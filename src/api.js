@@ -12,7 +12,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
-      throw new Error(`Ошибка GET запроса: ${response.status}`);
+      throw new Error(`[API] GET request failed: ${response.status}`);
     }
     return response.json();
   },
@@ -29,7 +29,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
-      throw new Error(`Ошибка POST запроса: ${response.status}`);
+      throw new Error(`[API] POST request failed: ${response.status}`);
     }
     return response.json();
   },
