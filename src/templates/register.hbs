@@ -1,0 +1,43 @@
+<div class="auth-page">
+  <div class="auth-form-container">
+    <h1 class="auth-title">Регистрация</h1>
+
+    <form id="register-form">
+      {{> input id="name" label="Имя" type="text" placeholder="Ваше имя" }}
+      {{> input id="email" label="Email" type="email" placeholder="example@email.com" }}
+      {{> input id="password" label="Пароль" type="password" placeholder="Минимум 8 символов" isPassword=true }}
+      {{> input id="repeatPassword" label="Повторите пароль" type="password" placeholder="Минимум 8 символов"
+      isPassword=true }}
+
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; margin-top: 0.5rem;">
+        <input type="checkbox" id="terms" style="cursor: pointer;">
+        <label for="terms" style="font-size: 12px; color: var(--text-muted);">
+          Я согласен с <a href="#">условиями использования</a> & <a href="#">политикой конфиденциальности</a>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+
+      <p style="text-align: center; font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;">
+        Есть аккаунт? <a href="#/login">Войти</a>
+      </p>
+
+      <div class="divider">
+        <div class="divider-line"></div>Или<div class="divider-line"></div>
+      </div>
+
+      <button type="button" class="btn btn-vk">
+        <b>VK</b> Зарегистрироваться через VK ID
+      </button>
+    </form>
+  </div>
+
+  <div class="auth-logo-container">
+
+    <div class="auth-logo-content">
+      <img src="/logo.svg" alt="NeXus Logo" style="width: 250px; margin-bottom: 1rem;" />
+      <p style="color: var(--text-muted); text-align: center;">Центр управления проектами</p>
+    </div>
+  </div>
+</div>
+</div>
