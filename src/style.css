@@ -26,7 +26,7 @@
 
 body {
   background-color: var(--bg-main);
-  background-image: url('/background.png');
+  background-image: url('/public/background.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -43,8 +43,8 @@ a:hover {
   text-decoration: underline;
 }
 
-.hidden {
-  display: none !important;
+#app .hidden {
+  display: none;
 }
 
 .input-group {
@@ -96,8 +96,8 @@ a:hover {
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-.input-field.error {
-  border-color: var(--border-error) !important;
+#app .input-wrapper .input-field.error {
+  border-color: var(--border-error);
   box-shadow: none;
 }
 
@@ -165,4 +165,20 @@ a:hover {
 
 .btn-vk:hover {
   background-color: var(--vk-hover);
+}
+
+.mt-05 {
+  margin-top: 0.5rem;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+.mb-1 {
+  margin-bottom: 1rem;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }

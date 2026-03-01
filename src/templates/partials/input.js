@@ -1,8 +1,9 @@
+export const inputPartial = `
 <div class="input-group">
   <div class="input-header">
     <label class="input-label" for="{{id}}">{{label}}</label>
     {{#if forgotPassword}}
-    <a href="#/forgot-password" class="forgot-link">Забыли пароль?</a>
+    <a href="#" class="forgot-link">Забыли пароль?</a>
     {{/if}}
   </div>
   <div class="input-wrapper">
@@ -29,3 +30,4 @@
   </div>
   <span id="{{id}}-error" class="input-error-msg"></span>
 </div>
+`;

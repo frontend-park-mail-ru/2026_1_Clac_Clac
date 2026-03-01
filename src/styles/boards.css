@@ -16,7 +16,8 @@
   z-index: 10;
 }
 
-.sidebar-top, .sidebar-bottom {
+.sidebar-top,
+.sidebar-bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,17 +41,17 @@
   color: white;
 }
 
-.sidebar-icon.active {
-  background-color: var(--primary);
+.sidebar-icon-primary {
+  background-color: #5c3cf6;
   color: white;
 }
 
-.sidebar-avatar {
+img.sidebar-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   background-color: #444;
-  background-size: cover;
+  object-fit: cover;
   cursor: pointer;
   border: 1px solid #333;
 }
@@ -105,9 +106,13 @@
   transition: background-color 0.2s;
 }
 
-.btn-create:hover { background-color: var(--primary-hover); }
+.btn-create:hover {
+  background-color: var(--primary-hover);
+}
 
-.search-container { position: relative; }
+.search-container {
+  position: relative;
+}
 
 .search-icon {
   position: absolute;
@@ -131,7 +136,10 @@
   transition: all 0.2s;
 }
 
-.search-input:focus { border-color: var(--border-default); background-color: #252526; }
+.search-input:focus {
+  border-color: var(--border-default);
+  background-color: #252526;
+}
 
 .boards-grid {
   display: grid;
@@ -147,13 +155,18 @@
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid transparent;
-  transition: border-color 0.2s, transform 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
   cursor: pointer;
   min-height: 250px;
   min-width: 400px;
 }
 
-.board-card:hover { border-color: #3b3b3d; transform: translateY(-2px); }
+.board-card:hover {
+  border-color: #3b3b3d;
+  transform: translateY(-2px);
+}
 
 .board-header {
   display: flex;
@@ -180,6 +193,28 @@
   flex-shrink: 0;
 }
 
+.bg-blue {
+  background-color: #0077ff;
+}
+
+.bg-white {
+  background-color: #ffffff;
+}
+
+.bg-orange-light {
+  background-color: #ffe0b2;
+}
+
+.icon-text {
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.icon-emoji {
+  font-size: 24px;
+}
+
 .board-name {
   font-size: 1.4rem;
   font-weight: 700;
@@ -192,7 +227,7 @@
 .board-options-btn {
   background-color: #303030;
   border: none;
-  color: #8C8C8C;
+  color: #8c8c8c;
   width: 36px;
   min-width: 36px;
   height: 36px;
@@ -205,10 +240,13 @@
   transition: background-color 0.2s;
 }
 
-.board-options-btn:hover { background-color: #444; color: white; }
+.board-options-btn:hover {
+  background-color: #444;
+  color: white;
+}
 
 .board-desc {
-  color: #8C8C8C;
+  color: #8c8c8c;
   font-size: 0.95rem;
   line-height: 1.4;
   margin-top: 0.5rem;
@@ -268,22 +306,28 @@
   z-index: 2;
 }
 
-.avatar-circle {
+img.avatar-circle {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   border: 2px solid #222222;
   background-color: #444;
-  background-size: cover;
-  background-position: center;
+  object-fit: cover;
   margin-left: -10px;
 }
-.avatar-circle:first-child { margin-left: 0; }
+
+img.avatar-circle:first-child {
+  margin-left: 0;
+}
 
 .stat-label {
   font-size: 0.85rem;
-  color: #8C8C8C;
+  color: #8c8c8c;
   font-weight: 400;
   line-height: 1.2;
   text-transform: none;
+}
+
+.empty-boards-msg {
+  color: var(--text-muted);
 }

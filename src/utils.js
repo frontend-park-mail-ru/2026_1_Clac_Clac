@@ -1,8 +1,10 @@
-export function setInputError(id: string, message: string | null) {
-  const input = document.getElementById(id) as HTMLInputElement;
-  const errorMsg = document.getElementById(`${id}-error`) as HTMLSpanElement;
-  
-  if (!input || !errorMsg) return;
+export const setInputError = (id, message) => {
+  const input = document.getElementById(id);
+  const errorMsg = document.getElementById(`${id}-error`);
+
+  if (!input || !errorMsg) {
+    return;
+  }
 
   if (message) {
     input.classList.add('error');
@@ -12,21 +14,24 @@ export function setInputError(id: string, message: string | null) {
     input.classList.remove('error');
     errorMsg.classList.remove('visible');
   }
-}
+};
 
-export function initGlobalListeners() {
+export const initGlobalListeners = () => {
   document.body.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
+    const target = e.target;
     const btn = target.closest('.toggle-password-btn');
-    
+
     if (btn) {
       const inputId = btn.getAttribute('data-target');
-      if (!inputId) return;
       
-      const input = document.getElementById(inputId) as HTMLInputElement;
+      if (!inputId) {
+        return;
+      }
+
+      const input = document.getElementById(inputId);
       const eyeSlash = btn.querySelector('.icon-eye-slash');
       const eye = btn.querySelector('.icon-eye');
-      
+
       if (input.type === 'password') {
         input.type = 'text';
         eyeSlash?.classList.add('hidden');
@@ -38,4 +43,4 @@ export function initGlobalListeners() {
       }
     }
   });
-}
+};
