@@ -1,9 +1,10 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
 import { setInputError } from '../utils.js';
-import { registerTpl } from '../templates/register.js';
 import { navigateTo } from '../main.js';
 
+const response = await fetch('/src/templates/register.hbs');
+const registerTpl = await response.text();
 const template = Handlebars.compile(registerTpl);
 
 export const renderRegister = (appDiv) => {

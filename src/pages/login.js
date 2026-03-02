@@ -1,9 +1,10 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
 import { setInputError } from '../utils.js';
-import { loginTpl } from '../templates/login.js';
 import { navigateTo } from '../main.js';
 
+const response = await fetch('/src/templates/login.hbs');
+const loginTpl = await response.text();
 const template = Handlebars.compile(loginTpl);
 
 export const renderLogin = (appDiv) => {

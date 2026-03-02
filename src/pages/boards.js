@@ -1,8 +1,9 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
-import { boardsTpl } from '../templates/boards.js';
 import { navigateTo } from '../main.js';
 
+const response = await fetch('/src/templates/boards.hbs');
+const boardsTpl = await response.text();
 const template = Handlebars.compile(boardsTpl);
 
 export const renderBoards = async (appDiv) => {
