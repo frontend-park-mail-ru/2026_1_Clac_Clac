@@ -1,36 +1,56 @@
 <div class="auth-page">
   <div class="auth-form-container">
-    <h1 class="auth-title">Войти</h1>
+    <div class="auth-form-wrapper">
+      <h1 class="auth-title">Войти</h1>
 
-    <div id="global-error" class="global-error-banner hidden">
-      <div class="global-error-icon">!</div>
-      <span id="global-error-text">Проверьте подключение и попробуйте снова</span>
+      <form id="login-form">
+        {{> input id="email" label="Email" type="email" placeholder="email@example.com" }}
+        {{> input id="password" label="Пароль" type="password" placeholder="Введите пароль" isPassword=true
+        forgotPassword=true }}
+
+        <button type="submit" class="btn btn-primary mt-05" id="login-submit" disabled>Войти</button>
+
+        <p class="auth-footer-text mt-1">
+          Нет аккаунта? <a href="#" id="link-register">Зарегистрироваться</a>
+        </p>
+
+        <div class="divider">
+          <div class="divider-line"></div>Или<div class="divider-line"></div>
+        </div>
+        <button type="button" class="btn btn-vk">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 101 100" fill="none">
+            <g clip-path="url(#clip0_2_40)">
+              <path
+                d="M0.5 48C0.5 25.3726 0.5 14.0589 7.52944 7.02944C14.5589 0 25.8726 0 48.5 0H52.5C75.1274 0 86.4411 0 93.4706 7.02944C100.5 14.0589 100.5 25.3726 100.5 48V52C100.5 74.6274 100.5 85.9411 93.4706 92.9706C86.4411 100 75.1274 100 52.5 100H48.5C25.8726 100 14.5589 100 7.52944 92.9706C0.5 85.9411 0.5 74.6274 0.5 52V48Z"
+                fill="transparent" />
+              <path
+                d="M53.7085 72.042C30.9168 72.042 17.9169 56.417 17.3752 30.417H28.7919C29.1669 49.5003 37.5834 57.5836 44.25 59.2503V30.417H55.0004V46.8752C61.5837 46.1669 68.4995 38.667 70.8329 30.417H81.5832C79.7915 40.5837 72.2915 48.0836 66.9582 51.1669C72.2915 53.6669 80.8336 60.2086 84.0836 72.042H72.2499C69.7082 64.1253 63.3754 58.0003 55.0004 57.1669V72.042H53.7085Z"
+                fill="white" />
+            </g>
+            <defs>
+              <clipPath id="clip0_2_40">
+                <rect width="100" height="100" fill="white" transform="translate(0.5)" />
+              </clipPath>
+            </defs>
+          </svg>
+          Войти с VK ID
+        </button>
+
+        <div id="global-error" class="global-error-banner hidden mt-1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span id="global-error-text">Проверьте подключение и попробуйте снова</span>
+        </div>
+      </form>
     </div>
-
-    <form id="login-form">
-      {{> input id="email" label="Email" type="email" placeholder="example@email.com" }}
-      {{> input id="password" label="Пароль" type="password" placeholder="Минимум 8 символов" isPassword=true forgotPassword=true }}
-
-      <button type="submit" class="btn btn-primary mt-05">Войти</button>
-
-      <p class="auth-footer-text mt-1">
-        Нет аккаунта? <a href="#" id="link-register">Зарегистрироваться</a>
-      </p>
-
-      <!-- TODO: Реализовать авторизацию через VK ID к РК2
-      <div class="divider">
-        <div class="divider-line"></div>Или<div class="divider-line"></div>
-      </div>
-      <button type="button" class="btn btn-vk">
-        <b>VK</b> Войти с VK ID
-      </button>
-      -->
-    </form>
   </div>
 
   <div class="auth-logo-container">
     <div class="auth-logo-content">
-      <img src="/public/logo.svg" alt="NeXus Logo" class="auth-logo mb-1" />
+      <img src="/public/logo.svg" alt="NeXus Logo" class="auth-logo" />
       <p class="auth-subtitle">Центр управления проектами</p>
     </div>
   </div>

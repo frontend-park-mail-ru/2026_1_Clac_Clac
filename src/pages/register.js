@@ -9,10 +9,32 @@ const template = Handlebars.compile(registerTpl);
 
 export const renderRegister = (appDiv) => {
   appDiv.innerHTML = template({});
-  
+
   const form = document.getElementById('register-form');
+  const submitBtn = document.getElementById('register-submit');
   const linkLogin = document.getElementById('link-login');
-  
+  const globalError = document.getElementById('global-error');
+  const globalErrorText = document.getElementById('global-error-text');
+
+  const checkForm = () => {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const repeatPassword = document.getElementById('repeatPassword').value.trim();
+    const terms = document.getElementById('terms').checked;
+
+    if (submitBtn) {
+      submitBtn.disabled = !(name && email && password && repeatPassword && terms);
+    }
+  };
+
+  const inputs = form.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('input', checkForm);
+    if (input.type === 'checkbox') input.addEventListener('change', checkForm);
+  });
+  checkForm();
+
   if (linkLogin) {
     linkLogin.addEventListener('click', (e) => {
       e.preventDefault();
@@ -26,19 +48,14 @@ export const renderRegister = (appDiv) => {
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const repeatPassword = document.getElementById('repeatPassword').value;
+    const repeatPassword = document.getElementById('repeatPassword').value.trim();
     const terms = document.getElementById('terms').checked;
 
     let hasError = false;
+    if (globalError) globalError.classList.add('hidden');
 
     if (!name) {
       setInputError('name', 'Введите имя');
-      hasError = true;
-    } else if (name.length < 3) {
-      setInputError('name', 'Имя должно содержать минимум 3 символа');
-      hasError = true;
-    } else if (!/^[a-zA-Zа-яА-Я0-9]+$/.test(name)) {
-      setInputError('name', 'Имя должно содержать только буквы и цифры');
       hasError = true;
     } else {
       setInputError('name', null);
@@ -48,7 +65,7 @@ export const renderRegister = (appDiv) => {
       setInputError('email', 'Введите адрес электронной почты');
       hasError = true;
     } else if (!email.includes('@')) {
-      setInputError('email', 'Введите корректный email');
+      setInputError('email', 'Неверный формат email');
       hasError = true;
     } else {
       setInputError('email', null);
@@ -57,8 +74,8 @@ export const renderRegister = (appDiv) => {
     if (!password) {
       setInputError('password', 'Введите пароль');
       hasError = true;
-    } else if (password.length < 8) {
-      setInputError('password', 'Пароль должен содержать минимум 8 символов');
+    } else if (password.length < 6) {
+      setInputError('password', 'Пароль должен содержать минимум 6 символов');
       hasError = true;
     } else {
       setInputError('password', null);
@@ -70,7 +87,7 @@ export const renderRegister = (appDiv) => {
     } else {
       setInputError('repeatPassword', null);
     }
-    
+
     if (!terms) {
       const termsError = document.getElementById('terms-error');
       if (termsError) {
@@ -90,10 +107,28 @@ export const renderRegister = (appDiv) => {
     }
 
     try {
-      await apiClient.post('/register', { name, email, password });
+      await apiClient.post('/register', {
+        display_name: name,
+        email: email,
+        password: password,
+        repeated_password: repeatPassword
+      });
+
+      localStorage.setItem('isAuth', 'true');
       navigateTo('boards');
+
     } catch (err) {
-      setInputError('email', 'Этот адрес уже зарегистрирован');
+      if (globalError) globalError.classList.remove('hidden');
+      if (err.data && err.data.error) {
+        if (err.data.error.includes('exists')) {
+          setInputError('email', 'Этот адрес уже зарегистрирован');
+          if (globalError) globalError.classList.add('hidden');
+        } else {
+          if (globalErrorText) globalErrorText.textContent = err.data.error;
+        }
+      } else {
+        if (globalErrorText) globalErrorText.textContent = 'Проверьте подключение и попробуйте снова';
+      }
     }
   });
 };
