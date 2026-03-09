@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8081';
+const API_URL = 'https://clac-clac.mooo.com/api';
 
 const request = async (method, url, body = null, headers = {}) => {
   const options = {
