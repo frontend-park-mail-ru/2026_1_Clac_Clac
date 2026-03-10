@@ -1,10 +1,15 @@
 import Handlebars from 'handlebars';
-import { setInputError } from '../utils.js';
+import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils.js';
 import { navigateTo } from '../main.js';
 
-const tplEmail = await (await fetch('/src/templates/password_recovery_email.hbs')).text();
-const tplCode = await (await fetch('/src/templates/password_recovery_code.hbs')).text();
-const tplNewPass = await (await fetch('/src/templates/password_recovery_new_pass.hbs')).text();
+const resEmail = await fetch('/src/templates/password_recovery_email.hbs');
+const tplEmail = await resEmail.text();
+
+const resCode = await fetch('/src/templates/password_recovery_code.hbs');
+const tplCode = await resCode.text();
+
+const resNewPass = await fetch('/src/templates/password_recovery_new_pass.hbs');
+const tplNewPass = await resNewPass.text();
 
 const renderStepEmail = Handlebars.compile(tplEmail);
 const renderStepCode = Handlebars.compile(tplCode);
@@ -23,26 +28,34 @@ const stepEmail = (appDiv) => {
   const submitBtn = document.getElementById('recovery-submit');
 
   const checkForm = () => {
-    if (submitBtn) {
+    if (submitBtn && emailInput) {
       submitBtn.disabled = !emailInput.value.trim();
     }
   };
 
-  if (emailInput) emailInput.addEventListener('input', checkForm);
+  if (emailInput) {
+    emailInput.addEventListener('input', checkForm);
+  }
   checkForm();
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value.trim();
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
 
-    if (!email || !email.includes('@')) {
-      setInputError('email', 'Введите корректный email');
-      return;
-    }
+      if (!email) {
+        setInputError('email', 'Введите адрес электронной почты');
+        return;
+      } else if (!validateEmail(email)) {
+        setInputError('email', 'Неверный формат email');
+        return;
+      }
 
-    recoveryState.email = email;
-    stepCode(appDiv);
-  });
+      setGlobalError(null);
+      recoveryState.email = email;
+      stepCode(appDiv);
+    });
+  }
 };
 
 const stepCode = (appDiv) => {
@@ -55,49 +68,59 @@ const stepCode = (appDiv) => {
   let timerSpan = document.getElementById('timer');
 
   const checkForm = () => {
-    if (submitBtn) submitBtn.disabled = !codeInput.value.trim();
+    if (submitBtn && codeInput) {
+      submitBtn.disabled = !codeInput.value.trim();
+    }
   };
 
-  if (codeInput) codeInput.addEventListener('input', checkForm);
+  if (codeInput) {
+    codeInput.addEventListener('input', checkForm);
+  }
   checkForm();
 
   let timeLeft = 59;
   const updateTimer = () => {
     if (timeLeft > 0) {
       timeLeft--;
-      if (timerSpan) timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
+      if (timerSpan) {
+        timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
+      }
     } else {
       clearInterval(timerInterval);
       if (resendLink) {
         resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
         const action = document.getElementById('resend-action');
-        action.addEventListener('click', (e) => {
-          e.preventDefault();
-          stepCode(appDiv);
-        });
+        if (action) {
+          action.addEventListener('click', (e) => {
+            e.preventDefault();
+            stepCode(appDiv);
+          });
+        }
       }
     }
   };
   let timerInterval = setInterval(updateTimer, 1000);
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const code = codeInput.value;
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = codeInput.value.trim();
 
-    if (!code || code.length < 4) {
-      setInputError('code', 'Введите код из письма');
-      return;
-    }
+      if (!code || code.length < 4) {
+        setInputError('code', 'Введите код из письма');
+        return;
+      }
 
-    if (code !== '123456') {
-      setInputError('code', 'Неверный код');
-      return;
-    }
+      if (code !== '123456') {
+        setInputError('code', 'Неверный код');
+        return;
+      }
 
-    clearInterval(timerInterval);
-    recoveryState.code = code;
-    stepNewPass(appDiv);
-  });
+      clearInterval(timerInterval);
+      recoveryState.code = code;
+      stepNewPass(appDiv);
+    });
+  }
 };
 
 const stepNewPass = (appDiv) => {
@@ -109,34 +132,43 @@ const stepNewPass = (appDiv) => {
   const submitBtn = form.querySelector('button[type="submit"]');
 
   const checkForm = () => {
-    if (submitBtn) {
+    if (submitBtn && password && repeatPassword) {
       submitBtn.disabled = !(password.value.trim() && repeatPassword.value.trim());
     }
   };
 
-  form.querySelectorAll('input').forEach(input => input.addEventListener('input', checkForm));
+  if (form) {
+    form.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', checkForm);
+    });
+  }
   checkForm();
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    let hasError = false;
-    setInputError('password', null);
-    setInputError('repeatPassword', null);
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let hasError = false;
+      setInputError('password', null);
+      setInputError('repeatPassword', null);
 
-    if (password.value.length < 8) {
-      setInputError('password', 'Минимум 8 символов');
-      hasError = true;
-    }
+      const passErrorMsg = validatePassword(password.value);
+      if (passErrorMsg) {
+        setInputError('password', passErrorMsg);
+        hasError = true;
+      }
 
-    if (password.value !== repeatPassword.value) {
-      setInputError('repeatPassword', 'Пароли не совпадают');
-      hasError = true;
-    }
+      if (password.value !== repeatPassword.value) {
+        setInputError('repeatPassword', 'Пароли не совпадают');
+        hasError = true;
+      }
 
-    if (hasError) return;
+      if (hasError) {
+        return;
+      }
 
-    navigateTo('login');
-  });
+      navigateTo('login');
+    });
+  }
 };
 
 export const renderPasswordRecovery = (appDiv) => {

@@ -50,6 +50,8 @@
   flex-direction: column;
   overflow-y: auto;
   z-index: 10;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .boards-header-container {
@@ -71,6 +73,8 @@
   font-size: 2rem;
   font-weight: 700;
   color: white;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .boards-count {
@@ -120,6 +124,8 @@
   font-size: 0.9rem;
   outline: none;
   transition: all 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .search-input:focus {
@@ -178,12 +184,15 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+  width: 100%;
 }
 
 .board-title-group {
   display: flex;
   align-items: flex-start;
   gap: 1.2rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .board-icon {
@@ -222,6 +231,9 @@
   color: white;
   margin: 0;
   line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .board-options-btn {
@@ -248,6 +260,12 @@
   font-size: 0.95rem;
   line-height: 1.4;
   margin-top: 1rem;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
 }
 
 .board-divider {
@@ -406,4 +424,46 @@
 
 .btn-danger:hover {
   background: #c53030;
+}
+
+.profile-popup {
+  position: absolute;
+  bottom: 80px;
+  left: 80px;
+  background-color: #252527;
+  border: 1px solid #363638;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  min-width: 200px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.profile-popup-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+.profile-name {
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  color: #999;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

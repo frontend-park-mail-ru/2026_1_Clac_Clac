@@ -7,146 +7,212 @@ const boardsTpl = await response.text();
 const template = Handlebars.compile(boardsTpl);
 
 let localBoards = [];
+let currentUser = null;
+let eventController = null;
 
 export const renderBoards = async (appDiv) => {
-  try {
-    const res = await apiClient.get('/home');
-    let fetchedBoards = Array.isArray(res) ? res : (res?.boards || []);
-
-    localBoards = fetchedBoards.map((b, i) => ({
-      id: b.id,
-      board_name: b.board_name || `Доска ${i + 1}`,
-      description: b.description || 'Описание отсутствует',
-      backlog: b.backlog || 0,
-      hot: b.hot || 0,
-      members: b.members || 1,
-      iconClass: b.iconClass || 'bg-purple',
-      iconHtml: b.iconHtml || '<span style="font-size: 1.5rem;">✨</span>',
-      avatars: b.avatars || ['https://i.pravatar.cc/100?img=1']
-    }));
-  } catch (err) {
-    if (err.status === 401) {
-      localStorage.removeItem('isAuth');
-      navigateTo('login');
-      return;
-    }
-  }
+  const success = await loadData();
+  if (!success) return;
 
   const updateUI = () => {
-    appDiv.innerHTML = template({ boards: localBoards });
-    attachEventListeners();
-  };
+    if (eventController) eventController.abort();
+    eventController = new AbortController();
 
-  const attachEventListeners = () => {
-    const searchInput = document.querySelector('.search-input');
-    const boardCards = document.querySelectorAll('.board-card');
-
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        boardCards.forEach((card) => {
-          const title = card.querySelector('.board-name')?.textContent?.toLowerCase() || '';
-          const desc = card.querySelector('.board-desc')?.textContent?.toLowerCase() || '';
-          card.style.display = (title.includes(query) || desc.includes(query)) ? 'flex' : 'none';
-        });
-      });
-    }
-
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        try {
-          await apiClient.post('/logout');
-        } catch (error) {
-          console.error('Ошибка при выходе:', error);
-        } finally {
-          localStorage.removeItem('isAuth');
-          navigateTo('login');
-        }
-      });
-    }
-
-    const modalOverlay = document.getElementById('modal-overlay');
-    const modalCreate = document.getElementById('modal-create-board');
-    const modalDelete = document.getElementById('modal-delete-board');
-
-    const openModal = (modal) => {
-      modalOverlay.classList.remove('hidden');
-      modal.classList.remove('hidden');
-    };
-
-    const closeModals = () => {
-      modalOverlay.classList.add('hidden');
-      modalCreate.classList.add('hidden');
-      modalDelete.classList.add('hidden');
-    };
-
-    modalOverlay.addEventListener('mousedown', (e) => {
-      if (e.target === modalOverlay) closeModals();
+    appDiv.innerHTML = template({
+      boards: localBoards,
+      user: currentUser
     });
 
-    const inputNewName = document.getElementById('new-board-name');
-    const btnConfirmCreate = document.getElementById('btn-confirm-create');
-    const btnCancelCreate = document.getElementById('btn-cancel-create');
-
-    const handleCreateClick = () => {
-      inputNewName.value = '';
-      btnConfirmCreate.disabled = true;
-      openModal(modalCreate);
-      setTimeout(() => inputNewName.focus(), 100);
-    };
-
-    document.querySelector('.btn-create')?.addEventListener('click', handleCreateClick);
-    document.querySelector('.board-card-empty')?.addEventListener('click', handleCreateClick);
-
-    inputNewName.addEventListener('input', () => {
-      btnConfirmCreate.disabled = !inputNewName.value.trim();
-    });
-
-    btnCancelCreate.addEventListener('click', closeModals);
-
-    btnConfirmCreate.addEventListener('click', () => {
-      const newName = inputNewName.value.trim();
-      if (newName) {
-        localBoards.unshift({
-          id: Date.now().toString(),
-          board_name: newName,
-          description: 'Новое рабочее пространство',
-          backlog: 0, hot: 0, members: 1,
-          iconClass: 'bg-purple', iconHtml: '<span style="font-size: 1.5rem;">✨</span>',
-          avatars: ['https://i.pravatar.cc/100?img=1']
-        });
-        closeModals();
-        setTimeout(updateUI, 150);
-      }
-    });
-
-    let boardIdToDelete = null;
-    const btnConfirmDelete = document.getElementById('btn-confirm-delete');
-    const btnCancelDelete = document.getElementById('btn-cancel-delete');
-    const spanDeleteName = document.getElementById('delete-board-name');
-
-    document.querySelectorAll('.board-options-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        boardIdToDelete = btn.getAttribute('data-id');
-        const boardName = btn.closest('.board-header').querySelector('.board-name').textContent;
-        spanDeleteName.textContent = boardName;
-        openModal(modalDelete);
-      });
-    });
-
-    btnCancelDelete.addEventListener('click', closeModals);
-
-    btnConfirmDelete.addEventListener('click', () => {
-      if (boardIdToDelete) {
-        localBoards = localBoards.filter(b => b.id !== boardIdToDelete);
-        closeModals();
-        setTimeout(updateUI, 150);
-      }
-    });
+    attachEventListeners(appDiv, updateUI, eventController.signal);
   };
 
   updateUI();
 };
+
+async function loadData() {
+  try {
+    const res = await apiClient.get('/home');
+
+    let rawBoards = [];
+    if (res && res.data) {
+      rawBoards = res.data;
+    } else if (Array.isArray(res)) {
+      rawBoards = res;
+    }
+
+    localBoards = rawBoards.map((board, i) => ({
+      id: board.id,
+      board_name: board.board_name || 'Без названия',
+      description: board.description || 'Описание отсутствует',
+      backlog: board.backlog || 0,
+      hot: board.hot || 0,
+      iconClass: board.iconClass || (i % 3 === 0 ? 'bg-purple' : i % 3 === 1 ? 'bg-blue' : 'bg-gradient'),
+      iconHtml: board.iconHtml || '<span style="font-size: 1.5rem;">✨</span>'
+    }));
+
+    try {
+      const profileRes = await apiClient.get('/profile');
+      currentUser = profileRes?.data || profileRes;
+    } catch (e) {
+      console.warn('Профиль не загружен');
+    }
+
+    return true;
+  } catch (err) {
+    if (err.status === 401) {
+      localStorage.removeItem('isAuth');
+      navigateTo('login');
+      return false;
+    }
+    console.error('Ошибка загрузки:', err);
+    return true;
+  }
+}
+
+function attachEventListeners(appDiv, updateUI, abortSignal) {
+  const searchInput = appDiv.querySelector('.search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      appDiv.querySelectorAll('.board-card').forEach(card => {
+        const title = card.querySelector('.board-name')?.textContent.toLowerCase() || '';
+        const desc = card.querySelector('.board-desc')?.textContent.toLowerCase() || '';
+        card.style.display = (title.includes(query) || desc.includes(query)) ? 'flex' : 'none';
+      });
+    });
+  }
+
+  const profileBtn = appDiv.querySelector('#profile-btn');
+  const profilePopup = appDiv.querySelector('#profile-popup');
+  if (profileBtn && profilePopup) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profilePopup.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profilePopup.contains(e.target) && e.target !== profileBtn) {
+        profilePopup.classList.add('hidden');
+      }
+    }, { signal: abortSignal });
+  }
+
+  const modalOverlay = appDiv.querySelector('#modal-overlay');
+  const modalCreate = appDiv.querySelector('#modal-create-board');
+  const modalDelete = appDiv.querySelector('#modal-delete-board');
+  const modalLogout = appDiv.querySelector('#modal-logout');
+
+  const closeModals = () => {
+    [modalOverlay, modalCreate, modalDelete, modalLogout].forEach(m => m?.classList.add('hidden'));
+  };
+
+  appDiv.querySelector('#btn-cancel-create')?.addEventListener('click', closeModals);
+  appDiv.querySelector('#btn-cancel-delete')?.addEventListener('click', closeModals);
+  appDiv.querySelector('#btn-cancel-logout')?.addEventListener('click', closeModals);
+
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeModals();
+      }
+    });
+  }
+
+  const logoutBtn = appDiv.querySelector('#logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (profilePopup) {
+        profilePopup.classList.add('hidden');
+      }
+
+      modalOverlay.classList.remove('hidden');
+      modalLogout.classList.remove('hidden');
+    });
+  }
+
+  const btnConfirmLogout = appDiv.querySelector('#btn-confirm-logout');
+  if (btnConfirmLogout) {
+    btnConfirmLogout.addEventListener('click', async () => {
+      btnConfirmLogout.disabled = true;
+      try {
+        await apiClient.post('/logout');
+      } finally {
+        localStorage.removeItem('isAuth');
+        navigateTo('login');
+      }
+    });
+  }
+
+  const inputNewName = appDiv.querySelector('#new-board-name');
+  const btnConfirmCreate = appDiv.querySelector('#btn-confirm-create');
+
+  const openCreate = () => {
+    if (inputNewName) {
+      inputNewName.value = '';
+      btnConfirmCreate.disabled = true;
+    }
+    modalOverlay.classList.remove('hidden');
+    modalCreate.classList.remove('hidden');
+    setTimeout(() => inputNewName?.focus(), 100);
+  };
+
+  appDiv.querySelector('.btn-create')?.addEventListener('click', openCreate);
+  appDiv.querySelector('.board-card-empty')?.addEventListener('click', openCreate);
+
+  if (inputNewName) {
+    inputNewName.addEventListener('input', () => {
+      btnConfirmCreate.disabled = !inputNewName.value.trim();
+    });
+  }
+
+  btnConfirmCreate?.addEventListener('click', async () => {
+    const name = inputNewName.value.trim();
+    try {
+      btnConfirmCreate.disabled = true;
+      await apiClient.post('/board', { board_name: name, description: 'Новое пространство' });
+      await loadData();
+      closeModals();
+      updateUI();
+    } catch (err) {
+      btnConfirmCreate.disabled = false;
+    }
+  });
+
+  let boardIdToDelete = null;
+  const btnConfirmDelete = appDiv.querySelector('#btn-confirm-delete');
+  const spanDeleteName = appDiv.querySelector('#delete-board-name');
+
+  appDiv.querySelectorAll('.board-options-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      boardIdToDelete = btn.getAttribute('data-id');
+      const name = btn.closest('.board-card').querySelector('.board-name').textContent;
+      if (spanDeleteName) spanDeleteName.textContent = name;
+      modalOverlay.classList.remove('hidden');
+      modalDelete.classList.remove('hidden');
+    });
+  });
+
+  btnConfirmDelete?.addEventListener('click', async () => {
+    if (!boardIdToDelete) return;
+    try {
+      await apiClient.delete(`/board/${boardIdToDelete}`);
+      await loadData();
+      closeModals();
+      updateUI();
+    } catch (err) {
+      alert('Ошибка удаления');
+    }
+  });
+
+  appDiv.querySelectorAll('.board-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.board-options-btn')) {
+        const id = card.querySelector('.board-options-btn')?.getAttribute('data-id');
+        if (id) console.log('Навигация в доску:', id);
+      }
+    });
+  });
+}
