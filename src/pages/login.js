@@ -1,18 +1,34 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
-import { setInputError } from '../utils.js';
+import { setInputError, setGlobalError, validateEmail } from '../utils.js';
 import { navigateTo } from '../main.js';
+import config from '../config.js';
 
-const response = await fetch('/src/templates/login.hbs');
-const loginTpl = await response.text();
+const res = await fetch('/src/templates/login.hbs');
+const loginTpl = await res.text();
 const template = Handlebars.compile(loginTpl);
 
 export const renderLogin = (appDiv) => {
   appDiv.innerHTML = template({});
-  
+
   const form = document.getElementById('login-form');
-  const globalError = document.getElementById('global-error');
-  
+  const submitBtn = document.getElementById('login-submit');
+
+  const checkForm = () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (submitBtn) {
+      submitBtn.disabled = !(email && password);
+    }
+  };
+
+  const inputs = form.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('input', checkForm);
+  });
+  checkForm();
+
   const linkRegister = document.getElementById('link-register');
   if (linkRegister) {
     linkRegister.addEventListener('click', (e) => {
@@ -21,18 +37,33 @@ export const renderLogin = (appDiv) => {
     });
   }
 
+  const forgotLink = document.querySelector('.forgot-link');
+  if (forgotLink) {
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo('forgot-password');
+    });
+  }
+
+  const btnVk = document.querySelector('.btn-vk');
+  if (btnVk) {
+    btnVk.addEventListener('click', () => {
+      window.location.href = config.vkAuthUrl;
+    });
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
 
     let hasError = false;
-    globalError.classList.add('hidden');
+    setGlobalError(null);
 
     if (!email) {
       setInputError('email', 'Введите адрес электронной почты');
       hasError = true;
-    } else if (!email.includes('@')) {
+    } else if (!validateEmail(email)) {
       setInputError('email', 'Неверный формат email');
       hasError = true;
     } else {
@@ -51,11 +82,26 @@ export const renderLogin = (appDiv) => {
     }
 
     try {
+      submitBtn.disabled = true;
       await apiClient.post('/login', { email, password });
+
+      localStorage.setItem('isAuth', 'true');
       navigateTo('boards');
+
     } catch (err) {
-      globalError.classList.remove('hidden');
-      setInputError('email', 'Пользователь с таким email не найден');
+      const errMsg = err.data?.message || err.data?.error;
+
+      if (err.status === 401 || (errMsg && (errMsg.includes('wrong') || errMsg.includes('exist') || errMsg.includes('invalid')))) {
+        setGlobalError('Неверный email или пароль');
+        setInputError('email', 'Неверный email или пароль');
+        setInputError('password', 'Неверный email или пароль');
+      } else if (errMsg) {
+        setGlobalError(errMsg);
+      } else {
+        setGlobalError('Проверьте подключение и попробуйте снова');
+      }
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 };

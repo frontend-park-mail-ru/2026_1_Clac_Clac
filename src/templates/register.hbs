@@ -1,34 +1,37 @@
 <div class="auth-page">
   <div class="auth-form-container">
-    <h1 class="auth-title">Регистрация</h1>
+    <div class="auth-form-wrapper">
+      <h1 class="auth-title">Регистрация</h1>
 
-    <form id="register-form">
-      {{> input id="name" label="Имя" type="text" placeholder="Ваше имя" }}
-      {{> input id="email" label="Email" type="email" placeholder="example@email.com" }}
-      {{> input id="password" label="Пароль" type="password" placeholder="Минимум 8 символов" isPassword=true }}
-      {{> input id="repeatPassword" label="Повторите пароль" type="password" placeholder="Минимум 8 символов" isPassword=true }}
+      <form id="register-form" novalidate>
+        {{> input id="name" label="Имя" type="text" placeholder="Ваше имя" maxlength="128" }}
+        {{> input id="email" label="Email" type="email" placeholder="email@example.com" maxlength="128" }}
+        {{> input id="password" label="Пароль" type="password" placeholder="Минимум 8 символов" isPassword=true
+        maxlength="128" }}
+        {{> input id="repeatPassword" label="Повторите пароль" type="password" placeholder="Минимум 8 символов"
+        isPassword=true maxlength="128" }}
 
-      <div class="terms-group mt-05 mb-1">
-        <div class="terms-checkbox-wrapper">
-          <input type="checkbox" id="terms" class="cursor-pointer">
-          <label for="terms" class="terms-label">
-            Я согласен с <a href="#">условиями использования</a> & <a href="#">политикой конфиденциальности</a>
-          </label>
+        <button type="submit" class="btn btn-primary mt-1" id="register-submit" disabled>Зарегистрироваться</button>
+
+        <p class="auth-footer-text mt-1">
+          У вас уже есть аккаунт? <a href="#" id="link-login">Войти</a>
+        </p>
+
+        <div id="global-error" class="global-error-banner hidden mt-1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span id="global-error-text">Проверьте подключение и попробуйте снова</span>
         </div>
-        <span id="terms-error" class="input-error-msg"></span>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-
-      <p class="auth-footer-text mt-1">
-        Есть аккаунт? <a href="#" id="link-login">Войти</a>
-      </p>
-    </form>
+      </form>
+    </div>
   </div>
 
   <div class="auth-logo-container">
     <div class="auth-logo-content">
-      <img src="/public/logo.svg" alt="NeXus Logo" class="auth-logo mb-1" />
+      <img src="/public/logo.svg" alt="NeXus Logo" class="auth-logo" />
       <p class="auth-subtitle">Центр управления проектами</p>
     </div>
   </div>

@@ -16,6 +16,66 @@ export const setInputError = (id, message) => {
   }
 };
 
+export const setGlobalError = (message) => {
+  const globalError = document.getElementById('global-error');
+  const globalErrorText = document.getElementById('global-error-text');
+
+  if (!globalError || !globalErrorText) {
+    return;
+  }
+
+  if (message) {
+    globalErrorText.textContent = message;
+    globalError.classList.remove('hidden');
+  } else {
+    globalError.classList.add('hidden');
+    globalErrorText.textContent = '';
+  }
+};
+
+export const validateEmail = (email) => {
+  if (email.length > 128) {
+    return false;
+  }
+
+  for (const char of email) {
+    if (char.trim() === '') {
+      return false;
+    }
+  }
+
+  const parts = email.split('@');
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const [local, domain] = parts;
+  if (local.length === 0) {
+    return false;
+  }
+
+  if (!domain.slice(1, -1).includes('.')) {
+    return false;
+  }
+
+  return true;
+};
+
+export const validatePassword = (password) => {
+  if (password.length < 8) {
+    return 'Минимум 8 символов';
+  }
+  if (password.length > 128) {
+    return 'Максимум 128 символов';
+  }
+  for (let i = 0; i < password.length; i++) {
+    if (password.charCodeAt(i) > 127) {
+      return 'Разрешены только латинские буквы, цифры и спецсимволы';
+    }
+  }
+  return null;
+};
+
 export const initGlobalListeners = () => {
   document.body.addEventListener('click', (e) => {
     const target = e.target;
@@ -23,7 +83,7 @@ export const initGlobalListeners = () => {
 
     if (btn) {
       const inputId = btn.getAttribute('data-target');
-      
+
       if (!inputId) {
         return;
       }
@@ -34,12 +94,20 @@ export const initGlobalListeners = () => {
 
       if (input.type === 'password') {
         input.type = 'text';
-        eyeSlash?.classList.add('hidden');
-        eye?.classList.remove('hidden');
+        if (eyeSlash) {
+          eyeSlash.classList.add('hidden');
+        }
+        if (eye) {
+          eye.classList.remove('hidden');
+        }
       } else {
         input.type = 'password';
-        eyeSlash?.classList.remove('hidden');
-        eye?.classList.add('hidden');
+        if (eyeSlash) {
+          eyeSlash.classList.remove('hidden');
+        }
+        if (eye) {
+          eye.classList.add('hidden');
+        }
       }
     }
   });

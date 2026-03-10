@@ -12,7 +12,7 @@
   --vk-color: #366af3;
   --vk-hover: #4777f4;
 
-  --border-default: #2a2a2c;
+  --border-default: transparent;
   --border-hover: #3b3b3d;
   --border-error: #ff5c5c;
 }
@@ -26,10 +26,6 @@
 
 body {
   background-color: var(--bg-main);
-  background-image: url('/public/background.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   color: var(--text-main);
   overflow-x: hidden;
 }
@@ -50,18 +46,18 @@ a:hover {
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
 }
 
 .input-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .input-label {
   font-size: 0.875rem;
-  color: #d1d5db;
+  color: #e5e5e5;
 }
 
 .forgot-link {
@@ -80,7 +76,7 @@ a:hover {
   background-color: var(--bg-input);
   color: var(--text-main);
   padding: 0.85rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   border: 1px solid var(--border-default);
   outline: none;
   transition: all 0.2s ease;
@@ -92,13 +88,18 @@ a:hover {
 }
 
 .input-field:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+  border-color: #444;
 }
 
 #app .input-wrapper .input-field.error {
   border-color: var(--border-error);
+  color: var(--text-error);
   box-shadow: none;
+}
+
+#app .input-wrapper .input-field.error::placeholder {
+  color: var(--text-error);
+  opacity: 0.7;
 }
 
 .input-field:disabled {
@@ -136,8 +137,8 @@ a:hover {
 
 .btn {
   width: 100%;
-  padding: 0.85rem;
-  border-radius: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 8px;
   border: none;
   font-weight: 500;
   font-size: 1rem;
@@ -150,8 +151,14 @@ a:hover {
   color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  background-color: #6b7280;
+  color: #d1d5db;
+  cursor: not-allowed;
 }
 
 .btn-vk {

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8081';
+const API_URL = 'https://clac-clac.mooo.com/api';
 
 const request = async (method, url, body = null, headers = {}) => {
   const options = {
@@ -15,12 +15,19 @@ const request = async (method, url, body = null, headers = {}) => {
   }
 
   const response = await fetch(`${API_URL}${url}`, options);
+  
+  let data;
+  try {
+    data = await response.json();
+  } catch (err) {
+    data = null;
+  }
 
   if (!response.ok) {
-    throw new Error(`[API] ${method} request failed: ${response.status}`);
+    throw { status: response.status, data };
   }
   
-  return response.json();
+  return data;
 };
 
 export const apiClient = {
