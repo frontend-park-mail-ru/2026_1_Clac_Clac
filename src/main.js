@@ -25,5 +25,10 @@ export const navigateTo = (page) => {
   }
 };
 
+if (window.location.pathname === '/home') {
+  localStorage.setItem('isAuth', 'true');
+  window.history.replaceState({}, '', '/');
+}
+
 const isAuth = localStorage.getItem('isAuth') === 'true';
 navigateTo(isAuth ? 'boards' : 'login');

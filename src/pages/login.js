@@ -2,6 +2,7 @@ import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
 import { setInputError, setGlobalError, validateEmail } from '../utils.js';
 import { navigateTo } from '../main.js';
+import config from '../config.js';
 
 const res = await fetch('/src/templates/login.hbs');
 const loginTpl = await res.text();
@@ -47,7 +48,7 @@ export const renderLogin = (appDiv) => {
   const btnVk = document.querySelector('.btn-vk');
   if (btnVk) {
     btnVk.addEventListener('click', () => {
-      setGlobalError('Вход через VK ID недоступен');
+      window.location.href = config.vkAuthUrl;
     });
   }
 
@@ -81,6 +82,7 @@ export const renderLogin = (appDiv) => {
     }
 
     try {
+      submitBtn.disabled = true;
       await apiClient.post('/login', { email, password });
 
       localStorage.setItem('isAuth', 'true');
@@ -98,6 +100,8 @@ export const renderLogin = (appDiv) => {
       } else {
         setGlobalError('Проверьте подключение и попробуйте снова');
       }
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 };

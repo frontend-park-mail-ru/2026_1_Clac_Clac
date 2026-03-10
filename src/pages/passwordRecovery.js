@@ -1,6 +1,7 @@
 import Handlebars from 'handlebars';
 import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils.js';
 import { navigateTo } from '../main.js';
+import { apiClient } from '../api.js';
 
 const resEmail = await fetch('/src/templates/password_recovery_email.hbs');
 const tplEmail = await resEmail.text();
@@ -52,8 +53,18 @@ const stepEmail = (appDiv) => {
       }
 
       setGlobalError(null);
-      recoveryState.email = email;
-      stepCode(appDiv);
+
+      try {
+        submitBtn.disabled = true;
+        await apiClient.post('/forgot-password', { email });
+        recoveryState.email = email;
+        stepCode(appDiv);
+      } catch (err) {
+        const errMsg = err.data?.message || err.data?.error;
+        setGlobalError(errMsg || 'Не удалось отправить код');
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   }
 };
@@ -79,6 +90,7 @@ const stepCode = (appDiv) => {
   checkForm();
 
   let timeLeft = 59;
+  let timerInterval = null;
   const updateTimer = () => {
     if (timeLeft > 0) {
       timeLeft--;
@@ -86,20 +98,25 @@ const stepCode = (appDiv) => {
         timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
       }
     } else {
-      clearInterval(timerInterval);
+      if (timerInterval) clearInterval(timerInterval);
       if (resendLink) {
         resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
         const action = document.getElementById('resend-action');
         if (action) {
-          action.addEventListener('click', (e) => {
+          action.addEventListener('click', async (e) => {
             e.preventDefault();
-            stepCode(appDiv);
+            try {
+              await apiClient.post('/forgot-password', { email: recoveryState.email });
+              stepCode(appDiv);
+            } catch (err) {
+              setInputError('code', 'Не удалось отправить код повторно');
+            }
           });
         }
       }
     }
   };
-  let timerInterval = setInterval(updateTimer, 1000);
+  timerInterval = setInterval(updateTimer, 1000);
 
   if (form) {
     form.addEventListener('submit', async (e) => {
@@ -111,14 +128,17 @@ const stepCode = (appDiv) => {
         return;
       }
 
-      if (code !== '123456') {
-        setInputError('code', 'Неверный код');
-        return;
+      try {
+        submitBtn.disabled = true;
+        await apiClient.post('/check-code', { code });
+        if (timerInterval) clearInterval(timerInterval);
+        recoveryState.code = code;
+        stepNewPass(appDiv);
+      } catch (err) {
+        setInputError('code', 'Неверный или недействительный код');
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      clearInterval(timerInterval);
-      recoveryState.code = code;
-      stepNewPass(appDiv);
     });
   }
 };
@@ -150,6 +170,7 @@ const stepNewPass = (appDiv) => {
       let hasError = false;
       setInputError('password', null);
       setInputError('repeatPassword', null);
+      setGlobalError(null);
 
       const passErrorMsg = validatePassword(password.value);
       if (passErrorMsg) {
@@ -166,7 +187,20 @@ const stepNewPass = (appDiv) => {
         return;
       }
 
-      navigateTo('login');
+      try {
+        submitBtn.disabled = true;
+        await apiClient.post('/reset-password', {
+          token_id: recoveryState.code,
+          password: password.value,
+          repeated_password: repeatPassword.value
+        });
+        navigateTo('login');
+      } catch (err) {
+        const errMsg = err.data?.message || err.data?.error;
+        setGlobalError(errMsg || 'Не удалось сохранить новый пароль');
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   }
 };
