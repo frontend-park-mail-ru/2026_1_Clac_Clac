@@ -73,7 +73,11 @@ const stepEmail = (appDiv) => {
         stepCode(appDiv);
       } catch (err) {
         const errMsg = err.data?.message || err.data?.error;
-        setGlobalError(errMsg || 'Не удалось отправить код');
+        if (errMsg === 'user does not exists') {
+          setInputError('Пользователь не найден');
+        } else {
+          setGlobalError(errMsg || 'Не удалось отправить код');
+        };
       } finally {
         submitBtn.disabled = false;
       }
