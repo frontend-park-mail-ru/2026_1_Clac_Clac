@@ -25,6 +25,19 @@ export const navigateTo = (page) => {
   }
 };
 
+const urlParams = new URLSearchParams(window.location.search);
+const vkCode = urlParams.get('code');
+const vkMessage = urlParams.get('message');
+
+if (vkCode) {
+  if (vkCode === '200') {
+    localStorage.setItem('isAuth', 'true');
+  } else {
+    localStorage.setItem('vkError', vkMessage || 'Ошибка авторизации');
+  }
+  window.history.replaceState({}, '', '/');
+}
+
 if (window.location.pathname === '/home') {
   localStorage.setItem('isAuth', 'true');
   window.history.replaceState({}, '', '/');

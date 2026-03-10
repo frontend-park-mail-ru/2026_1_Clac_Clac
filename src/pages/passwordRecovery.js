@@ -27,6 +27,14 @@ const stepEmail = (appDiv) => {
   const form = document.getElementById('recovery-email-form');
   const emailInput = document.getElementById('email');
   const submitBtn = document.getElementById('recovery-submit');
+  const backLink = document.getElementById('back-link-email');
+
+  if (backLink) {
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo('login');
+    });
+  }
 
   const checkForm = () => {
     if (submitBtn && emailInput) {

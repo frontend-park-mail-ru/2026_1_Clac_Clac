@@ -71,6 +71,22 @@
               </div>
               <div class="stat-label">Горящие<br>задачи</div>
             </div>
+            
+            {{#if hasMembers}}
+            <div class="stat-item">
+              <div class="stat-value-wrapper">
+                <span class="stat-value">{{members}}</span>
+                {{#if avatars}}
+                <div class="avatars-inline">
+                  {{#each avatars}}
+                  <img src="{{this}}" alt="avatar" class="avatar-circle">
+                  {{/each}}
+                </div>
+                {{/if}}
+              </div>
+              <div class="stat-label">Человек состоит<br>в команде</div>
+            </div>
+            {{/if}}
           </div>
         </div>
       </div>
