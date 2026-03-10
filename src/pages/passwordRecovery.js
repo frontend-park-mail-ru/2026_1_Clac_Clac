@@ -34,6 +34,10 @@ const stepEmail = (appDiv) => {
     }
   };
 
+  if (emailInput && recoveryState.email) {
+    emailInput.value = recoveryState.email;
+  }
+
   if (emailInput) {
     emailInput.addEventListener('input', checkForm);
   }
@@ -117,6 +121,17 @@ const stepCode = (appDiv) => {
     }
   };
   timerInterval = setInterval(updateTimer, 1000);
+
+  const backLink = document.getElementById('back-link');
+  if (backLink) {
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      stepEmail(appDiv);
+    });
+  }
 
   if (form) {
     form.addEventListener('submit', async (e) => {
