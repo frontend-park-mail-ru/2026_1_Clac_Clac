@@ -74,7 +74,7 @@ const stepEmail = (appDiv) => {
       } catch (err) {
         const errMsg = err.data?.message || err.data?.error;
         if (errMsg === 'user does not exists') {
-          setInputError('Пользователь не найден');
+          setGlobalError('Пользователь не найден');
         } else {
           setGlobalError(errMsg || 'Не удалось отправить код');
         };
