@@ -57,7 +57,7 @@ export const validateEmail = (email) => {
   if (!domain.slice(1, -1).includes('.')) {
     return false;
   }
-  
+
   return true;
 };
 
@@ -94,12 +94,20 @@ export const initGlobalListeners = () => {
 
       if (input.type === 'password') {
         input.type = 'text';
-        if (eyeSlash) eyeSlash.classList.add('hidden');
-        if (eye) eye.classList.remove('hidden');
+        if (eyeSlash) {
+          eyeSlash.classList.add('hidden');
+        }
+        if (eye) {
+          eye.classList.remove('hidden');
+        }
       } else {
         input.type = 'password';
-        if (eyeSlash) eyeSlash.classList.remove('hidden');
-        if (eye) eye.classList.add('hidden');
+        if (eyeSlash) {
+          eyeSlash.classList.remove('hidden');
+        }
+        if (eye) {
+          eye.classList.add('hidden');
+        }
       }
     }
   });
