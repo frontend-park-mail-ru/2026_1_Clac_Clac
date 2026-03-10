@@ -11,6 +11,25 @@ const template = Handlebars.compile(loginTpl);
 export const renderLogin = (appDiv) => {
   appDiv.innerHTML = template({});
 
+  const vkError = localStorage.getItem('vkError');
+  if (vkError) {
+    let errorMsg = 'Ошибка авторизации через VK';
+    if (vkError === 'vk_oauth_error') {
+      errorMsg = 'Ошибка авторизации через VK';
+    } else if (vkError === 'no_valid_email') {
+      errorMsg = 'К вашему VK не привязан Email';
+    } else if (vkError === 'cannot_request_data') {
+      errorMsg = 'Не удалось получить данные из VK';
+    } else if (vkError === 'something_went_wrong') {
+      errorMsg = 'Что-то пошло не так. Попробуйте снова';
+    } else {
+      errorMsg = `Ошибка авторизации: ${vkError}`;
+    }
+    
+    setGlobalError(errorMsg);
+    localStorage.removeItem('vkError');
+  }
+
   const form = document.getElementById('login-form');
   const submitBtn = document.getElementById('login-submit');
 
@@ -25,7 +44,15 @@ export const renderLogin = (appDiv) => {
 
   const inputs = form.querySelectorAll('input');
   inputs.forEach(input => {
-    input.addEventListener('input', checkForm);
+    input.addEventListener('input', () => {
+      checkForm();
+      input.classList.remove('error');
+      const errorMsg = document.getElementById(`${input.id}-error`);
+      if (errorMsg) {
+        errorMsg.classList.remove('visible');
+      }
+      setGlobalError(null);
+    });
   });
   checkForm();
 
@@ -93,8 +120,8 @@ export const renderLogin = (appDiv) => {
 
       if (err.status === 401 || (errMsg && (errMsg.includes('wrong') || errMsg.includes('exist') || errMsg.includes('invalid')))) {
         setGlobalError('Неверный email или пароль');
-        setInputError('email', 'Неверный email или пароль');
-        setInputError('password', 'Неверный email или пароль');
+        document.getElementById('email').classList.add('error');
+        document.getElementById('password').classList.add('error');
       } else if (errMsg) {
         setGlobalError(errMsg);
       } else {

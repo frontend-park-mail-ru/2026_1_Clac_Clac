@@ -44,12 +44,15 @@ async function loadData() {
 
     localBoards = rawBoards.map((board, i) => ({
       id: board.id,
-      board_name: board.board_name || 'Без названия',
+      board_name: board.board_name || board.title || 'Без названия',
       description: board.description || 'Описание отсутствует',
-      backlog: board.backlog || 0,
-      hot: board.hot || 0,
+      backlog: board.backlog !== undefined ? board.backlog : 0,
+      hot: board.hot !== undefined ? board.hot : 0,
+      members: board.members,
+      hasMembers: board.members !== undefined && board.members !== null,
+      avatars: board.avatars && Array.isArray(board.avatars) && board.avatars.length > 0 ? board.avatars : null,
       iconClass: board.iconClass || (i % 3 === 0 ? 'bg-purple' : i % 3 === 1 ? 'bg-blue' : 'bg-gradient'),
-      iconHtml: board.iconHtml || '<span style="font-size: 1.5rem;">✨</span>'
+      iconHtml: board.iconHtml || '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm-1.24 13.56c-4.44 0-6.95-3.04-7.07-8.11h2.24c.08 3.73 1.63 5.3 2.87 5.63V7.45h2.15v3.2c1.22-.13 2.49-1.46 2.93-2.6h2.15c-.37 1.4-1.49 2.5-2.38 3.03.89.41 2.14 1.34 2.72 2.92h-2.31c-.48-1.07-1.48-1.93-3.07-2.06v2.02h-.23z"/></svg>'
     }));
 
     try {

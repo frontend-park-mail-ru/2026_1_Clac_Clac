@@ -27,6 +27,14 @@ const stepEmail = (appDiv) => {
   const form = document.getElementById('recovery-email-form');
   const emailInput = document.getElementById('email');
   const submitBtn = document.getElementById('recovery-submit');
+  const backLink = document.getElementById('back-link-email');
+
+  if (backLink) {
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo('login');
+    });
+  }
 
   const checkForm = () => {
     if (submitBtn && emailInput) {
@@ -65,7 +73,11 @@ const stepEmail = (appDiv) => {
         stepCode(appDiv);
       } catch (err) {
         const errMsg = err.data?.message || err.data?.error;
-        setGlobalError(errMsg || 'Не удалось отправить код');
+        if (errMsg === 'user does not exists') {
+          setGlobalError('Пользователь не найден');
+        } else {
+          setGlobalError(errMsg || 'Не удалось отправить код');
+        };
       } finally {
         submitBtn.disabled = false;
       }
