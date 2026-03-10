@@ -15,7 +15,9 @@ export const renderBoards = async (appDiv) => {
   if (!success) return;
 
   const updateUI = () => {
-    if (eventController) eventController.abort();
+    if (eventController) {
+      eventController.abort();
+    }
     eventController = new AbortController();
 
     appDiv.innerHTML = template({
@@ -54,7 +56,7 @@ async function loadData() {
       const profileRes = await apiClient.get('/profile');
       currentUser = profileRes?.data || profileRes;
     } catch (e) {
-      console.warn('Профиль не загружен');
+      
     }
 
     return true;
@@ -64,7 +66,6 @@ async function loadData() {
       navigateTo('login');
       return false;
     }
-    console.error('Ошибка загрузки:', err);
     return true;
   }
 }
@@ -98,16 +99,12 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
   }
 
   const modalOverlay = appDiv.querySelector('#modal-overlay');
-  const modalCreate = appDiv.querySelector('#modal-create-board');
-  const modalDelete = appDiv.querySelector('#modal-delete-board');
   const modalLogout = appDiv.querySelector('#modal-logout');
 
   const closeModals = () => {
-    [modalOverlay, modalCreate, modalDelete, modalLogout].forEach(m => m?.classList.add('hidden'));
+    [modalOverlay, modalLogout].forEach(m => m?.classList.add('hidden'));
   };
 
-  appDiv.querySelector('#btn-cancel-create')?.addEventListener('click', closeModals);
-  appDiv.querySelector('#btn-cancel-delete')?.addEventListener('click', closeModals);
   appDiv.querySelector('#btn-cancel-logout')?.addEventListener('click', closeModals);
 
   if (modalOverlay) {
@@ -145,73 +142,11 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
     });
   }
 
-  const inputNewName = appDiv.querySelector('#new-board-name');
-  const btnConfirmCreate = appDiv.querySelector('#btn-confirm-create');
-
-  const openCreate = () => {
-    if (inputNewName) {
-      inputNewName.value = '';
-      btnConfirmCreate.disabled = true;
-    }
-    modalOverlay.classList.remove('hidden');
-    modalCreate.classList.remove('hidden');
-    setTimeout(() => inputNewName?.focus(), 100);
-  };
-
-  appDiv.querySelector('.btn-create')?.addEventListener('click', openCreate);
-  appDiv.querySelector('.board-card-empty')?.addEventListener('click', openCreate);
-
-  if (inputNewName) {
-    inputNewName.addEventListener('input', () => {
-      btnConfirmCreate.disabled = !inputNewName.value.trim();
-    });
-  }
-
-  btnConfirmCreate?.addEventListener('click', async () => {
-    const name = inputNewName.value.trim();
-    try {
-      btnConfirmCreate.disabled = true;
-      await apiClient.post('/board', { board_name: name, description: 'Новое пространство' });
-      await loadData();
-      closeModals();
-      updateUI();
-    } catch (err) {
-      btnConfirmCreate.disabled = false;
-    }
-  });
-
-  let boardIdToDelete = null;
-  const btnConfirmDelete = appDiv.querySelector('#btn-confirm-delete');
-  const spanDeleteName = appDiv.querySelector('#delete-board-name');
-
-  appDiv.querySelectorAll('.board-options-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      boardIdToDelete = btn.getAttribute('data-id');
-      const name = btn.closest('.board-card').querySelector('.board-name').textContent;
-      if (spanDeleteName) spanDeleteName.textContent = name;
-      modalOverlay.classList.remove('hidden');
-      modalDelete.classList.remove('hidden');
-    });
-  });
-
-  btnConfirmDelete?.addEventListener('click', async () => {
-    if (!boardIdToDelete) return;
-    try {
-      await apiClient.delete(`/board/${boardIdToDelete}`);
-      await loadData();
-      closeModals();
-      updateUI();
-    } catch (err) {
-      alert('Ошибка удаления');
-    }
-  });
-
   appDiv.querySelectorAll('.board-card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (!e.target.closest('.board-options-btn')) {
-        const id = card.querySelector('.board-options-btn')?.getAttribute('data-id');
-        if (id) console.log('Навигация в доску:', id);
+        const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
+        // TODO: Реализовать переход в доску
       }
     });
   });
