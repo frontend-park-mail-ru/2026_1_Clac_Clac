@@ -13,6 +13,11 @@ initGlobalListeners();
 
 const appDiv = document.getElementById('app');
 
+/**
+ * Выполняет навигацию по страницам SPA.
+ * 
+ * @param {string} page - Идентификатор страницы, на которую нужно перейти.
+ */
 export const navigateTo = (page) => {
   if (page === 'login') {
     renderLogin(appDiv);

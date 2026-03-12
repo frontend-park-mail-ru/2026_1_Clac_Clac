@@ -1,4 +1,32 @@
-import Handlebars from 'handlebars';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/boards.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/boards.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import Handlebars from 'handlebars';
 import { apiClient } from '../api.js';
 import { navigateTo } from '../main.js';
 
@@ -43,14 +71,14 @@ export const renderBoards = async (appDiv) => {
  * Асинхронно загружает данные пользователя и список досок с сервера.
  * В случае ошибки 401 автоматически перенаправляет пользователя на страницу входа.
  * 
- * @returns {Promise<boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
+ * @returns {Promise&lt;boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
  */
 async function loadData() {
   try {
     const res = await apiClient.get('/home');
 
     let rawBoards = [];
-    if (res && res.data) {
+    if (res &amp;&amp; res.data) {
       rawBoards = res.data;
     } else if (Array.isArray(res)) {
       rawBoards = res;
@@ -63,18 +91,18 @@ async function loadData() {
       backlog: board.backlog !== undefined ? board.backlog : 0,
       hot: board.hot !== undefined ? board.hot : 0,
       members: board.members,
-      hasMembers: board.members !== undefined && board.members !== null,
-      avatars: board.avatars && Array.isArray(board.avatars) && board.avatars.length > 0 ? board.avatars : null,
+      hasMembers: board.members !== undefined &amp;&amp; board.members !== null,
+      avatars: board.avatars &amp;&amp; Array.isArray(board.avatars) &amp;&amp; board.avatars.length > 0 ? board.avatars : null,
       iconClass: board.iconClass || (i % 3 === 0 ? 'bg-purple' : i % 3 === 1 ? 'bg-blue' : 'bg-gradient'),
-      iconHtml: board.iconHtml || '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm-1.24 13.56c-4.44 0-6.95-3.04-7.07-8.11h2.24c.08 3.73 1.63 5.3 2.87 5.63V7.45h2.15v3.2c1.22-.13 2.49-1.46 2.93-2.6h2.15c-.37 1.4-1.49 2.5-2.38 3.03.89.41 2.14 1.34 2.72 2.92h-2.31c-.48-1.07-1.48-1.93-3.07-2.06v2.02h-.23z"/></svg>'
+      iconHtml: board.iconHtml || '&lt;svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">&lt;path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm-1.24 13.56c-4.44 0-6.95-3.04-7.07-8.11h2.24c.08 3.73 1.63 5.3 2.87 5.63V7.45h2.15v3.2c1.22-.13 2.49-1.46 2.93-2.6h2.15c-.37 1.4-1.49 2.5-2.38 3.03.89.41 2.14 1.34 2.72 2.92h-2.31c-.48-1.07-1.48-1.93-3.07-2.06v2.02h-.23z"/>&lt;/svg>'
     }));
 
     try {
       const profileRes = await apiClient.get('/profile');
       currentUser = profileRes?.data || profileRes;
-    } catch {
-      currentUser = null;
-    };
+    } catch (e) {
+      
+    }
 
     return true;
   } catch (err) {
@@ -109,14 +137,14 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
 
   const profileBtn = appDiv.querySelector('#profile-btn');
   const profilePopup = appDiv.querySelector('#profile-popup');
-  if (profileBtn && profilePopup) {
+  if (profileBtn &amp;&amp; profilePopup) {
     profileBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       profilePopup.classList.toggle('hidden');
     });
 
     document.addEventListener('click', (e) => {
-      if (!profilePopup.contains(e.target) && e.target !== profileBtn) {
+      if (!profilePopup.contains(e.target) &amp;&amp; e.target !== profileBtn) {
         profilePopup.classList.add('hidden');
       }
     }, { signal: abortSignal });
@@ -172,9 +200,32 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
   appDiv.querySelectorAll('.board-card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (!e.target.closest('.board-options-btn')) {
-        // const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
+        const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
         // TODO: Реализовать переход в доску
       }
     });
   });
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#attachEventListeners">attachEventListeners</a></li><li><a href="global.html#initGlobalListeners">initGlobalListeners</a></li><li><a href="global.html#loadData">loadData</a></li><li><a href="global.html#navigateTo">navigateTo</a></li><li><a href="global.html#renderBoards">renderBoards</a></li><li><a href="global.html#renderLogin">renderLogin</a></li><li><a href="global.html#renderPasswordRecovery">renderPasswordRecovery</a></li><li><a href="global.html#renderRegister">renderRegister</a></li><li><a href="global.html#request">request</a></li><li><a href="global.html#setGlobalError">setGlobalError</a></li><li><a href="global.html#setInputError">setInputError</a></li><li><a href="global.html#stepCode">stepCode</a></li><li><a href="global.html#stepEmail">stepEmail</a></li><li><a href="global.html#stepNewPass">stepNewPass</a></li><li><a href="global.html#validateEmail">validateEmail</a></li><li><a href="global.html#validatePassword">validatePassword</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Fri Mar 13 2026 00:32:14 GMT+0300 (Moscow Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
