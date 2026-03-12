@@ -29,7 +29,7 @@ const request = async (method, url, body = null, headers = {}) => {
   let data;
   try {
     data = await response.json();
-  } catch (err) {
+  } catch {
     data = null;
   }
 

@@ -72,9 +72,9 @@ async function loadData() {
     try {
       const profileRes = await apiClient.get('/profile');
       currentUser = profileRes?.data || profileRes;
-    } catch (e) {
-      
-    }
+    } catch {
+      currentUser = null;
+    };
 
     return true;
   } catch (err) {
@@ -172,7 +172,7 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
   appDiv.querySelectorAll('.board-card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (!e.target.closest('.board-options-btn')) {
-        const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
+        // const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
         // TODO: Реализовать переход в доску
       }
     });

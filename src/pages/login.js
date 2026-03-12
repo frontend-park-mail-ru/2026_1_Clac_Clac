@@ -18,7 +18,7 @@ export const renderLogin = (appDiv) => {
 
   const vkError = localStorage.getItem('vkError');
   if (vkError) {
-    let errorMsg = 'Ошибка авторизации через VK';
+    let errorMsg;
     if (vkError === 'vk_oauth_error') {
       errorMsg = 'Ошибка авторизации через VK';
     } else if (vkError === 'no_valid_email') {

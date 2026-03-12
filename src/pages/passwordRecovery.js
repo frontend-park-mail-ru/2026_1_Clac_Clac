@@ -144,7 +144,7 @@ const stepCode = (appDiv) => {
             try {
               await apiClient.post('/forgot-password', { email: recoveryState.email });
               stepCode(appDiv);
-            } catch (err) {
+            } catch {
               setInputError('code', 'Не удалось отправить код повторно');
             }
           });
@@ -181,7 +181,7 @@ const stepCode = (appDiv) => {
         if (timerInterval) clearInterval(timerInterval);
         recoveryState.code = code;
         stepNewPass(appDiv);
-      } catch (err) {
+      } catch {
         setInputError('code', 'Неверный или недействительный код');
       } finally {
         submitBtn.disabled = false;
