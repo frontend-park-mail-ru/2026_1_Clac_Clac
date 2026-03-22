@@ -133,7 +133,7 @@ async function loadData(): Promise<boolean> {
  * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
  */
-function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void {
+function attachEventListeners(appDiv: HTMLElement, _: () => void, abortSignal: AbortSignal): void {
   const searchInput = appDiv.querySelector<HTMLInputElement>('.search-input');
 
   if (searchInput) {
