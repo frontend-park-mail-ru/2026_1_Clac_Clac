@@ -1,10 +1,10 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setInputError, setGlobalError, validateEmail } from '../utils';
-import { navigateTo } from '../main';
 import config from '../config';
 
 import loginTpl from '../templates/login.hbs?raw';
+import { navigateTo } from '../router';
 
 const template = Handlebars.compile(loginTpl);
 
@@ -86,7 +86,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   if (linkRegister) {
     linkRegister.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
-      navigateTo('register');
+      navigateTo('/register');
     });
   }
 
@@ -94,7 +94,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   if (forgotLink) {
     forgotLink.addEventListener('click', (e: Event) => {
       e.preventDefault();
-      navigateTo('forgot-password');
+      navigateTo('/forgot-password');
     });
   }
 
@@ -140,7 +140,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
       await apiClient.post('/login', { email, password });
 
       localStorage.setItem('isAuth', 'true');
-      navigateTo('boards');
+      navigateTo('/boards');
 
     } catch (error) {
       const err = error as ApiError;

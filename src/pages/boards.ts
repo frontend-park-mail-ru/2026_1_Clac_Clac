@@ -1,8 +1,8 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
-import { navigateTo } from '../main';
 
 import boardsTpl from '../templates/boards.hbs?raw';
+import { navigateTo } from '../router';
 
 const template = Handlebars.compile(boardsTpl);
 
@@ -119,7 +119,7 @@ async function loadData(): Promise<boolean> {
     const error = err as ApiError;
     if (error.status === 401) {
       localStorage.removeItem('isAuth');
-      navigateTo('login');
+      navigateTo('/login');
       return false;
     }
     return true;
@@ -209,7 +209,7 @@ function attachEventListeners(appDiv: HTMLElement, _: () => void, abortSignal: A
         await apiClient.post('/logout');
       } finally {
         localStorage.removeItem('isAuth');
-        navigateTo('login');
+        navigateTo('/login');
       }
     });
   }

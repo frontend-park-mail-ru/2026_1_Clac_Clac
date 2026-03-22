@@ -1,11 +1,11 @@
 import Handlebars from 'handlebars';
 import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
-import { navigateTo } from '../main';
 import { apiClient } from '../api';
 
 import tplEmail from '../templates/password_recovery_email.hbs?raw';
 import tplCode from '../templates/password_recovery_code.hbs?raw';
 import tplNewPass from '../templates/password_recovery_new_pass.hbs?raw';
+import { navigateTo } from '../router';
 
 const renderStepEmail = Handlebars.compile(tplEmail);
 const renderStepCode = Handlebars.compile(tplCode);
@@ -44,7 +44,7 @@ const stepEmail = (appDiv: HTMLElement): void => {
   if (backLink) {
     backLink.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
-      navigateTo('login');
+      navigateTo('/login');
     });
   }
 
@@ -265,7 +265,7 @@ const stepNewPass = (appDiv: HTMLElement): void => {
           password: password.value,
           repeated_password: repeatPassword.value
         });
-        navigateTo('login');
+        navigateTo('/login');
       } catch (err: unknown) {
         const error = err as ApiError;
         const errMsg = error.data?.message || error.data?.error;

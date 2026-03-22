@@ -1,9 +1,9 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
-import { navigateTo } from '../main';
 
 import registerTpl from '../templates/register.hbs?raw';
+import { navigateTo } from '../router';
 
 const template = Handlebars.compile(registerTpl);
 
@@ -46,7 +46,7 @@ export const renderRegister = (appDiv: HTMLElement): void => {
   if (linkLogin) {
     linkLogin.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
-      navigateTo('login');
+      navigateTo('/login');
     });
   }
 
@@ -106,7 +106,7 @@ export const renderRegister = (appDiv: HTMLElement): void => {
       });
 
       localStorage.setItem('isAuth', 'true');
-      navigateTo('boards');
+      navigateTo('/boards');
 
     } catch (err: unknown) {
       type ApiError = { data?: { message?: string; error?: string } };
