@@ -1,5 +1,12 @@
 const API_URL = 'https://clac-clac.mooo.com/api';
 
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+export interface ApiError<T = unknown> {
+  status: number;
+  data: T | null;
+}
+
 /**
  * Внутренняя функция для выполнения HTTP-запросов к API.
  * 
@@ -10,8 +17,13 @@ const API_URL = 'https://clac-clac.mooo.com/api';
  * @returns {Promise<any>} Результат запроса.
  * @throws {Object} Объект ошибки, содержащий HTTP-статус и данные ошибки, если ответ не успешен.
  */
-const request = async (method, url, body = null, headers = {}) => {
-  const options = {
+const request = async <TResponse = unknown, TBody = unknown>(
+  method: HttpMethod,
+  url: string,
+  body: TBody | null = null,
+  headers: HeadersInit = {}
+): Promise<TResponse> => {
+  const options: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -25,19 +37,20 @@ const request = async (method, url, body = null, headers = {}) => {
   }
 
   const response = await fetch(`${API_URL}${url}`, options);
-  
-  let data;
+
+  let data: TResponse | null;
   try {
-    data = await response.json();
+    data = (await response.json()) as TResponse;
   } catch {
     data = null;
   }
 
   if (!response.ok) {
-    throw { status: response.status, data };
+    const error: ApiError = { status: response.status, data };
+    throw error;
   }
-  
-  return data;
+
+  return data as TResponse;
 };
 
 export const apiClient = {
@@ -48,7 +61,8 @@ export const apiClient = {
    * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
    * @returns {Promise<any>} Ответ сервера.
    */
-  get: (url, headers = {}) => request('GET', url, null, headers),
+  get: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
+    request<TResponse>('GET', url, null, headers),
 
   /**
    * Выполняет POST-запрос к API.
@@ -58,7 +72,8 @@ export const apiClient = {
    * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
    * @returns {Promise<any>} Ответ сервера.
    */
-  post: (url, body, headers = {}) => request('POST', url, body, headers),
+  post: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
+    request<TResponse, TBody>('POST', url, body, headers),
 
   /**
    * Выполняет PUT-запрос к API.
@@ -68,7 +83,8 @@ export const apiClient = {
    * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
    * @returns {Promise<any>} Ответ сервера.
    */
-  put: (url, body, headers = {}) => request('PUT', url, body, headers),
+  put: <TResponse = unknown, TBody = unknown>(url: string, body: TBody, headers?: HeadersInit): Promise<TResponse> =>
+    request<TResponse, TBody>('PUT', url, body, headers),
 
   /**
    * Выполняет DELETE-запрос к API.
@@ -77,5 +93,6 @@ export const apiClient = {
    * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
    * @returns {Promise<any>} Ответ сервера.
    */
-  delete: (url, headers = {}) => request('DELETE', url, null, headers),
+  delete: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
+    request<TResponse>('DELETE', url, null, headers),
 };

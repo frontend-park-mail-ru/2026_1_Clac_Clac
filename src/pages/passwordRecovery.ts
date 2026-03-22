@@ -1,22 +1,29 @@
 import Handlebars from 'handlebars';
-import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils.js';
-import { navigateTo } from '../main.js';
-import { apiClient } from '../api.js';
+import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
+import { navigateTo } from '../main';
+import { apiClient } from '../api';
 
-const resEmail = await fetch('/src/templates/password_recovery_email.hbs');
-const tplEmail = await resEmail.text();
-
-const resCode = await fetch('/src/templates/password_recovery_code.hbs');
-const tplCode = await resCode.text();
-
-const resNewPass = await fetch('/src/templates/password_recovery_new_pass.hbs');
-const tplNewPass = await resNewPass.text();
+import tplEmail from '../templates/password_recovery_email.hbs?raw';
+import tplCode from '../templates/password_recovery_code.hbs?raw';
+import tplNewPass from '../templates/password_recovery_new_pass.hbs?raw';
 
 const renderStepEmail = Handlebars.compile(tplEmail);
 const renderStepCode = Handlebars.compile(tplCode);
 const renderStepNewPass = Handlebars.compile(tplNewPass);
 
-let recoveryState = {
+interface RecoveryState {
+  email: string;
+  code: string;
+}
+
+interface ApiError {
+  data?: {
+    message?: string;
+    error?: string;
+  };
+}
+
+let recoveryState: RecoveryState = {
   email: '',
   code: ''
 };
@@ -26,16 +33,16 @@ let recoveryState = {
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер для рендеринга.
  */
-const stepEmail = (appDiv) => {
+const stepEmail = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = renderStepEmail({});
 
-  const form = document.getElementById('recovery-email-form');
-  const emailInput = document.getElementById('email');
-  const submitBtn = document.getElementById('recovery-submit');
-  const backLink = document.getElementById('back-link-email');
+  const form = document.getElementById('recovery-email-form') as HTMLFormElement | null;
+  const emailInput = document.getElementById('email') as HTMLInputElement | null;
+  const submitBtn = document.getElementById('recovery-submit') as HTMLButtonElement | null;
+  const backLink = document.getElementById('back-link-email') as HTMLAnchorElement | null;
 
   if (backLink) {
-    backLink.addEventListener('click', (e) => {
+    backLink.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
       navigateTo('login');
     });
@@ -44,7 +51,7 @@ const stepEmail = (appDiv) => {
   /**
    * Проверяет наличие введенного адреса электронной почты и разблокирует/блокирует кнопку.
    */
-  const checkForm = () => {
+  const checkForm = (): void => {
     if (submitBtn && emailInput) {
       submitBtn.disabled = !emailInput.value.trim();
     }
@@ -60,8 +67,11 @@ const stepEmail = (appDiv) => {
   checkForm();
 
   if (form) {
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
+
+      if (!emailInput || !submitBtn) return;
+
       const email = emailInput.value.trim();
 
       if (!email) {
@@ -79,13 +89,14 @@ const stepEmail = (appDiv) => {
         await apiClient.post('/forgot-password', { email });
         recoveryState.email = email;
         stepCode(appDiv);
-      } catch (err) {
-        const errMsg = err.data?.message || err.data?.error;
+      } catch (err: unknown) {
+        const error = err as ApiError;
+        const errMsg = error.data?.message || error.data?.error;
         if (errMsg === 'user does not exists') {
           setGlobalError('Пользователь не найден');
         } else {
           setGlobalError(errMsg || 'Не удалось отправить код');
-        };
+        }
       } finally {
         submitBtn.disabled = false;
       }
@@ -98,19 +109,19 @@ const stepEmail = (appDiv) => {
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер для рендеринга.
  */
-const stepCode = (appDiv) => {
+const stepCode = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = renderStepCode({ email: recoveryState.email });
 
-  const form = document.getElementById('recovery-code-form');
-  const codeInput = document.getElementById('code');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const resendLink = document.getElementById('resend-link');
-  let timerSpan = document.getElementById('timer');
+  const form = document.getElementById('recovery-code-form') as HTMLFormElement | null;
+  const codeInput = document.getElementById('code') as HTMLInputElement | null;
+  const submitBtn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const resendLink = document.getElementById('resend-link') as HTMLElement | null;
+  const timerSpan = document.getElementById('timer') as HTMLElement | null;
 
   /**
    * Проверяет заполненность поля кода и активирует/деактивирует кнопку подтверждения.
    */
-  const checkForm = () => {
+  const checkForm = (): void => {
     if (submitBtn && codeInput) {
       submitBtn.disabled = !codeInput.value.trim();
     }
@@ -122,12 +133,12 @@ const stepCode = (appDiv) => {
   checkForm();
 
   let timeLeft = 59;
-  let timerInterval = null;
+  let timerInterval: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Обновляет обратный отсчет таймера для повторной отправки кода.
    */
-  const updateTimer = () => {
+  const updateTimer = (): void => {
     if (timeLeft > 0) {
       timeLeft--;
       if (timerSpan) {
@@ -137,9 +148,9 @@ const stepCode = (appDiv) => {
       if (timerInterval) clearInterval(timerInterval);
       if (resendLink) {
         resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
-        const action = document.getElementById('resend-action');
+        const action = document.getElementById('resend-action') as HTMLAnchorElement | null;
         if (action) {
-          action.addEventListener('click', async (e) => {
+          action.addEventListener('click', async (e: MouseEvent) => {
             e.preventDefault();
             try {
               await apiClient.post('/forgot-password', { email: recoveryState.email });
@@ -152,11 +163,12 @@ const stepCode = (appDiv) => {
       }
     }
   };
+
   timerInterval = setInterval(updateTimer, 1000);
 
-  const backLink = document.getElementById('back-link');
+  const backLink = document.getElementById('back-link') as HTMLAnchorElement | null;
   if (backLink) {
-    backLink.addEventListener('click', (e) => {
+    backLink.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
       if (timerInterval) {
         clearInterval(timerInterval);
@@ -166,8 +178,10 @@ const stepCode = (appDiv) => {
   }
 
   if (form) {
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
+      if (!codeInput || !submitBtn) return;
+
       const code = codeInput.value.trim();
 
       if (!code || code.length < 4) {
@@ -195,33 +209,35 @@ const stepCode = (appDiv) => {
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер для рендеринга.
  */
-const stepNewPass = (appDiv) => {
+const stepNewPass = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = renderStepNewPass({});
 
-  const form = document.getElementById('recovery-pass-form');
-  const password = document.getElementById('password');
-  const repeatPassword = document.getElementById('repeatPassword');
-  const submitBtn = form.querySelector('button[type="submit"]');
+  const form = document.getElementById('recovery-pass-form') as HTMLFormElement | null;
+  const password = document.getElementById('password') as HTMLInputElement | null;
+  const repeatPassword = document.getElementById('repeatPassword') as HTMLInputElement | null;
+  const submitBtn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
 
   /**
    * Проверяет заполненность полей нового пароля и разблокирует кнопку отправки.
    */
-  const checkForm = () => {
+  const checkForm = (): void => {
     if (submitBtn && password && repeatPassword) {
       submitBtn.disabled = !(password.value.trim() && repeatPassword.value.trim());
     }
   };
 
   if (form) {
-    form.querySelectorAll('input').forEach(input => {
+    form.querySelectorAll<HTMLInputElement>('input').forEach(input => {
       input.addEventListener('input', checkForm);
     });
   }
   checkForm();
 
   if (form) {
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
+      if (!password || !repeatPassword || !submitBtn) return;
+
       let hasError = false;
       setInputError('password', null);
       setInputError('repeatPassword', null);
@@ -250,8 +266,9 @@ const stepNewPass = (appDiv) => {
           repeated_password: repeatPassword.value
         });
         navigateTo('login');
-      } catch (err) {
-        const errMsg = err.data?.message || err.data?.error;
+      } catch (err: unknown) {
+        const error = err as ApiError;
+        const errMsg = error.data?.message || error.data?.error;
         setGlobalError(errMsg || 'Не удалось сохранить новый пароль');
       } finally {
         submitBtn.disabled = false;
@@ -265,7 +282,7 @@ const stepNewPass = (appDiv) => {
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
  */
-export const renderPasswordRecovery = (appDiv) => {
+export const renderPasswordRecovery = (appDiv: HTMLElement): void => {
   recoveryState = { email: '', code: '' };
   stepEmail(appDiv);
 };

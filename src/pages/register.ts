@@ -1,10 +1,10 @@
 import Handlebars from 'handlebars';
-import { apiClient } from '../api.js';
-import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils.js';
-import { navigateTo } from '../main.js';
+import { apiClient } from '../api';
+import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
+import { navigateTo } from '../main';
 
-const response = await fetch('/src/templates/register.hbs');
-const registerTpl = await response.text();
+import registerTpl from '../templates/register.hbs?raw';
+
 const template = Handlebars.compile(registerTpl);
 
 /**
@@ -12,48 +12,51 @@ const template = Handlebars.compile(registerTpl);
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
  */
-export const renderRegister = (appDiv) => {
+export const renderRegister = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = template({});
 
-  const form = document.getElementById('register-form');
-  const submitBtn = document.getElementById('register-submit');
-  const linkLogin = document.getElementById('link-login');
+  const form = document.getElementById('register-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('register-submit') as HTMLButtonElement | null;
+  const linkLogin = document.getElementById('link-login') as HTMLAnchorElement | null;
+
+  if (!form) return;
 
   /**
    * Проверяет заполненность обязательных полей (имя, email, пароли) 
    * и активирует или деактивирует кнопку регистрации.
    */
-  const checkForm = () => {
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const repeatPassword = document.getElementById('repeatPassword').value.trim();
+  const checkForm = (): void => {
+    const name = (document.getElementById('name') as HTMLInputElement | null)?.value.trim() ?? '';
+    const email = (document.getElementById('email') as HTMLInputElement | null)?.value.trim() ?? '';
+    const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() ?? '';
+    const repeatPassword = (document.getElementById('repeatPassword') as HTMLInputElement | null)?.value.trim() ?? '';
 
     if (submitBtn) {
       submitBtn.disabled = !(name && email && password && repeatPassword);
     }
   };
 
-  const inputs = form.querySelectorAll('input');
+  const inputs = form.querySelectorAll<HTMLInputElement>('input');
   inputs.forEach(input => {
     input.addEventListener('input', checkForm);
   });
+
   checkForm();
 
   if (linkLogin) {
-    linkLogin.addEventListener('click', (e) => {
+    linkLogin.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
       navigateTo('login');
     });
   }
 
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async (e: SubmitEvent) => {
     e.preventDefault();
 
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const repeatPassword = document.getElementById('repeatPassword').value.trim();
+    const name = (document.getElementById('name') as HTMLInputElement | null)?.value.trim() ?? '';
+    const email = (document.getElementById('email') as HTMLInputElement | null)?.value.trim() ?? '';
+    const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() ?? '';
+    const repeatPassword = (document.getElementById('repeatPassword') as HTMLInputElement | null)?.value.trim() ?? '';
 
     let hasError = false;
     setGlobalError(null);
@@ -105,9 +108,11 @@ export const renderRegister = (appDiv) => {
       localStorage.setItem('isAuth', 'true');
       navigateTo('boards');
 
-    } catch (err) {
-      const errMsg = err.data?.message || err.data?.error;
-      
+    } catch (err: unknown) {
+      type ApiError = { data?: { message?: string; error?: string } };
+      const error = err as ApiError;
+      const errMsg = error.data?.message || error.data?.error;
+
       if (errMsg) {
         if (errMsg.includes('exists')) {
           setInputError('email', 'Этот адрес уже зарегистрирован');

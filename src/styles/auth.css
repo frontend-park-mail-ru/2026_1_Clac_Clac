@@ -4,7 +4,7 @@
   width: 100vw;
   overflow: hidden;
   background-color: var(--bg-main);
-  background-image: url('/public/background.png');
+  background-image: url('/background.png');
   background-size: cover;
   background-position: center;
 }

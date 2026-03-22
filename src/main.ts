@@ -1,24 +1,30 @@
 import Handlebars from 'handlebars';
-import { initGlobalListeners } from './utils.js';
-import { renderLogin } from './pages/login.js';
-import { renderRegister } from './pages/register.js';
-import { renderBoards } from './pages/boards.js';
-import { renderPasswordRecovery } from './pages/passwordRecovery.js';
+import { initGlobalListeners } from './utils';
+import { renderLogin } from './pages/login';
+import { renderRegister } from './pages/register';
+import { renderBoards } from './pages/boards';
+import { renderPasswordRecovery } from './pages/passwordRecovery';
 
-const partialRes = await fetch('/src/templates/partials/input.hbs');
-const inputPartial = await partialRes.text();
+import inputPartial from '/src/templates/partials/input.hbs?raw';
+
 Handlebars.registerPartial('input', inputPartial);
 
 initGlobalListeners();
 
-const appDiv = document.getElementById('app');
+const appDiv = document.getElementById('app') as HTMLDivElement | null;
+
+if (!appDiv) {
+  throw new Error('Критическая ошибка: элемент #app не найден в DOM.');
+}
+
+export type Page = 'login' | 'register' | 'forgot-password' | 'boards';
 
 /**
  * Выполняет навигацию по страницам SPA.
  * 
  * @param {string} page - Идентификатор страницы, на которую нужно перейти.
  */
-export const navigateTo = (page) => {
+export const navigateTo = (page: Page): void => {
   if (page === 'login') {
     renderLogin(appDiv);
   } else if (page === 'register') {
@@ -49,4 +55,5 @@ if (window.location.pathname === '/home') {
 }
 
 const isAuth = localStorage.getItem('isAuth') === 'true';
+
 navigateTo(isAuth ? 'boards' : 'login');
