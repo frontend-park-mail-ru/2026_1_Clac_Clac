@@ -4,7 +4,7 @@
  * @param {string} id - Уникальный идентификатор элемента input.
  * @param {string|null} message - Текст ошибки. Если передано null, ошибка скрывается.
  */
-export const setInputError = (id, message) => {
+export const setInputError = (id: string, message: string | null): void => {
   const input = document.getElementById(id);
   const errorMsg = document.getElementById(`${id}-error`);
 
@@ -27,7 +27,7 @@ export const setInputError = (id, message) => {
  * 
  * @param {string|null} message - Текст глобальной ошибки. Если передано null, баннер скрывается.
  */
-export const setGlobalError = (message) => {
+export const setGlobalError = (message: string | null): void => {
   const globalError = document.getElementById('global-error');
   const globalErrorText = document.getElementById('global-error-text');
 
@@ -50,7 +50,7 @@ export const setGlobalError = (message) => {
  * @param {string} email - Адрес электронной почты.
  * @returns {boolean} `true`, если email имеет валидный формат, иначе `false`.
  */
-export const validateEmail = (email) => {
+export const validateEmail = (email: string): boolean => {
   if (email.length > 128) {
     return false;
   }
@@ -84,7 +84,7 @@ export const validateEmail = (email) => {
  * @param {string} password - Пароль.
  * @returns {string|null} Строка с описанием ошибки, если пароль невалиден. `null`, если пароль прошел проверку.
  */
-export const validatePassword = (password) => {
+export const validatePassword = (password: string): string | null => {
   if (password.length < 8) {
     return 'Минимум 8 символов';
   }
@@ -102,39 +102,31 @@ export const validatePassword = (password) => {
 /**
  * Инициализирует глобальные слушатели событий.
  */
-export const initGlobalListeners = () => {
-  document.body.addEventListener('click', (e) => {
-    const target = e.target;
+export const initGlobalListeners = (): void => {
+  document.body.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
     const btn = target.closest('.toggle-password-btn');
 
-    if (btn) {
-      const inputId = btn.getAttribute('data-target');
+    if (!btn) return;
 
-      if (!inputId) {
-        return;
-      }
+    const inputId = btn.getAttribute('data-target');
+    if (!inputId) return;
 
-      const input = document.getElementById(inputId);
-      const eyeSlash = btn.querySelector('.icon-eye-slash');
-      const eye = btn.querySelector('.icon-eye');
+    const input = document.getElementById(inputId) as HTMLInputElement | null;
 
-      if (input.type === 'password') {
-        input.type = 'text';
-        if (eyeSlash) {
-          eyeSlash.classList.add('hidden');
-        }
-        if (eye) {
-          eye.classList.remove('hidden');
-        }
-      } else {
-        input.type = 'password';
-        if (eyeSlash) {
-          eyeSlash.classList.remove('hidden');
-        }
-        if (eye) {
-          eye.classList.add('hidden');
-        }
-      }
+    if (!input) return;
+
+    const eyeSlash = btn.querySelector('.icon-eye-slash');
+    const eye = btn.querySelector('.icon-eye');
+
+    if (input.type === 'password') {
+      input.type = 'text';
+      eyeSlash?.classList.add('hidden');
+      eye?.classList.remove('hidden');
+    } else {
+      input.type = 'password';
+      eyeSlash?.classList.remove('hidden');
+      eye?.classList.add('hidden');
     }
   });
 };

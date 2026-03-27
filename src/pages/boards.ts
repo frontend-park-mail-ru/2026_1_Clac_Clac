@@ -1,28 +1,66 @@
 import Handlebars from 'handlebars';
-import { apiClient } from '../api.js';
-import { navigateTo } from '../main.js';
+import { apiClient } from '../api';
 
-const response = await fetch('/src/templates/boards.hbs');
-const boardsTpl = await response.text();
+import boardsTpl from '../templates/boards.hbs?raw';
+import { navigateTo } from '../router';
+
 const template = Handlebars.compile(boardsTpl);
 
-let localBoards = [];
-let currentUser = null;
-let eventController = null;
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  avatar: string;
+}
+
+interface RawBoard {
+  id: string;
+  board_name: string;
+  title: string;
+  description: string;
+  backlog: number;
+  hot: number;
+  members: number;
+  avatars: string[];
+  iconClass: string;
+  iconHtml: string;
+}
+
+interface Board {
+  id: string;
+  board_name: string;
+  description: string;
+  backlog: number;
+  hot: number;
+  members: number;
+  hasMembers: boolean;
+  avatars: string[] | null;
+  iconClass: string;
+  iconHtml: string;
+}
+
+interface ApiError {
+  status: number;
+  message: string;
+}
+
+let localBoards: Board[] = [];
+let currentUser: User | null = null;
+let eventController: AbortController | null = null;
 
 /**
  * Отрисовывает главную страницу со списком досок проекта.
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
  */
-export const renderBoards = async (appDiv) => {
+export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
   const success = await loadData();
   if (!success) return;
 
   /**
    * Обновляет UI интерфейс досок, перерисовывая шаблон и перенавешивая слушатели.
    */
-  const updateUI = () => {
+  const updateUI = (): void => {
     if (eventController) {
       eventController.abort();
     }
@@ -45,11 +83,11 @@ export const renderBoards = async (appDiv) => {
  * 
  * @returns {Promise<boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
  */
-async function loadData() {
+async function loadData(): Promise<boolean> {
   try {
-    const res = await apiClient.get('/home');
+    const res = await apiClient.get('/home') as any;
 
-    let rawBoards = [];
+    let rawBoards: RawBoard[] = [];
     if (res && res.data) {
       rawBoards = res.data;
     } else if (Array.isArray(res)) {
@@ -70,17 +108,18 @@ async function loadData() {
     }));
 
     try {
-      const profileRes = await apiClient.get('/profile');
+      const profileRes = await apiClient.get('/profile') as any;
       currentUser = profileRes?.data || profileRes;
     } catch {
       currentUser = null;
-    };
+    }
 
     return true;
   } catch (err) {
-    if (err.status === 401) {
+    const error = err as ApiError;
+    if (error.status === 401) {
       localStorage.removeItem('isAuth');
-      navigateTo('login');
+      navigateTo('/login');
       return false;
     }
     return true;
@@ -94,69 +133,75 @@ async function loadData() {
  * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
  */
-function attachEventListeners(appDiv, updateUI, abortSignal) {
-  const searchInput = appDiv.querySelector('.search-input');
+function attachEventListeners(appDiv: HTMLElement, _: () => void, abortSignal: AbortSignal): void {
+  const searchInput = appDiv.querySelector<HTMLInputElement>('.search-input');
+
   if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      appDiv.querySelectorAll('.board-card').forEach(card => {
-        const title = card.querySelector('.board-name')?.textContent.toLowerCase() || '';
-        const desc = card.querySelector('.board-desc')?.textContent.toLowerCase() || '';
+    searchInput.addEventListener('input', (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const query = target.value.toLowerCase();
+
+      const cards = appDiv.querySelectorAll<HTMLElement>('.board-card');
+      cards.forEach(card => {
+        const title = card.querySelector('.board-name')?.textContent?.toLowerCase() || '';
+        const desc = card.querySelector('.board-desc')?.textContent?.toLowerCase() || '';
         card.style.display = (title.includes(query) || desc.includes(query)) ? 'flex' : 'none';
       });
     });
   }
 
-  const profileBtn = appDiv.querySelector('#profile-btn');
-  const profilePopup = appDiv.querySelector('#profile-popup');
+  const profileBtn = appDiv.querySelector<HTMLElement>('#profile-btn');
+  const profilePopup = appDiv.querySelector<HTMLElement>('#profile-popup');
+
   if (profileBtn && profilePopup) {
-    profileBtn.addEventListener('click', (e) => {
+    profileBtn.addEventListener('click', (e: MouseEvent) => {
       e.stopPropagation();
       profilePopup.classList.toggle('hidden');
     });
 
-    document.addEventListener('click', (e) => {
-      if (!profilePopup.contains(e.target) && e.target !== profileBtn) {
+    document.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!profilePopup.contains(target) && target !== profileBtn) {
         profilePopup.classList.add('hidden');
       }
     }, { signal: abortSignal });
   }
 
-  const modalOverlay = appDiv.querySelector('#modal-overlay');
-  const modalLogout = appDiv.querySelector('#modal-logout');
+  const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
+  const modalLogout = appDiv.querySelector<HTMLElement>('#modal-logout');
 
   /**
    * Скрывает все открытые модальные окна и оверлей на странице.
    */
-  const closeModals = () => {
+  const closeModals = (): void => {
     [modalOverlay, modalLogout].forEach(m => m?.classList.add('hidden'));
   };
 
-  appDiv.querySelector('#btn-cancel-logout')?.addEventListener('click', closeModals);
+  appDiv.querySelector<HTMLButtonElement>('#btn-cancel-logout')?.addEventListener('click', closeModals);
 
   if (modalOverlay) {
-    modalOverlay.addEventListener('click', (e) => {
+    modalOverlay.addEventListener('click', (e: MouseEvent) => {
       if (e.target === modalOverlay) {
         closeModals();
       }
     });
   }
 
-  const logoutBtn = appDiv.querySelector('#logout-btn');
+  const logoutBtn = appDiv.querySelector<HTMLElement>('#logout-btn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
+    logoutBtn.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
 
       if (profilePopup) {
         profilePopup.classList.add('hidden');
       }
 
-      modalOverlay.classList.remove('hidden');
-      modalLogout.classList.remove('hidden');
+      modalOverlay?.classList.remove('hidden');
+      modalLogout?.classList.remove('hidden');
     });
   }
 
-  const btnConfirmLogout = appDiv.querySelector('#btn-confirm-logout');
+  const btnConfirmLogout = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-logout');
   if (btnConfirmLogout) {
     btnConfirmLogout.addEventListener('click', async () => {
       btnConfirmLogout.disabled = true;
@@ -164,14 +209,16 @@ function attachEventListeners(appDiv, updateUI, abortSignal) {
         await apiClient.post('/logout');
       } finally {
         localStorage.removeItem('isAuth');
-        navigateTo('login');
+        navigateTo('/login');
       }
     });
   }
 
-  appDiv.querySelectorAll('.board-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (!e.target.closest('.board-options-btn')) {
+  const boardCards = appDiv.querySelectorAll<HTMLElement>('.board-card');
+  boardCards.forEach(card => {
+    card.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.board-options-btn')) {
         // const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
         // TODO: Реализовать переход в доску
       }

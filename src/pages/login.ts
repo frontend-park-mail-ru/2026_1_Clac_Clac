@@ -1,58 +1,74 @@
 import Handlebars from 'handlebars';
-import { apiClient } from '../api.js';
-import { setInputError, setGlobalError, validateEmail } from '../utils.js';
-import { navigateTo } from '../main.js';
-import config from '../config.js';
+import { apiClient } from '../api';
+import { setInputError, setGlobalError, validateEmail } from '../utils';
+import config from '../config';
 
-const res = await fetch('/src/templates/login.hbs');
-const loginTpl = await res.text();
+import loginTpl from '../templates/login.hbs?raw';
+import { navigateTo } from '../router';
+
 const template = Handlebars.compile(loginTpl);
+
+interface ApiError {
+  status?: number;
+  data?: {
+    message?: string;
+    error?: string;
+  };
+}
 
 /**
  * Отрисовывает страницу авторизации и инициализирует все связанные с ней обработчики событий.
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
  */
-export const renderLogin = (appDiv) => {
+export const renderLogin = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = template({});
 
   const vkError = localStorage.getItem('vkError');
   if (vkError) {
-    let errorMsg;
-    if (vkError === 'vk_oauth_error') {
-      errorMsg = 'Ошибка авторизации через VK';
-    } else if (vkError === 'no_valid_email') {
-      errorMsg = 'К вашему VK не привязан Email';
-    } else if (vkError === 'cannot_request_data') {
-      errorMsg = 'Не удалось получить данные из VK';
-    } else if (vkError === 'something_went_wrong') {
-      errorMsg = 'Что-то пошло не так. Попробуйте снова';
-    } else {
-      errorMsg = `Ошибка авторизации: ${vkError}`;
+    let errorMsg: string;
+
+    switch (vkError) {
+      case 'vk_oauth_error':
+        errorMsg = 'Ошибка авторизации через VK';
+        break;
+      case 'no_valid_email':
+        errorMsg = 'К вашему VK не привязан Email';
+        break;
+      case 'cannot_request_data':
+        errorMsg = 'Не удалось получить данные из VK';
+        break;
+      case 'something_went_wrong':
+        errorMsg = 'Что-то пошло не так. Попробуйте снова';
+        break;
+      default:
+        errorMsg = `Ошибка авторизации: ${vkError}`;
     }
-    
+
     setGlobalError(errorMsg);
     localStorage.removeItem('vkError');
   }
 
-  const form = document.getElementById('login-form');
-  const submitBtn = document.getElementById('login-submit');
+  const form = document.getElementById('login-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('login-submit') as HTMLButtonElement | null;
+  const emailInput = document.getElementById('email') as HTMLInputElement | null;
+  const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
   /**
    * Проверяет заполненность обязательных полей (email и пароль) 
    * и активирует или деактивирует кнопку входа.
    */
-  const checkForm = () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
+  const checkForm = (): void => {
+    const emailVal = emailInput?.value.trim() || '';
+    const passwordVal = passwordInput?.value.trim() || '';
 
     if (submitBtn) {
-      submitBtn.disabled = !(email && password);
+      submitBtn.disabled = !(emailVal && passwordVal);
     }
   };
 
-  const inputs = form.querySelectorAll('input');
-  inputs.forEach(input => {
+  const inputs = form?.querySelectorAll('input');
+  inputs?.forEach((input: HTMLInputElement) => {
     input.addEventListener('input', () => {
       checkForm();
       input.classList.remove('error');
@@ -63,21 +79,22 @@ export const renderLogin = (appDiv) => {
       setGlobalError(null);
     });
   });
+
   checkForm();
 
   const linkRegister = document.getElementById('link-register');
   if (linkRegister) {
-    linkRegister.addEventListener('click', (e) => {
+    linkRegister.addEventListener('click', (e: MouseEvent) => {
       e.preventDefault();
-      navigateTo('register');
+      navigateTo('/register');
     });
   }
 
   const forgotLink = document.querySelector('.forgot-link');
   if (forgotLink) {
-    forgotLink.addEventListener('click', (e) => {
+    forgotLink.addEventListener('click', (e: Event) => {
       e.preventDefault();
-      navigateTo('forgot-password');
+      navigateTo('/forgot-password');
     });
   }
 
@@ -88,10 +105,11 @@ export const renderLogin = (appDiv) => {
     });
   }
 
-  form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e: SubmitEvent) => {
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
+
+    const email = emailInput?.value.trim() || '';
+    const password = passwordInput?.value.trim() || '';
 
     let hasError = false;
     setGlobalError(null);
@@ -118,26 +136,29 @@ export const renderLogin = (appDiv) => {
     }
 
     try {
-      submitBtn.disabled = true;
+      if (submitBtn) submitBtn.disabled = true;
       await apiClient.post('/login', { email, password });
 
       localStorage.setItem('isAuth', 'true');
-      navigateTo('boards');
+      navigateTo('/boards');
 
-    } catch (err) {
+    } catch (error) {
+      const err = error as ApiError;
       const errMsg = err.data?.message || err.data?.error;
 
       if (err.status === 401 || (errMsg && (errMsg.includes('wrong') || errMsg.includes('exist') || errMsg.includes('invalid')))) {
         setGlobalError('Неверный email или пароль');
-        document.getElementById('email').classList.add('error');
-        document.getElementById('password').classList.add('error');
+        emailInput?.classList.add('error');
+        passwordInput?.classList.add('error');
       } else if (errMsg) {
         setGlobalError(errMsg);
       } else {
         setGlobalError('Проверьте подключение и попробуйте снова');
       }
     } finally {
-      submitBtn.disabled = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+      }
     }
   });
 };
