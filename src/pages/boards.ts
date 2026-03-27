@@ -7,14 +7,14 @@ import { navigateTo } from '../router';
 const template = Handlebars.compile(boardsTpl);
 
 interface User {
-  id: number | string;
+  id: string;
   username?: string;
   email?: string;
   avatar?: string;
 }
 
 interface RawBoard {
-  id: string | number;
+  id: string;
   board_name?: string;
   title?: string;
   description?: string;
@@ -27,7 +27,7 @@ interface RawBoard {
 }
 
 interface Board {
-  id: string | number;
+  id: string;
   board_name: string;
   description: string;
   backlog: number;
@@ -40,8 +40,8 @@ interface Board {
 }
 
 interface ApiError {
-  status?: number;
-  message?: string;
+  status: number;
+  message: string;
 }
 
 let localBoards: Board[] = [];
