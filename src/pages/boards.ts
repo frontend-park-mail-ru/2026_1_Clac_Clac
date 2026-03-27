@@ -8,22 +8,22 @@ const template = Handlebars.compile(boardsTpl);
 
 interface User {
   id: string;
-  username?: string;
-  email?: string;
-  avatar?: string;
+  username: string;
+  email: string;
+  avatar: string;
 }
 
 interface RawBoard {
   id: string;
-  board_name?: string;
-  title?: string;
-  description?: string;
-  backlog?: number;
-  hot?: number;
-  members?: number;
-  avatars?: string[];
-  iconClass?: string;
-  iconHtml?: string;
+  board_name: string;
+  title: string;
+  description: string;
+  backlog: number;
+  hot: number;
+  members: number;
+  avatars: string[];
+  iconClass: string;
+  iconHtml: string;
 }
 
 interface Board {
@@ -32,7 +32,7 @@ interface Board {
   description: string;
   backlog: number;
   hot: number;
-  members?: number;
+  members: number;
   hasMembers: boolean;
   avatars: string[] | null;
   iconClass: string;
