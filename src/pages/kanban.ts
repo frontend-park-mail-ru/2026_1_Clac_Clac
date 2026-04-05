@@ -121,7 +121,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     });
 
     document.querySelectorAll('.add-card-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const parent = btn.parentElement!;
         const sectionId = parent.getAttribute('data-section-id')!;
         parent.innerHTML = `
