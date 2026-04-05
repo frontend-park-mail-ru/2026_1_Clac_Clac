@@ -1,4 +1,5 @@
 import Handlebars from 'handlebars';
+import { authApi } from '../api';
 import taskTpl from '../templates/task.hbs?raw';
 import { navigateTo } from '../router';
 
@@ -20,7 +21,12 @@ export const renderTask = (appDiv: HTMLElement): void => {
 
   document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
-  document.getElementById('logout-btn')?.addEventListener('click', () => {
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      
+    }
     localStorage.removeItem('isAuth');
     navigateTo('/login');
   });

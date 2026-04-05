@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { apiClient, boardsApi } from '../api';
+import { authApi, boardsApi } from '../api';
 import boardsTpl from '../templates/boards.hbs?raw';
 import { navigateTo } from '../router';
 
@@ -13,13 +13,14 @@ interface User {
 }
 
 interface RawBoard {
-  id: string;
-  board_name: string;
-  title: string;
-  description: string;
-  backlog: number;
-  hot: number;
-  members: number;
+  id?: string;
+  link?: string;
+  board_name?: string;
+  title?: string;
+  description?: string;
+  backlog?: number;
+  hot?: number;
+  members?: number;
 }
 
 interface Board {
@@ -67,16 +68,16 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
  */
 async function loadData(): Promise<boolean> {
   try {
-    const res = await apiClient.get('/home') as any;
+    const res = await boardsApi.getBoards() as any;
     let rawBoards: RawBoard[] = [];
     if (res && res.data) {
-      rawBoards = res.data;
+      rawBoards = Array.isArray(res.data) ? res.data : [res.data];
     } else if (Array.isArray(res)) {
       rawBoards = res;
     }
 
     localBoards = rawBoards.map(board => ({
-      id: board.id,
+      id: board.link || board.id || '',
       board_name: board.board_name || board.title || 'Без названия',
       description: board.description || 'Создаём аналог Trello',
       backlog: board.backlog || 0,
@@ -111,13 +112,13 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   let currentBoardName: string | null = null;
 
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
-  document.getElementById('logout-btn')?.addEventListener('click', () => {
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    try { await authApi.logout(); } catch {}
     localStorage.removeItem('isAuth');
     navigateTo('/login');
   }, { signal: abortSignal });
 
-  const closeModals = (): void => {
-    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
+  const closeModals = (): void => {[modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
   };
 
   appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
