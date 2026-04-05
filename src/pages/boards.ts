@@ -5,20 +5,52 @@ import { navigateTo } from '../router';
 
 const template = Handlebars.compile(boardsTpl);
 
-interface User { id: string; username: string; email: string; avatar: string; }
-interface RawBoard { id: string; board_name: string; title: string; description: string; backlog: number; hot: number; members: number; }
-interface Board { id: string; board_name: string; description: string; backlog: number; hot: number; members: number; }
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  avatar: string;
+}
+
+interface RawBoard {
+  id: string;
+  board_name: string;
+  title: string;
+  description: string;
+  backlog: number;
+  hot: number;
+  members: number;
+}
+
+interface Board {
+  id: string;
+  board_name: string;
+  description: string;
+  backlog: number;
+  hot: number;
+  members: number;
+}
 
 let localBoards: Board[] = [];
 let currentUser: User | null = null;
 let eventController: AbortController | null = null;
 
+/**
+ * Отрисовывает главную страницу со списком досок проекта.
+ * 
+ * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
+ */
 export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
   const success = await loadData();
   if (!success) return;
 
+  /**
+   * Обновляет UI интерфейс досок, перерисовывая шаблон и перенавешивая слушатели.
+   */
   const updateUI = (): void => {
-    if (eventController) eventController.abort();
+    if (eventController) {
+      eventController.abort();
+    }
     eventController = new AbortController();
 
     appDiv.innerHTML = template({ boards: localBoards, user: currentUser });
@@ -27,12 +59,21 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
   updateUI();
 };
 
+/**
+ * Асинхронно загружает данные пользователя и список досок с сервера.
+ * В случае ошибки 401 автоматически перенаправляет пользователя на страницу входа.
+ * 
+ * @returns {Promise<boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
+ */
 async function loadData(): Promise<boolean> {
   try {
     const res = await apiClient.get('/home') as any;
     let rawBoards: RawBoard[] = [];
-    if (res && res.data) rawBoards = res.data;
-    else if (Array.isArray(res)) rawBoards = res;
+    if (res && res.data) {
+      rawBoards = res.data;
+    } else if (Array.isArray(res)) {
+      rawBoards = res;
+    }
 
     localBoards = rawBoards.map(board => ({
       id: board.id,
@@ -53,6 +94,13 @@ async function loadData(): Promise<boolean> {
   }
 }
 
+/**
+ * Инициализирует и прикрепляет слушатели событий на странице со списком досок.
+ * 
+ * @param {HTMLElement} appDiv - DOM-контейнер страницы.
+ * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
+ * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
+ */
 function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void {
   const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
   const modalCreate = appDiv.querySelector<HTMLElement>('#modal-create-board');
@@ -67,6 +115,9 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     navigateTo('/login');
   }, { signal: abortSignal });
 
+  /**
+   * Скрывает все открытые модальные окна и оверлей на странице.
+   */
   const closeModals = (): void => {
     [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
   };
@@ -148,7 +199,9 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   btnConfirmEdit?.addEventListener('click', async () => {
     const name = editBoardNameInput?.value.trim();
-    if (!name || !currentBoardId) return;
+    if (!name || !currentBoardId) {
+      return;
+    };
     try {
       btnConfirmEdit.disabled = true;
       await boardsApi.updateBoard(currentBoardId, { board_name: name });
