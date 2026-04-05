@@ -1,5 +1,3 @@
-import { setInputError, validateEmail, validatePassword } from '../utils';
-
 export interface ValidationRule {
   required?: boolean;
   minLength?: number;
@@ -10,18 +8,23 @@ export interface ValidationRule {
 
 export type ValidationSchema = Record<string, ValidationRule[]>;
 
+type SetErrorFn = (fieldId: string, message: string | null) => void;
+
 export class FormValidator {
-  private formId: string;
+  // private formId: string; // Удаляем это поле
   private schema: ValidationSchema;
   private onValidityChange?: (isValid: boolean) => void;
+  private setErrorFn: SetErrorFn;
 
   constructor(
-    formId: string,
+    // formId: string, // Удаляем этот аргумент
     schema: ValidationSchema,
+    onError: SetErrorFn,
     onValidityChange?: (isValid: boolean) => void
   ) {
-    this.formId = formId;
+    // this.formId = formId; // Удаляем присваивание
     this.schema = schema;
+    this.setErrorFn = onError;
     this.onValidityChange = onValidityChange;
   }
 
@@ -29,6 +32,8 @@ export class FormValidator {
     let isFormValid = true;
 
     for (const [fieldId, rules] of Object.entries(this.schema)) {
+      // Ищем элемент по fieldId напрямую. 
+      // Это предполагает, что ID полей уникальны на всей странице, что обычно верно для форм.
       const field = document.getElementById(fieldId) as HTMLInputElement | null;
       if (!field) continue;
 
@@ -36,10 +41,10 @@ export class FormValidator {
       const error = this.checkFieldRules(value, rules);
 
       if (error) {
-        setInputError(fieldId, error);
+        this.setErrorFn(fieldId, error);
         isFormValid = false;
       } else {
-        setInputError(fieldId, null);
+        this.setErrorFn(fieldId, null);
       }
     }
 
@@ -55,15 +60,12 @@ export class FormValidator {
       if (rule.required && !value) {
         return rule.message;
       }
-
       if (rule.minLength !== undefined && value.length < rule.minLength) {
         return rule.message;
       }
-
       if (rule.maxLength !== undefined && value.length > rule.maxLength) {
         return rule.message;
       }
-
       if (rule.customValidator) {
         const customError = rule.customValidator(value);
         if (customError !== null) {
@@ -76,7 +78,7 @@ export class FormValidator {
 
   public clearErrors(): void {
     for (const fieldId of Object.keys(this.schema)) {
-      setInputError(fieldId, null);
+      this.setErrorFn(fieldId, null);
     }
   }
 
@@ -90,7 +92,7 @@ export class FormValidator {
         const rules = this.schema[fieldId];
         const error = this.checkFieldRules(value, rules);
         
-        setInputError(fieldId, error);
+        this.setErrorFn(fieldId, error);
         
         if (this.onValidityChange) {
           this.onValidityChange(this.validate());

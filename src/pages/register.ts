@@ -54,7 +54,7 @@ export const renderRegister = (appDiv: HTMLElement): void => {
     ]
   };
 
-  const validator = new FormValidator('register-form', registerSchema, (isValid) => {
+  const validator = new FormValidator(registerSchema, (isValid) => {
     if (submitBtn) {
       submitBtn.disabled = !isValid;
     }

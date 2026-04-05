@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
-import { setInputError, setGlobalError, validateEmail } from '../utils';
+import { setGlobalError, validateEmail } from '../utils';
 import { FormValidator, ValidationSchema } from '../utils/Validator';
 import config from '../config';
 
@@ -63,7 +63,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
     ]
   };
 
-  const validator = new FormValidator('login-form', loginSchema, (isValid) => {
+  const validator = new FormValidator(loginSchema, (isValid) => {
     if (submitBtn) {
       submitBtn.disabled = !isValid;
     }
