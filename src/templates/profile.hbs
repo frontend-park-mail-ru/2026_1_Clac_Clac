@@ -1,0 +1,76 @@
+<div class="boards-layout">
+  {{> sidebar activeProfile=true}}
+
+  <div class="main-content" style="max-width: 600px; padding: 2rem 4rem;">
+    <h1 class="boards-title mb-1" style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">Профиль</h1>
+
+    <div class="profile-avatar-section" style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2.5rem;">
+      <div class="avatar-preview"
+        style="width: 80px; height: 80px; background: #252527; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        {{#if user.avatar_url}}
+        <img src="{{user.avatar_url}}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+        {{else}}
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        {{/if}}
+      </div>
+      <div class="avatar-actions" style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <label for="avatar-upload" class="action-link cursor-pointer"
+          style="color: #8b5cf6; font-size: 0.9rem;">Изменить фото</label>
+        <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+        <span id="btn-delete-avatar" class="action-text cursor-pointer" style="color: #ccc; font-size: 0.9rem;">Удалить
+          фото</span>
+      </div>
+    </div>
+
+    <form id="profile-form">
+      <div class="input-group">
+        <label class="input-label" style="color: #ccc; margin-bottom: 0.6rem; font-size: 0.85rem;">Имя</label>
+        <input type="text" id="profile-name" class="input-field" value="{{user.display_name}}" maxlength="128"
+          style="background: #252527; border-color: #333;">
+      </div>
+      <div class="input-group">
+        <label class="input-label" style="color: #ccc; margin-bottom: 0.6rem; font-size: 0.85rem;">О себе</label>
+        <textarea id="profile-desc" class="input-field" maxlength="1000"
+          style="resize: vertical; min-height: 100px; background: #252527; border-color: #333;"
+          placeholder="Расскажите о себе">{{user.description_user}}</textarea>
+      </div>
+      <div class="input-group">
+        <div class="input-header" style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+          <label class="input-label" style="color: #ccc; font-size: 0.85rem;">Email</label>
+          <a href="#" class="forgot-link" style="color: #8b5cf6; font-size: 0.85rem;">Изменить пароль</a>
+        </div>
+        <div class="input-wrapper" style="position: relative;">
+          <input type="text" class="input-field" value="{{user.email}}" readonly
+            style="background: #252527; border-color: #333; padding-right: 2.5rem; color: #888;">
+          <svg style="position: absolute; right: 1rem;" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#666" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" id="btn-save-profile"
+        style="width: auto; padding: 0.8rem 2.5rem; background: #555; color: #999; cursor: not-allowed; border-radius: 8px;"
+        disabled>Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div id="modal-delete-avatar" class="modal hidden">
+    <div class="modal-header" style="margin-bottom: 1.5rem;">
+      <h2 class="modal-title" style="font-weight: bold; font-size: 1.6rem; color: white; margin: 0;">Удалить фото
+        профиля?</h2>
+      <button class="close-modal-btn">×</button>
+    </div>
+    <div class="modal-actions" style="justify-content: space-between; display: flex; gap: 1rem; margin-top: 2rem;">
+      <button class="btn btn-danger" id="confirm-delete-avatar"
+        style="flex: 1; padding: 0.8rem; border-radius: 8px;">Удалить</button>
+      <button class="btn btn-cancel close-modal-btn"
+        style="flex: 1; padding: 0.8rem; border-radius: 8px;">Отменить</button>
+    </div>
+  </div>
+</div>

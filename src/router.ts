@@ -2,12 +2,18 @@ import { renderLogin } from './pages/login';
 import { renderRegister } from './pages/register';
 import { renderBoards } from './pages/boards';
 import { renderPasswordRecovery } from './pages/passwordRecovery';
+import { renderProfile } from './pages/profile';
+import { renderKanban } from './pages/kanban';
+import { renderTask } from './pages/task';
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   '/login': renderLogin,
   '/register': renderRegister,
   '/forgot-password': renderPasswordRecovery,
   '/boards': renderBoards,
+  '/profile': renderProfile,
+  '/board': renderKanban,
+  '/task': renderTask,
 };
 
 export const navigateTo = (path: string): void => {
