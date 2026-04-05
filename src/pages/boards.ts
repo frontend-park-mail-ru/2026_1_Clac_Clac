@@ -108,6 +108,7 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   const modalDelete = appDiv.querySelector<HTMLElement>('#modal-delete-board');
 
   let currentBoardId: string | null = null;
+  let currentBoardName: string | null = null;
 
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
   document.getElementById('logout-btn')?.addEventListener('click', () => {
@@ -115,14 +116,15 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     navigateTo('/login');
   }, { signal: abortSignal });
 
-  /**
-   * Скрывает все открытые модальные окна и оверлей на странице.
-   */
   const closeModals = (): void => {
     [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
   };
 
-  appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
+  appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeModals();
+  }));
+
   if (modalOverlay) {
     modalOverlay.addEventListener('click', (e: MouseEvent) => {
       if (e.target === modalOverlay) closeModals();
@@ -138,9 +140,12 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
     if (inputNewBoard) {
       inputNewBoard.value = '';
-      inputNewBoard.style.borderColor = '#ff5c5c';
+      inputNewBoard.style.borderColor = 'transparent';
     }
-    errorNewBoard?.classList.remove('hidden');
+    if (errorNewBoard) {
+      errorNewBoard.style.display = 'none';
+      errorNewBoard.classList.remove('visible');
+    }
     if (btnConfirmCreate) btnConfirmCreate.disabled = true;
   };
 
@@ -154,11 +159,17 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   inputNewBoard?.addEventListener('input', () => {
     const val = inputNewBoard.value.trim();
     if (val) {
-      errorNewBoard?.classList.add('hidden');
+      if (errorNewBoard) {
+        errorNewBoard.style.display = 'none';
+        errorNewBoard.classList.remove('visible');
+      }
       if (btnConfirmCreate) btnConfirmCreate.disabled = false;
-      inputNewBoard.style.borderColor = '#333';
+      inputNewBoard.style.borderColor = 'transparent';
     } else {
-      errorNewBoard?.classList.remove('hidden');
+      if (errorNewBoard) {
+        errorNewBoard.style.display = 'block';
+        errorNewBoard.classList.add('visible');
+      }
       if (btnConfirmCreate) btnConfirmCreate.disabled = true;
       inputNewBoard.style.borderColor = '#ff5c5c';
     }
@@ -190,11 +201,26 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
       const id = (e.currentTarget as HTMLElement).getAttribute('data-id')!;
       const name = (e.currentTarget as HTMLElement).getAttribute('data-name')!;
       currentBoardId = id;
+      currentBoardName = name;
 
-      if (editBoardNameInput) editBoardNameInput.value = name;
+      if (editBoardNameInput) {
+        editBoardNameInput.value = '';
+        editBoardNameInput.placeholder = 'Например, Запуск продукта';
+      }
+      if (btnConfirmEdit) btnConfirmEdit.disabled = true;
+
       modalOverlay?.classList.remove('hidden');
       modalEdit?.classList.remove('hidden');
     });
+  });
+
+  editBoardNameInput?.addEventListener('input', () => {
+    const val = editBoardNameInput.value.trim();
+    if (val) {
+      if (btnConfirmEdit) btnConfirmEdit.disabled = false;
+    } else {
+      if (btnConfirmEdit) btnConfirmEdit.disabled = true;
+    }
   });
 
   btnConfirmEdit?.addEventListener('click', async () => {
@@ -216,8 +242,8 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     modalEdit?.classList.add('hidden');
     modalDelete?.classList.remove('hidden');
     const deleteBoardName = appDiv.querySelector('#delete-board-name');
-    if (deleteBoardName) {
-      deleteBoardName.textContent = editBoardNameInput?.value || '';
+    if (deleteBoardName && currentBoardName) {
+      deleteBoardName.textContent = currentBoardName;
     }
   });
 
@@ -231,6 +257,7 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     } finally {
       btnConfirmDelete.disabled = false;
       currentBoardId = null;
+      currentBoardName = null;
     }
   });
 

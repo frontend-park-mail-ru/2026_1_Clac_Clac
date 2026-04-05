@@ -1,0 +1,46 @@
+├── public/
+│   ├── background.png
+│   ├── favicon.ico
+│   └── logo.svg
+├── src/
+│   ├── pages/
+│   │   ├── boards.ts
+│   │   ├── kanban.ts
+│   │   ├── login.ts
+│   │   ├── passwordRecovery.ts
+│   │   ├── profile.ts
+│   │   ├── register.ts
+│   │   └── task.ts
+│   ├── styles/
+│   │   ├── auth.css
+│   │   └── boards.css
+│   ├── templates/
+│   │   ├── partials/
+│   │   │   ├── input.hbs
+│   │   │   └── sidebar.hbs
+│   │   ├── boards.hbs
+│   │   ├── kanban.hbs
+│   │   ├── login.hbs
+│   │   ├── password_recovery_code.hbs
+│   │   ├── password_recovery_email.hbs
+│   │   ├── password_recovery_new_pass.hbs
+│   │   ├── profile.hbs
+│   │   ├── register.hbs
+│   │   └── task.hbs
+│   ├── api.ts
+│   ├── config.ts
+│   ├── main.ts
+│   ├── router.ts
+│   ├── style.css
+│   └── utils.ts
+├── .gitignore
+├── babel.config.json
+├── codemark.ts
+├── eslint.config.js
+├── index.html
+├── package.json
+├── README.md
+├── st.ts
+├── tsconfig.json
+├── vite-env.d.ts
+└── vite.config.ts

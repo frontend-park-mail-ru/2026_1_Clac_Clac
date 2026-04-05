@@ -68,13 +68,13 @@
 }
 
 .board-card-empty-large {
-  background-color: #252527;
+  background-color: transparent;
   border: 2px dashed #444;
-  border-radius: 32px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
+  min-height: 240px;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -82,11 +82,12 @@
 
 .board-card-empty-large:hover {
   border-color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.05);
 }
 
 .board-card {
-  background-color: #252527;
-  border-radius: 32px;
+  background-color: #222224;
+  border-radius: 24px;
   padding: 1.8rem 2rem;
   display: flex;
   flex-direction: column;
@@ -94,7 +95,7 @@
   border: 1px solid transparent;
   transition: transform 0.2s, border-color 0.2s;
   cursor: pointer;
-  min-height: 280px;
+  min-height: 240px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -136,13 +137,13 @@
 }
 
 .modal {
-  background: #1e1e20;
+  background: #252527;
   border-radius: 20px;
   padding: 2rem;
   width: 440px;
   max-width: 90%;
-  border: 1px solid #333;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   display: none;
   transform: translateY(20px);
   transition: transform 0.2s ease;
