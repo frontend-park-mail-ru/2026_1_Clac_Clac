@@ -89,6 +89,7 @@
 </div>
 
 <div id="modal-overlay" class="modal-overlay hidden">
+
   <div id="modal-create-board" class="modal hidden">
     <div class="modal-header"
       style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
@@ -103,16 +104,17 @@
       </button>
     </div>
     <div class="modal-body" style="margin-bottom: 2rem;">
-      <div class="modal-image-row"
-        style="display: flex; align-items: center; gap: 0.8rem; color: white; margin-bottom: 1.5rem; font-size: 0.95rem; cursor: pointer;">
+      <label for="create-board-image" class="modal-image-row"
+        style="display: flex; align-items: center; gap: 0.8rem; color: white; margin-bottom: 1.5rem; font-size: 0.95rem; cursor: pointer; width: max-content;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        Изображение доски
-      </div>
+        <span id="create-board-image-name">Изображение доски</span>
+        <input type="file" id="create-board-image" class="hidden" accept="image/*" />
+      </label>
       <div class="input-group" style="margin-bottom: 0;">
         <label class="input-label"
           style="margin-bottom: 0.6rem; display: block; font-size: 0.85rem; color: #ccc;">Название доски</label>
@@ -141,16 +143,17 @@
       </button>
     </div>
     <div class="modal-body" style="margin-bottom: 2rem;">
-      <div class="modal-image-row"
-        style="display: flex; align-items: center; gap: 0.8rem; color: white; margin-bottom: 1.5rem; font-size: 0.95rem; cursor: pointer;">
+      <label for="edit-board-image" class="modal-image-row"
+        style="display: flex; align-items: center; gap: 0.8rem; color: white; margin-bottom: 1.5rem; font-size: 0.95rem; cursor: pointer; width: max-content;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        Изображение доски
-      </div>
+        <span id="edit-board-image-name">Изображение доски</span>
+        <input type="file" id="edit-board-image" class="hidden" accept="image/*" />
+      </label>
       <div class="input-group" style="margin-bottom: 0;">
         <label class="input-label"
           style="margin-bottom: 0.6rem; display: block; font-size: 0.85rem; color: #ccc;">Другое название доски</label>

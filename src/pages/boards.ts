@@ -131,6 +131,20 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     });
   }
 
+  const createImgInput = appDiv.querySelector<HTMLInputElement>('#create-board-image');
+  const createImgName = appDiv.querySelector<HTMLElement>('#create-board-image-name');
+  createImgInput?.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file && createImgName) createImgName.textContent = file.name;
+  });
+
+  const editImgInput = appDiv.querySelector<HTMLInputElement>('#edit-board-image');
+  const editImgName = appDiv.querySelector<HTMLElement>('#edit-board-image-name');
+  editImgInput?.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file && editImgName) editImgName.textContent = file.name;
+  });
+
   const openCreateModal = () => {
     modalOverlay?.classList.remove('hidden');
     modalCreate?.classList.remove('hidden');
@@ -146,6 +160,9 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
       errorNewBoard.style.display = 'none';
       errorNewBoard.classList.remove('visible');
     }
+    if (createImgInput) createImgInput.value = '';
+    if (createImgName) createImgName.textContent = 'Изображение доски';
+
     if (btnConfirmCreate) btnConfirmCreate.disabled = true;
   };
 
@@ -207,6 +224,9 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
         editBoardNameInput.value = '';
         editBoardNameInput.placeholder = 'Например, Запуск продукта';
       }
+      if (editImgInput) editImgInput.value = '';
+      if (editImgName) editImgName.textContent = 'Изображение доски';
+
       if (btnConfirmEdit) btnConfirmEdit.disabled = true;
 
       modalOverlay?.classList.remove('hidden');
@@ -225,9 +245,7 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   btnConfirmEdit?.addEventListener('click', async () => {
     const name = editBoardNameInput?.value.trim();
-    if (!name || !currentBoardId) {
-      return;
-    };
+    if (!name || !currentBoardId) return;
     try {
       btnConfirmEdit.disabled = true;
       await boardsApi.updateBoard(currentBoardId, { board_name: name });
