@@ -1,6 +1,7 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
+import { FormValidator, ValidationSchema } from '../utils/Validator';
 
 import registerTpl from '../templates/register.hbs?raw';
 import { navigateTo } from '../router';
@@ -14,11 +15,6 @@ type LocalApiError = {
 
 const template = Handlebars.compile(registerTpl);
 
-/**
- * Отрисовывает страницу регистрации и инициализирует все связанные с ней обработчики событий.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
- */
 export const renderRegister = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = template({});
 
@@ -28,27 +24,43 @@ export const renderRegister = (appDiv: HTMLElement): void => {
 
   if (!form) return;
 
-  /**
-   * Проверяет заполненность обязательных полей (имя, email, пароли) 
-   * и активирует или деактивирует кнопку регистрации.
-   */
-  const checkForm = (): void => {
-    const name = (document.getElementById('name') as HTMLInputElement | null)?.value.trim() ?? '';
-    const email = (document.getElementById('email') as HTMLInputElement | null)?.value.trim() ?? '';
-    const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() ?? '';
-    const repeatPassword = (document.getElementById('repeatPassword') as HTMLInputElement | null)?.value.trim() ?? '';
-
-    if (submitBtn) {
-      submitBtn.disabled = !(name && email && password && repeatPassword);
-    }
+  const registerSchema: ValidationSchema = {
+    name: [
+      { required: true, message: 'Введите имя' }
+    ],
+    email: [
+      { required: true, message: 'Введите адрес электронной почты' },
+      { 
+        customValidator: (value: string) => validateEmail(value) ? null : 'Неверный формат email',
+        message: 'Неверный формат email'
+      }
+    ],
+    password: [
+      { required: true, message: 'Введите пароль' },
+      { 
+        customValidator: (value: string) => validatePassword(value),
+        message: 'Ошибка в пароле'
+      }
+    ],
+    repeatPassword: [
+      { required: true, message: 'Повторите пароль' },
+      {
+        customValidator: (value: string) => {
+          const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() || '';
+          return value === password ? null : 'Пароли не совпадают';
+        },
+        message: 'Пароли не совпадают'
+      }
+    ]
   };
 
-  const inputs = form.querySelectorAll<HTMLInputElement>('input');
-  inputs.forEach(input => {
-    input.addEventListener('input', checkForm);
+  const validator = new FormValidator('register-form', registerSchema, (isValid) => {
+    if (submitBtn) {
+      submitBtn.disabled = !isValid;
+    }
   });
 
-  checkForm();
+  validator.attachLiveValidation();
 
   if (linkLogin) {
     linkLogin.addEventListener('click', (e: MouseEvent) => {
@@ -60,56 +72,20 @@ export const renderRegister = (appDiv: HTMLElement): void => {
   form.addEventListener('submit', async (e: SubmitEvent) => {
     e.preventDefault();
 
+    if (!validator.validate()) {
+      return;
+    }
+
     const name = (document.getElementById('name') as HTMLInputElement | null)?.value.trim() ?? '';
     const email = (document.getElementById('email') as HTMLInputElement | null)?.value.trim() ?? '';
     const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() ?? '';
-    const repeatPassword = (document.getElementById('repeatPassword') as HTMLInputElement | null)?.value.trim() ?? '';
-
-    let hasError = false;
-    setGlobalError(null);
-
-    if (!name) {
-      setInputError('name', 'Введите имя');
-      hasError = true;
-    } else {
-      setInputError('name', null);
-    }
-
-    if (!email) {
-      setInputError('email', 'Введите адрес электронной почты');
-      hasError = true;
-    } else if (!validateEmail(email)) {
-      setInputError('email', 'Неверный формат email');
-      hasError = true;
-    } else {
-      setInputError('email', null);
-    }
-
-    const passErrorMsg = validatePassword(password);
-    if (passErrorMsg) {
-      setInputError('password', passErrorMsg);
-      hasError = true;
-    } else {
-      setInputError('password', null);
-    }
-
-    if (password !== repeatPassword) {
-      setInputError('repeatPassword', 'Пароли не совпадают');
-      hasError = true;
-    } else {
-      setInputError('repeatPassword', null);
-    }
-
-    if (hasError) {
-      return;
-    }
 
     try {
       await apiClient.post('/register', {
         display_name: name,
         email: email,
         password: password,
-        repeated_password: repeatPassword
+        repeated_password: password
       });
 
       localStorage.setItem('isAuth', 'true');

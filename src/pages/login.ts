@@ -1,6 +1,7 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setInputError, setGlobalError, validateEmail } from '../utils';
+import { FormValidator, ValidationSchema } from '../utils/Validator';
 import config from '../config';
 
 import loginTpl from '../templates/login.hbs?raw';
@@ -16,11 +17,6 @@ interface ApiError {
   };
 }
 
-/**
- * Отрисовывает страницу авторизации и инициализирует все связанные с ней обработчики событий.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
- */
 export const renderLogin = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = template({});
 
@@ -54,33 +50,26 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   const emailInput = document.getElementById('email') as HTMLInputElement | null;
   const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
-  /**
-   * Проверяет заполненность обязательных полей (email и пароль) 
-   * и активирует или деактивирует кнопку входа.
-   */
-  const checkForm = (): void => {
-    const emailVal = emailInput?.value.trim() || '';
-    const passwordVal = passwordInput?.value.trim() || '';
-
-    if (submitBtn) {
-      submitBtn.disabled = !(emailVal && passwordVal);
-    }
+  const loginSchema: ValidationSchema = {
+    email: [
+      { required: true, message: 'Введите адрес электронной почты' },
+      { 
+        customValidator: (value: string) => validateEmail(value) ? null : 'Неверный формат email',
+        message: 'Неверный формат email'
+      }
+    ],
+    password: [
+      { required: true, message: 'Введите пароль' }
+    ]
   };
 
-  const inputs = form?.querySelectorAll('input');
-  inputs?.forEach((input: HTMLInputElement) => {
-    input.addEventListener('input', () => {
-      checkForm();
-      input.classList.remove('error');
-      const errorMsg = document.getElementById(`${input.id}-error`);
-      if (errorMsg) {
-        errorMsg.classList.remove('visible');
-      }
-      setGlobalError(null);
-    });
+  const validator = new FormValidator('login-form', loginSchema, (isValid) => {
+    if (submitBtn) {
+      submitBtn.disabled = !isValid;
+    }
   });
 
-  checkForm();
+  validator.attachLiveValidation();
 
   const linkRegister = document.getElementById('link-register');
   if (linkRegister) {
@@ -108,32 +97,12 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   form?.addEventListener('submit', async (e: SubmitEvent) => {
     e.preventDefault();
 
-    const email = emailInput?.value.trim() || '';
-    const password = passwordInput?.value.trim() || '';
-
-    let hasError = false;
-    setGlobalError(null);
-
-    if (!email) {
-      setInputError('email', 'Введите адрес электронной почты');
-      hasError = true;
-    } else if (!validateEmail(email)) {
-      setInputError('email', 'Неверный формат email');
-      hasError = true;
-    } else {
-      setInputError('email', null);
-    }
-
-    if (!password) {
-      setInputError('password', 'Введите пароль');
-      hasError = true;
-    } else {
-      setInputError('password', null);
-    }
-
-    if (hasError) {
+    if (!validator.validate()) {
       return;
     }
+
+    const email = emailInput?.value.trim() || '';
+    const password = passwordInput?.value.trim() || '';
 
     try {
       if (submitBtn) submitBtn.disabled = true;
