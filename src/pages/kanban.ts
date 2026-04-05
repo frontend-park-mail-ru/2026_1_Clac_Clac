@@ -48,8 +48,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       modalOverlay.classList.add('hidden');
       modalDeleteCard.classList.add('hidden');
     };
+
     document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModals(); });
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModals();
+    });
 
     let activeMenu: HTMLElement | null = null;
     const closeMenu = () => {
@@ -70,11 +73,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         menu.innerHTML = `
           <div class="context-menu-item" id="ctx-add-card">Добавить карточку</div>
           <div class="context-menu-item" id="ctx-edit-list">Изменить имя списка</div>
-          <div class="context-menu-item" id="ctx-delete-list">Удалить список</div>
+          <div class="context-menu-item text-danger" id="ctx-delete-list">Удалить список</div>
         `;
         const rect = btn.getBoundingClientRect();
-        menu.style.top = `${rect.bottom + window.scrollY}px`;
-        menu.style.left = `${rect.left + window.scrollX}px`;
+        menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
+        menu.style.left = `${rect.left + window.scrollX - 150}px`;
         document.body.appendChild(menu);
         activeMenu = menu;
 
@@ -100,8 +103,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           <div class="context-menu-item text-danger" id="ctx-delete-card">Удалить карточку</div>
         `;
         const rect = btn.getBoundingClientRect();
-        menu.style.top = `${rect.bottom + window.scrollY}px`;
-        menu.style.left = `${rect.left + window.scrollX}px`;
+        menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
+        menu.style.left = `${rect.left + window.scrollX - 150}px`;
         document.body.appendChild(menu);
         activeMenu = menu;
 
@@ -124,25 +127,14 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       btn.addEventListener('click', () => {
         const parent = btn.parentElement!;
         const sectionId = parent.getAttribute('data-section-id')!;
+
         parent.innerHTML = `
-          <div class="add-card-form">
-            <textarea class="add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea>
-            <div class="add-card-footer">
-              <span class="char-count" id="char-count-${sectionId}">50</span>
-              <div class="add-card-icons">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-              </div>
-            </div>
+          <div class="add-card-form" style="background: #1e1e20; border: 1px dashed #444; border-radius: 12px; padding: 1.2rem;">
+            <textarea class="add-card-input" id="inline-new-task-\${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus style="width: 100%; background: transparent; border: none; color: white; font-size: 0.95rem; resize: none; outline: none; min-height: 40px;"></textarea>
           </div>
         `;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
-        const charCount = document.getElementById(`char-count-${sectionId}`)!;
         input.focus();
-
-        input.addEventListener('input', () => {
-          charCount.textContent = (50 - input.value.length).toString();
-        });
 
         const saveTask = async () => {
           const val = input.value.trim();
@@ -172,8 +164,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       addColumnBtn.addEventListener('click', () => {
         const parent = addColumnBtn.parentElement!;
         parent.innerHTML = `
-          <div class="add-column-form">
-            <input type="text" class="add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus>
+          <div class="add-column-form" style="background: #1e1e20; border: 1px dashed #444; border-radius: 12px; padding: 1.2rem; min-height: 75px; display: flex; align-items: center;">
+            <input type="text" class="add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus style="background: transparent; border: none; color: white; font-size: 0.95rem; outline: none; width: 100%;">
           </div>
         `;
         const input = document.getElementById('inline-new-col-name') as HTMLInputElement;
