@@ -1,123 +1,50 @@
 import Handlebars from 'handlebars';
-import { apiClient } from '../api';
-
+import { apiClient, boardsApi } from '../api';
 import boardsTpl from '../templates/boards.hbs?raw';
 import { navigateTo } from '../router';
 
 const template = Handlebars.compile(boardsTpl);
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar: string;
-}
-
-interface RawBoard {
-  id: string;
-  board_name: string;
-  title: string;
-  description: string;
-  backlog: number;
-  hot: number;
-  members: number;
-  avatars: string[];
-  iconClass: string;
-  iconHtml: string;
-}
-
-interface Board {
-  id: string;
-  board_name: string;
-  description: string;
-  backlog: number;
-  hot: number;
-  members: number;
-  hasMembers: boolean;
-  avatars: string[] | null;
-  iconClass: string;
-  iconHtml: string;
-}
-
-interface ApiError {
-  status: number;
-  message: string;
-}
+interface User { id: string; username: string; email: string; avatar: string; }
+interface RawBoard { id: string; board_name: string; title: string; description: string; backlog: number; hot: number; members: number; }
+interface Board { id: string; board_name: string; description: string; backlog: number; hot: number; members: number; }
 
 let localBoards: Board[] = [];
 let currentUser: User | null = null;
 let eventController: AbortController | null = null;
 
-/**
- * Отрисовывает главную страницу со списком досок проекта.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
- */
 export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
   const success = await loadData();
   if (!success) return;
 
-  /**
-   * Обновляет UI интерфейс досок, перерисовывая шаблон и перенавешивая слушатели.
-   */
   const updateUI = (): void => {
-    if (eventController) {
-      eventController.abort();
-    }
+    if (eventController) eventController.abort();
     eventController = new AbortController();
 
-    appDiv.innerHTML = template({
-      boards: localBoards,
-      user: currentUser
-    });
-
+    appDiv.innerHTML = template({ boards: localBoards, user: currentUser });
     attachEventListeners(appDiv, updateUI, eventController.signal);
   };
-
   updateUI();
 };
 
-/**
- * Асинхронно загружает данные пользователя и список досок с сервера.
- * В случае ошибки 401 автоматически перенаправляет пользователя на страницу входа.
- * 
- * @returns {Promise<boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
- */
 async function loadData(): Promise<boolean> {
   try {
     const res = await apiClient.get('/home') as any;
-
     let rawBoards: RawBoard[] = [];
-    if (res && res.data) {
-      rawBoards = res.data;
-    } else if (Array.isArray(res)) {
-      rawBoards = res;
-    }
+    if (res && res.data) rawBoards = res.data;
+    else if (Array.isArray(res)) rawBoards = res;
 
-    localBoards = rawBoards.map((board, i) => ({
+    localBoards = rawBoards.map(board => ({
       id: board.id,
       board_name: board.board_name || board.title || 'Без названия',
-      description: board.description || 'Описание отсутствует',
-      backlog: board.backlog !== undefined ? board.backlog : 0,
-      hot: board.hot !== undefined ? board.hot : 0,
-      members: board.members,
-      hasMembers: board.members !== undefined && board.members !== null,
-      avatars: board.avatars && Array.isArray(board.avatars) && board.avatars.length > 0 ? board.avatars : null,
-      iconClass: board.iconClass || (i % 3 === 0 ? 'bg-purple' : i % 3 === 1 ? 'bg-blue' : 'bg-gradient'),
-      iconHtml: board.iconHtml || '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm-1.24 13.56c-4.44 0-6.95-3.04-7.07-8.11h2.24c.08 3.73 1.63 5.3 2.87 5.63V7.45h2.15v3.2c1.22-.13 2.49-1.46 2.93-2.6h2.15c-.37 1.4-1.49 2.5-2.38 3.03.89.41 2.14 1.34 2.72 2.92h-2.31c-.48-1.07-1.48-1.93-3.07-2.06v2.02h-.23z"/></svg>'
+      description: board.description || 'Создаём аналог Trello',
+      backlog: board.backlog || 0,
+      hot: board.hot || 0,
+      members: board.members || 0
     }));
-
-    try {
-      const profileRes = await apiClient.get('/profile') as any;
-      currentUser = profileRes?.data || profileRes;
-    } catch {
-      currentUser = null;
-    }
-
     return true;
-  } catch (err) {
-    const error = err as ApiError;
-    if (error.status === 401) {
+  } catch (err: any) {
+    if (err.status === 401) {
       localStorage.removeItem('isAuth');
       navigateTo('/login');
       return false;
@@ -126,102 +53,139 @@ async function loadData(): Promise<boolean> {
   }
 }
 
-/**
- * Инициализирует и прикрепляет слушатели событий на странице со списком досок.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер страницы.
- * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
- * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
- */
-function attachEventListeners(appDiv: HTMLElement, _: () => void, abortSignal: AbortSignal): void {
-  const searchInput = appDiv.querySelector<HTMLInputElement>('.search-input');
-
-  if (searchInput) {
-    searchInput.addEventListener('input', (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const query = target.value.toLowerCase();
-
-      const cards = appDiv.querySelectorAll<HTMLElement>('.board-card');
-      cards.forEach(card => {
-        const title = card.querySelector('.board-name')?.textContent?.toLowerCase() || '';
-        const desc = card.querySelector('.board-desc')?.textContent?.toLowerCase() || '';
-        card.style.display = (title.includes(query) || desc.includes(query)) ? 'flex' : 'none';
-      });
-    });
-  }
-
-  const profileBtn = appDiv.querySelector<HTMLElement>('#profile-btn');
-  const profilePopup = appDiv.querySelector<HTMLElement>('#profile-popup');
-
-  if (profileBtn && profilePopup) {
-    profileBtn.addEventListener('click', (e: MouseEvent) => {
-      e.stopPropagation();
-      profilePopup.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (!profilePopup.contains(target) && target !== profileBtn) {
-        profilePopup.classList.add('hidden');
-      }
-    }, { signal: abortSignal });
-  }
-
+function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void {
   const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
-  const modalLogout = appDiv.querySelector<HTMLElement>('#modal-logout');
+  const modalCreate = appDiv.querySelector<HTMLElement>('#modal-create-board');
+  const modalEdit = appDiv.querySelector<HTMLElement>('#modal-edit-board');
+  const modalDelete = appDiv.querySelector<HTMLElement>('#modal-delete-board');
 
-  /**
-   * Скрывает все открытые модальные окна и оверлей на странице.
-   */
+  let currentBoardId: string | null = null;
+
+  document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('isAuth');
+    navigateTo('/login');
+  }, { signal: abortSignal });
+
   const closeModals = (): void => {
-    [modalOverlay, modalLogout].forEach(m => m?.classList.add('hidden'));
+    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
   };
 
-  appDiv.querySelector<HTMLButtonElement>('#btn-cancel-logout')?.addEventListener('click', closeModals);
-
+  appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
   if (modalOverlay) {
     modalOverlay.addEventListener('click', (e: MouseEvent) => {
-      if (e.target === modalOverlay) {
-        closeModals();
-      }
+      if (e.target === modalOverlay) closeModals();
     });
   }
 
-  const logoutBtn = appDiv.querySelector<HTMLElement>('#logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e: MouseEvent) => {
-      e.preventDefault();
+  const openCreateModal = () => {
+    modalOverlay?.classList.remove('hidden');
+    modalCreate?.classList.remove('hidden');
+    const inputNewBoard = appDiv.querySelector<HTMLInputElement>('#new-board-name');
+    const errorNewBoard = appDiv.querySelector<HTMLElement>('#new-board-name-error');
+    const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-create');
 
-      if (profilePopup) {
-        profilePopup.classList.add('hidden');
-      }
+    if (inputNewBoard) {
+      inputNewBoard.value = '';
+      inputNewBoard.style.borderColor = '#ff5c5c';
+    }
+    errorNewBoard?.classList.remove('hidden');
+    if (btnConfirmCreate) btnConfirmCreate.disabled = true;
+  };
 
+  appDiv.querySelector('#btn-create-board')?.addEventListener('click', openCreateModal);
+  appDiv.querySelector('#btn-create-board-empty')?.addEventListener('click', openCreateModal);
+
+  const inputNewBoard = appDiv.querySelector<HTMLInputElement>('#new-board-name');
+  const errorNewBoard = appDiv.querySelector<HTMLElement>('#new-board-name-error');
+  const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-create');
+
+  inputNewBoard?.addEventListener('input', () => {
+    const val = inputNewBoard.value.trim();
+    if (val) {
+      errorNewBoard?.classList.add('hidden');
+      if (btnConfirmCreate) btnConfirmCreate.disabled = false;
+      inputNewBoard.style.borderColor = '#333';
+    } else {
+      errorNewBoard?.classList.remove('hidden');
+      if (btnConfirmCreate) btnConfirmCreate.disabled = true;
+      inputNewBoard.style.borderColor = '#ff5c5c';
+    }
+  });
+
+  btnConfirmCreate?.addEventListener('click', async () => {
+    const boardName = inputNewBoard?.value.trim();
+    if (!boardName) return;
+    try {
+      btnConfirmCreate.disabled = true;
+      await boardsApi.createBoard({ board_name: boardName, description: 'Создаём аналог Trello' });
+      closeModals();
+      updateUI();
+    } catch (err) {
+      console.error('Create error', err);
+    } finally {
+      btnConfirmCreate.disabled = false;
+    }
+  });
+
+  const editBoardNameInput = appDiv.querySelector<HTMLInputElement>('#edit-board-name');
+  const btnConfirmEdit = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-edit');
+  const btnOpenDelete = appDiv.querySelector<HTMLButtonElement>('#btn-open-delete');
+  const btnConfirmDelete = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-delete');
+
+  appDiv.querySelectorAll('.board-options-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = (e.currentTarget as HTMLElement).getAttribute('data-id')!;
+      const name = (e.currentTarget as HTMLElement).getAttribute('data-name')!;
+      currentBoardId = id;
+
+      if (editBoardNameInput) editBoardNameInput.value = name;
       modalOverlay?.classList.remove('hidden');
-      modalLogout?.classList.remove('hidden');
+      modalEdit?.classList.remove('hidden');
     });
-  }
+  });
 
-  const btnConfirmLogout = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-logout');
-  if (btnConfirmLogout) {
-    btnConfirmLogout.addEventListener('click', async () => {
-      btnConfirmLogout.disabled = true;
-      try {
-        await apiClient.post('/logout');
-      } finally {
-        localStorage.removeItem('isAuth');
-        navigateTo('/login');
-      }
-    });
-  }
+  btnConfirmEdit?.addEventListener('click', async () => {
+    const name = editBoardNameInput?.value.trim();
+    if (!name || !currentBoardId) return;
+    try {
+      btnConfirmEdit.disabled = true;
+      await boardsApi.updateBoard(currentBoardId, { board_name: name });
+      closeModals();
+      updateUI();
+    } finally {
+      btnConfirmEdit.disabled = false;
+    }
+  });
 
-  const boardCards = appDiv.querySelectorAll<HTMLElement>('.board-card');
-  boardCards.forEach(card => {
-    card.addEventListener('click', (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.board-options-btn')) {
-        // const id = card.querySelector('.board-options-btn')?.getAttribute('data-id') || card.getAttribute('data-id');
-        // TODO: Реализовать переход в доску
-      }
+  btnOpenDelete?.addEventListener('click', () => {
+    modalEdit?.classList.add('hidden');
+    modalDelete?.classList.remove('hidden');
+    const deleteBoardName = appDiv.querySelector('#delete-board-name');
+    if (deleteBoardName) {
+      deleteBoardName.textContent = editBoardNameInput?.value || '';
+    }
+  });
+
+  btnConfirmDelete?.addEventListener('click', async () => {
+    if (!currentBoardId) return;
+    try {
+      btnConfirmDelete.disabled = true;
+      await boardsApi.deleteBoard(currentBoardId);
+      closeModals();
+      updateUI();
+    } finally {
+      btnConfirmDelete.disabled = false;
+      currentBoardId = null;
+    }
+  });
+
+  appDiv.querySelectorAll('.board-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.board-options-btn')) return;
+      const id = card.getAttribute('data-id');
+      navigateTo(`/board?id=${id}`);
     });
   });
 }

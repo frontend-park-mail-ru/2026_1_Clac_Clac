@@ -96,3 +96,38 @@ export const apiClient = {
   delete: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse>('DELETE', url, null, headers),
 };
+
+export const profileApi = {
+  getProfile: () => apiClient.get('/profile'),
+  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.post('/update-profile', data),
+  updateAvatar: (formData: FormData) => {
+    return fetch(`${API_URL}/api/update-avatar`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    }).then(res => {
+      if (!res.ok) throw new Error('Ошибка загрузки аватара');
+      return res.json();
+    });
+  },
+  deleteAvatar: () => apiClient.delete('/delete-avatar'),
+};
+
+export const boardsApi = {
+  getBoards: () => apiClient.get('/home'),
+  createBoard: (data: { board_name: string; description?: string }) => apiClient.post('/boards', data),
+  updateBoard: (id: string, data: { board_name: string; description?: string }) => apiClient.put(`/boards/${id}`, data),
+  deleteBoard: (id: string) => apiClient.delete(`/boards/${id}`),
+};
+
+export const kanbanApi = {
+  getSections: (boardId: string) => apiClient.get(`/boards/${boardId}/sections`),
+  createSection: (boardId: string, data: { section_name: string; position: number }) => apiClient.post(`/boards/${boardId}/sections`, data),
+  updateSection: (sectionId: string, data: { section_name: string }) => apiClient.put(`/sections/${sectionId}`, data),
+  deleteSection: (sectionId: string) => apiClient.delete(`/sections/${sectionId}`),
+
+  getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/tasks`),
+  createTask: (sectionId: string, data: { title: string, due_date?: string }) => apiClient.post(`/sections/${sectionId}/tasks`, data),
+  updateTask: (taskId: string, data: { title: string, section_id?: string }) => apiClient.put(`/tasks/${taskId}`, data),
+  deleteTask: (taskId: string) => apiClient.delete(`/tasks/${taskId}`),
+};
