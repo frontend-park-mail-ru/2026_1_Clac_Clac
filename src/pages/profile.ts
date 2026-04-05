@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { profileApi } from '../api';
+import { authApi, profileApi } from '../api';
 import { navigateTo } from '../router';
 import profileTpl from '../templates/profile.hbs?raw';
 
@@ -8,12 +8,17 @@ const template = Handlebars.compile(profileTpl);
 export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
   try {
     const res = await profileApi.getProfile() as any;
-    const user = res.data;
+    const user = res.data || res;
 
     appDiv.innerHTML = template({ user });
 
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
-    document.getElementById('logout-btn')?.addEventListener('click', () => {
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await authApi.logout();
+      } catch {
+
+      }
       localStorage.removeItem('isAuth');
       navigateTo('/login');
     });

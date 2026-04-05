@@ -5,6 +5,13 @@ import { setInputError, setGlobalError, validateEmail, validatePassword } from '
 import registerTpl from '../templates/register.hbs?raw';
 import { navigateTo } from '../router';
 
+type LocalApiError = {
+  data?: {
+    message?: string;
+    error?: string
+  }
+};
+
 const template = Handlebars.compile(registerTpl);
 
 /**
@@ -109,8 +116,7 @@ export const renderRegister = (appDiv: HTMLElement): void => {
       navigateTo('/boards');
 
     } catch (err: unknown) {
-      type ApiError = { data?: { message?: string; error?: string } };
-      const error = err as ApiError;
+      const error = err as LocalApiError;
       const errMsg = error.data?.message || error.data?.error;
 
       if (errMsg) {
@@ -121,6 +127,10 @@ export const renderRegister = (appDiv: HTMLElement): void => {
         }
       } else {
         setGlobalError('Проверьте подключение и попробуйте снова');
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
       }
     }
   });

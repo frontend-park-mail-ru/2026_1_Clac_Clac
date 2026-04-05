@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { kanbanApi } from '../api';
+import { authApi, kanbanApi } from '../api';
 import { navigateTo } from '../router';
 import kanbanTpl from '../templates/kanban.hbs?raw';
 
@@ -36,7 +36,12 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
     document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
-    document.getElementById('logout-btn')?.addEventListener('click', () => {
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await authApi.logout();
+      } catch {
+        
+      }
       localStorage.removeItem('isAuth');
       navigateTo('/login');
     });

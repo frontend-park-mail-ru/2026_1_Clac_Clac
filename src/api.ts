@@ -7,6 +7,13 @@ export interface ApiError<T = unknown> {
   data: T | null;
 }
 
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+};
+
 /**
  * Внутренняя функция для выполнения HTTP-запросов к API.
  * 
@@ -26,14 +33,36 @@ const request = async <TResponse = unknown, TBody = unknown>(
   const options: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
       ...headers,
     },
     credentials: 'include',
   };
 
+  if (!(body instanceof FormData)) {
+    (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
+  }
+
+  if (method !== 'GET') {
+    let csrfToken = getCookie('csrf_token');
+    if (!csrfToken && url !== '/csrf') {
+      try {
+        await fetch(`${API_URL}/csrf`, { credentials: 'include' });
+        csrfToken = getCookie('csrf_token');
+      } catch (e) {
+        console.error('Failed to get CSRF token', e);
+      }
+    }
+    if (csrfToken) {
+      (options.headers as Record<string, string>)['X-CSRF-Token'] = csrfToken;
+    }
+  }
+
   if (body) {
-    options.body = JSON.stringify(body);
+    if (body instanceof FormData) {
+      options.body = body;
+    } else {
+      options.body = JSON.stringify(body);
+    }
   }
 
   const response = await fetch(`${API_URL}${url}`, options);
@@ -54,62 +83,28 @@ const request = async <TResponse = unknown, TBody = unknown>(
 };
 
 export const apiClient = {
-  /**
-   * Выполняет GET-запрос к API.
-   * 
-   * @param {string} url - Относительный путь API.
-   * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
-   * @returns {Promise<any>} Ответ сервера.
-   */
   get: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse>('GET', url, null, headers),
 
-  /**
-   * Выполняет POST-запрос к API.
-   * 
-   * @param {string} url - Относительный путь API.
-   * @param {Object} body - Тело запроса.
-   * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
-   * @returns {Promise<any>} Ответ сервера.
-   */
   post: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse, TBody>('POST', url, body, headers),
 
-  /**
-   * Выполняет PUT-запрос к API.
-   * 
-   * @param {string} url - Относительный путь API.
-   * @param {Object} body - Тело запроса.
-   * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
-   * @returns {Promise<any>} Ответ сервера.
-   */
-  put: <TResponse = unknown, TBody = unknown>(url: string, body: TBody, headers?: HeadersInit): Promise<TResponse> =>
+  put: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse, TBody>('PUT', url, body, headers),
 
-  /**
-   * Выполняет DELETE-запрос к API.
-   * 
-   * @param {string} url - Относительный путь API.
-   * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
-   * @returns {Promise<any>} Ответ сервера.
-   */
   delete: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse>('DELETE', url, null, headers),
+};
+
+export const authApi = {
+  checkAuth: () => apiClient.get('/me'),
+  logout: () => apiClient.post('/logout'),
 };
 
 export const profileApi = {
   getProfile: () => apiClient.get('/profile'),
   updateProfile: (data: { display_name: string; description_user: string }) => apiClient.post('/update-profile', data),
-  updateAvatar: (formData: FormData) => {
-    return fetch(`${API_URL}/api/update-avatar`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    }).then(res => {
-      if (!res.ok) throw new Error('Ошибка загрузки аватара');
-      return res.json();
-    });
-  },
+  updateAvatar: (formData: FormData) => apiClient.post('/update-avatar', formData),
   deleteAvatar: () => apiClient.delete('/delete-avatar'),
 };
 
