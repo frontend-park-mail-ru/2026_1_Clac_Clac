@@ -279,6 +279,7 @@
   max-height: 100%;
   margin-right: 1.5rem;
   position: relative;
+  height: 100%;
 }
 
 .kanban-column:last-child {
@@ -294,8 +295,8 @@
   width: 1px;
   background: repeating-linear-gradient(
     to bottom,
-    #3B3B3B,
-    #3B3B3B 10px,
+    #2a2a2c,
+    #2a2a2c 10px,
     transparent 10px,
     transparent 20px
   );
@@ -309,6 +310,7 @@
   align-items: center;
   font-weight: 500;
   font-size: 0.95rem;
+  flex-shrink: 0;
 }
 
 .column-title {
@@ -339,69 +341,234 @@
 }
 
 .column-cards {
-  padding: 0 1rem 1rem 1rem;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 0 0.25rem 0.5rem 0.25rem;
 }
 
 .column-cards::-webkit-scrollbar {
   width: 6px;
 }
-.column-cards::-webkit-scrollbar-thumb {
-  background: #333;
+.column-cards::-webkit-scrollbar-track {
+  background: transparent;
   border-radius: 4px;
+}
+.column-cards::-webkit-scrollbar-thumb {
+  background: #3a3a3c;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.column-cards::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4c;
+}
+.column-cards {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3c transparent;
 }
 
 .kanban-card {
-  background: #252527;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 1rem;
+  background-color: #222224; 
+  border: 2px solid #2a2a2c;
+  border-radius: 12px;
+  padding: 1.2rem;
   cursor: pointer;
-  transition: border-color 0.2s;
   position: relative;
+  transition: border-color 0.2s, transform 0.1s;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+.column-cards .kanban-card:first-child {
+  margin-top: 15px;
 }
 
 .kanban-card:hover {
   border-color: #444;
-}
+  z-index: 10;
 
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
 .btn-card-options {
   opacity: 0;
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background: transparent;
-  color: #888;
   border: none;
-  border-radius: 4px;
+  color: #666;
   cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .kanban-card:hover .btn-card-options {
   opacity: 1;
 }
 
-.btn-card-options:hover {
-  background: #3b3b3d;
-  color: white;
-}
-
-.card-assignee {
-  font-size: 0.75rem;
-  color: #888;
+/* Блок выбора исполнителя */
+.card-assignee-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #1a1a1c;
+  border: 1px solid #2a2a2c;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
   margin-bottom: 0.8rem;
 }
 
-.card-title {
-  font-size: 0.95rem;
-  color: white;
-  line-height: 1.4;
-  margin-bottom: 1rem;
+.assignee-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
+.assignee-icon-wrapper svg {
+  width: 25px;
+  height: 25px;
+}
+
+.assignee-label {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.assignee-select-btn {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-align: left;
+  flex: 1;
+  min-width: 0; /* Для корректного обрезания длинного текста */
+}
+
+.assignee-select-btn:hover {
+  background-color: #2a2a2c;
+  color: white;
+}
+
+.assignee-select-btn:active {
+  transform: scale(0.98);
+}
+
+.assignee-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #1a1a1c;
+  border: 1px solid #2a2a2c;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.assignee-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.assignee-dropdown-item:hover {
+  background-color: #2a2a2c;
+  color: white;
+}
+
+.assignee-dropdown-item.selected {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--primary);
+}
+
+.assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  flex-shrink: 0;
+}
+
+.btn-card-options:hover {
+  background-color: #2a2a2c;
+  color: white;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2a2a2c;
+  padding-bottom: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.card-assignee {
+  font-size: 0.8rem;
+  color: #777;
+  display: flex;
+  align-items: center; 
+  line-height: 1;      
+  gap: 0.4rem;         
+}
+
+.card-assignee span {
+  color: #ccc;
+  font-weight: 500;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.meta-item svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
 .add-card-btn {
   display: flex;
   align-items: center;

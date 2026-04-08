@@ -21,6 +21,25 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       try {
         const tasksRes = await kanbanApi.getTasks(sections[i].id) as any;
         const tasksList = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+
+
+        sections[i].tasks = tasksList.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          due_date: '17 марта, 2026',
+          time: 'До 23:59'
+        }));
+
+        if (sections[i].id === 1) { 
+          sections[i].tasks.push({
+            id: 9999,
+            title: "ТЕСТОВАЯ КАРТОЧКА ФРОНТА",
+            due_date: "Сегодня",
+            time: "12:00"
+          });
+          console.log("⚠️ Добавлена тестовая карточка для проверки рендера");
+        }
+
         sections[i].tasks = tasksList.map((t: any) => ({
           id: t.id,
           title: t.title,
@@ -33,6 +52,27 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     }
 
     appDiv.innerHTML = template({ board_name: "NeXuS (Trello)", sections });
+
+    console.log("=== ПРОВЕРКА ПЕРЕД РЕНДЕРОМ ===");
+    console.log("Количество секций:", sections.length);
+    
+    if (sections.length > 0) {
+        if (!sections[0].tasks) sections[0].tasks = [];
+        
+        console.log("Задачи в первой секции (ID=1):", sections[0].tasks);
+    } else {
+        console.error("❌ ОШИБКА: Секции пусты!");
+    }
+
+    appDiv.innerHTML = template({ board_name: "NeXuS (Trello)", sections });
+    
+    const firstColumnCards = document.querySelector('[data-section-id="1"]');
+    if (firstColumnCards) {
+        console.log("HTML внутри первой колонки:", firstColumnCards.innerHTML);
+    }
+
+
+
 
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
     document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
@@ -199,6 +239,174 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const title = card.getAttribute('data-title') || '';
         navigateTo(`/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title)}`);
       });
+    });
+
+    document.querySelectorAll('.assignee-select-btn').forEach(btn => {
+      if (btn.id === 'assignee-select-btn') return;
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const taskId = btn.getAttribute('data-task-id');
+        
+        document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
+        
+        const dropdown = document.createElement('div');
+        dropdown.className = 'assignee-dropdown';
+        
+        const users = [
+          { id: 1, name: 'Demo User', email: 'demo@demo.ru' }
+        ];
+        
+        users.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'assignee-dropdown-item';
+          item.innerHTML = `
+            <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-weight: 500;">${user.name}</div>
+              <div style="font-size: 0.75rem; color: #777;">${user.email}</div>
+            </div>
+          `;
+          
+          item.addEventListener('click', () => {
+            btn.textContent = user.name;
+            btn.setAttribute('data-selected-user-id', user.id.toString());
+            
+            updateTaskAssignee(taskId, user.id);
+            
+            dropdown.remove();
+          });
+          
+          dropdown.appendChild(item);
+        });
+        
+        btn.parentElement!.style.position = 'relative';
+        btn.parentElement!.appendChild(dropdown);
+      });
+    });
+
+    const updateTaskAssignee = async (taskId: string | null, userId: number) => {
+      if (!taskId) return;
+      
+      try {
+        await kanbanApi.updateTask(taskId, { title: '', assignee_id: userId });
+      } catch (error) {
+        console.error('Ошибка при обновлении исполнителя:', error);
+      }
+    };
+
+    const modalCreateTask = document.getElementById('modal-create-task')!;
+    const newTaskInput = document.getElementById('new-task-title') as HTMLInputElement;
+    const btnConfirmCreate = document.getElementById('btn-confirm-create-task')!;
+    const btnNewTask = document.getElementById('btn-new-task');
+    const modalAssigneeBtn = document.getElementById('assignee-select-btn');
+    
+    // Переменная для хранения выбранного исполнителя в модалке
+    let selectedAssigneeId: number | null = null;
+
+    // Открытие модалки
+    if (btnNewTask) {
+      btnNewTask.addEventListener('click', () => {
+        modalOverlay.classList.remove('hidden');
+        modalCreateTask.classList.remove('hidden');
+        newTaskInput.value = '';
+        newTaskInput.focus();
+        
+        // Сброс исполнителя при каждом открытии модалки
+        selectedAssigneeId = null;
+        if (modalAssigneeBtn) {
+          modalAssigneeBtn.textContent = 'Выбрать...';
+        }
+      });
+    }
+
+    // Выбор исполнителя ВНУТРИ модалки
+    if (modalAssigneeBtn) {
+      modalAssigneeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Закрываем другие открытые дропдауны
+        document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
+        
+        const dropdown = document.createElement('div');
+        dropdown.className = 'assignee-dropdown';
+        
+        const users = [
+          { id: 1, name: 'Demo User', email: 'demo@demo.ru' }
+        ];
+        
+        users.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'assignee-dropdown-item';
+          if (user.id === selectedAssigneeId) {
+            item.classList.add('selected');
+          }
+          
+          item.innerHTML = `
+            <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
+            <div class="assignee-info">
+              <span class="assignee-name">${user.name}</span>
+              <span class="assignee-email">${user.email}</span>
+            </div>
+          `;
+          
+          item.addEventListener('click', () => {
+            selectedAssigneeId = user.id;
+            modalAssigneeBtn.textContent = user.name;
+            dropdown.remove();
+          });
+          
+          dropdown.appendChild(item);
+        });
+        
+        modalAssigneeBtn.style.position = 'relative';
+        modalAssigneeBtn.appendChild(dropdown);
+      });
+    }
+
+    const handleCreateTask = async () => {
+      const title = newTaskInput.value.trim();
+      if (!title) return;
+
+      try {
+        if (sections.length > 0) {
+          const taskData: { title: string; assignee_id?: number | null } = {
+            title,
+            assignee_id: selectedAssigneeId
+          };
+          
+          await kanbanApi.createTask(sections[0].id, taskData);
+          
+          closeModals();
+          await renderKanban(appDiv);
+          
+          selectedAssigneeId = null;
+          if (modalAssigneeBtn) {
+            modalAssigneeBtn.textContent = 'Выбрать...';
+          }
+        } else {
+          alert('Сначала создайте колонку');
+        }
+      } catch (error) {
+        console.error('Ошибка при создании задачи:', error);
+        alert('Не удалось создать задачу');
+      }
+    };
+
+    btnConfirmCreate.addEventListener('click', handleCreateTask);
+    
+    newTaskInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleCreateTask();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.assignee-select-btn')) {
+        document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
+      }
     });
 
   } catch (err) {

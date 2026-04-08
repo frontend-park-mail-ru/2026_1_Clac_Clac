@@ -44,7 +44,7 @@
           <div class="kanban-column" data-id="{{id}}"
             style="min-width: 360px; max-width: 360px; display: flex; flex-direction: column; padding: 1.5rem; height: 100%;">
             <div class="column-header"
-              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
               <div class="column-title"
                 style="display: flex; align-items: center; gap: 0.6rem; color: #aaa; font-size: 0.95rem; font-weight: 500;">
                 <span class="col-dot"
@@ -65,7 +65,7 @@
               style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; flex: 1;">
               {{#each tasks}}
               <div class="kanban-card" data-id="{{id}}" data-title="{{title}}"
-                style="background: #222224; border: 1px solid transparent; border-radius: 12px; padding: 1.2rem; cursor: pointer; position: relative; transition: border-color 0.2s;">
+                style="border-radius: 12px; padding: 1.2rem; cursor: pointer; position: relative; transition: border-color 0.2s;">
                 <div class="card-header"
                   style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 0.8rem; margin-bottom: 0.8rem;">
                   <div class="card-assignee" style="font-size: 0.8rem; color: #777;">Исп.: <span
@@ -138,6 +138,39 @@
         style="flex: 1; padding: 0.9rem; border-radius: 8px; border: none; font-weight: 500; font-size: 1rem; cursor: pointer; background-color: #ff6b6b; color: white;">Удалить</button>
       <button class="btn btn-cancel close-modal-btn"
         style="flex: 1; padding: 0.9rem; border-radius: 8px; border: 1px solid #444; background: transparent; color: #ccc; font-weight: 500; font-size: 1rem; cursor: pointer;">Отменить</button>
+    </div>
+  </div>
+
+  <div id="modal-create-task" class="modal hidden" style="background: #252527; border-radius: 20px; padding: 2rem; width: 440px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+    <div class="modal-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <h2 class="modal-title" style="font-weight: 700; font-size: 1.5rem; color: white; margin: 0;">Новая задача</h2>
+      <button class="close-modal-btn" style="padding: 0; background: transparent; border: none; color: #aaa; cursor: pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body" style="margin-bottom: 2rem;">
+      <input type="text" id="new-task-title" placeholder="Введите название задачи..." autofocus style="width: 100%; background: #1a1a1c; border: 1px solid #444; border-radius: 8px; padding: 0.8rem; color: white; font-size: 1rem; outline: none; margin-bottom: 1rem;">
+      
+      <div class="assignee-selection-block" style="background: #252527; padding: 0.8rem; display: flex; align-items: center; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 22 25" fill="none">
+            <path d="M21 20.1667H17.25M17.25 20.1667H13.5M17.25 20.1667V16.3333M17.25 20.1667V24M9.75 24H1C1 19.0601 4.91751 15.0556 9.75 15.0556C10.6187 15.0556 11.4579 15.185 12.25 15.426M14.75 6.11111C14.75 8.9339 12.5114 11.2222 9.75 11.2222C6.98857 11.2222 4.75 8.9339 4.75 6.11111C4.75 3.28832 6.98857 1 9.75 1C12.5114 1 14.75 3.28832 14.75 6.11111Z" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span style="color: #8b5cf6; font-size: 0.85rem; font-weight: 500;">Исполнитель:</span>
+        <button id="assignee-select-btn" type="button" style="background: transparent; border: none; color: #ccc; font-size: 0.9rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 4px; text-align: left; flex: 1; min-width: 0;">
+          Выбрать...
+        </button>
+      </div>
+    </div>
+    
+    <div class="modal-actions" style="display: flex; gap: 1rem;">
+      <button class="btn btn-primary" id="btn-confirm-create-task" style="flex: 1; padding: 0.9rem; border-radius: 8px; border: none; font-weight: 500; font-size: 1rem; cursor: pointer; background-color: #8b5cf6; color: white;">Создать</button>
+      <button class="btn btn-cancel close-modal-btn" style="flex: 1; padding: 0.9rem; border-radius: 8px; border: 1px solid #444; background: transparent; color: #ccc; font-weight: 500; font-size: 1rem; cursor: pointer;">Отменить</button>
     </div>
   </div>
 </div>
