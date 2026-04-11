@@ -1,5 +1,6 @@
 const API_URL = 'https://clac-clac.mooo.com/api';
 
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface ApiError<T = unknown> {
@@ -123,6 +124,6 @@ export const kanbanApi = {
 
   getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/tasks`),
   createTask: (sectionId: string, data: { title: string, due_date?: string }) => apiClient.post(`/sections/${sectionId}/tasks`, data),
-  updateTask: (taskId: string, data: { title: string, section_id?: string }) => apiClient.put(`/tasks/${taskId}`, data),
+  updateTask: (taskId: string, data: { title: string, section_id?: string, assignee_id?: number | null }) => apiClient.put(`/tasks/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/tasks/${taskId}`),
 };
