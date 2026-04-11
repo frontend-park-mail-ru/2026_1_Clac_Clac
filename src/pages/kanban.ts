@@ -61,7 +61,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         
         console.log("Задачи в первой секции (ID=1):", sections[0].tasks);
     } else {
-        console.error("❌ ОШИБКА: Секции пусты!");
+        console.error("ОШИБКА: Секции пусты!");
     }
 
     appDiv.innerHTML = template({ board_name: "NeXuS (Trello)", sections });
