@@ -21,10 +21,17 @@
   font-family: 'Roboto', sans-serif;
 }
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
-  overflow-x: hidden;
 }
 
 a {

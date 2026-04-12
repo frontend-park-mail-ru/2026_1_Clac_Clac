@@ -418,9 +418,9 @@
   &__content {
     display: flex;
     flex-direction: column;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden;
+    padding: 0 !important;
+    height: 100%;
+    overflow: hidden !important;
   }
 
   &__header {
@@ -479,6 +479,7 @@
     flex: 1;
     padding-top: 18px;
     padding-left: 38px;
+    min-height: 0;
   }
 
   &__columns-container {
