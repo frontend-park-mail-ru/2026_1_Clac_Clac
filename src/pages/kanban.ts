@@ -50,22 +50,37 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     for (let i = 0; i < sections.length; i++) {
       sections[i].id = sections[i].section_link || sections[i].id;
       sections[i].color = sections[i].color || colors[i % colors.length];
+      
       try {
         const tasksRes = await kanbanApi.getTasks(sections[i].id) as any;
-        const tasksList = Array.isArray(tasksRes?.data) ? tasksRes.data : (Array.isArray(tasksRes) ? tasksRes : []);
+        
+        let tasksList = [];
+        if (Array.isArray(tasksRes?.data?.cards)) {
+          tasksList = tasksRes.data.cards;
+        } else if (Array.isArray(tasksRes?.cards)) {
+          tasksList = tasksRes.cards;
+        } else if (Array.isArray(tasksRes?.data)) {
+          tasksList = tasksRes.data;
+        } else if (Array.isArray(tasksRes)) {
+          tasksList = tasksRes;
+        }
 
         sections[i].tasks = tasksList.map((t: any) => {
-          const exUser = boardUsers.find(u => u.id === t.link_executer);
+          const executerId = t.link_executer || t.executer_link;
+          const exUser = boardUsers.find(u => u.id === executerId);
+          
+          const deadline = t.dead_line || t.data_dead_line;
+
           return {
-            id: t.link_card || t.id,
+            id: t.card_link || t.link_card || t.id,
             title: t.title || 'Без названия',
-            due_date: t.data_dead_line ? new Date(t.data_dead_line).toLocaleDateString() : '17 марта, 2026',
-            time: t.data_dead_line ? new Date(t.data_dead_line).toLocaleTimeString() : 'До 23:59',
-            executor: exUser ? exUser.name : (t.name_executer || null)
+            due_date: deadline ? new Date(deadline).toLocaleDateString() : null,
+            time: deadline ? new Date(deadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : null,
+            executor: exUser ? exUser.name : (t.executer_name || t.name_executer || null)
           };
         });
       } catch (err) {
-        sections[i].tasks = [];
+        sections[i].tasks =[];
         console.error('Error fetching tasks', err);
       }
     }
