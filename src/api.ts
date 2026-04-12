@@ -1,6 +1,6 @@
-const API_URL = 'https://clac-clac.mooo.com/api';
+const API_URL = "https://clac-clac.mooo.com/api";
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 export interface ApiError<T = unknown> {
   status: number;
@@ -11,7 +11,7 @@ const getCookie = (name: string): string | null => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null;
+    return parts.pop()?.split(";").shift() || null;
   }
   return null;
 };
@@ -20,26 +20,26 @@ let cachedCsrfToken: string | null = null;
 
 const fetchCsrfToken = async (): Promise<string | null> => {
   try {
-    const csrfRes = await fetch(`${API_URL}/csrf`, { credentials: 'include' });
-    
-    let token = csrfRes.headers.get('X-CSRF-Token') || csrfRes.headers.get('X-Csrf-Token');
-    
+    const csrfRes = await fetch(`${API_URL}/csrf`, { credentials: "include" });
+
+    let token =
+      csrfRes.headers.get("X-CSRF-Token") ||
+      csrfRes.headers.get("X-Csrf-Token");
+
     if (!token) {
       try {
         const data = await csrfRes.json();
         token = data.csrf_token || data.token || data.csrfToken || null;
-      } catch {
-
-      }
+      } catch {}
     }
 
     if (!token) {
-      token = getCookie('csrf_token');
+      token = getCookie("csrf_token");
     }
 
     return token;
   } catch (e) {
-    console.error('Failed to get CSRF token', e);
+    console.error("Failed to get CSRF token", e);
     return null;
   }
 };
@@ -48,28 +48,29 @@ const request = async <TResponse = unknown, TBody = unknown>(
   method: HttpMethod,
   url: string,
   body: TBody | null = null,
-  headers: HeadersInit = {}
+  headers: HeadersInit = {},
 ): Promise<TResponse> => {
   const options: RequestInit = {
     method,
     headers: { ...headers },
-    credentials: 'include',
+    credentials: "include",
   };
 
   if (!(body instanceof FormData)) {
-    (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
+    (options.headers as Record<string, string>)["Content-Type"] =
+      "application/json";
   }
 
-  if (method !== 'GET') {
-    let csrfToken = getCookie('csrf_token') || cachedCsrfToken;
-    
-    if (!csrfToken && url !== '/csrf') {
+  if (method !== "GET") {
+    let csrfToken = getCookie("csrf_token") || cachedCsrfToken;
+
+    if (!csrfToken && url !== "/csrf") {
       csrfToken = await fetchCsrfToken();
     }
-    
+
     if (csrfToken) {
       cachedCsrfToken = csrfToken;
-      (options.headers as Record<string, string>)['X-CSRF-Token'] = csrfToken;
+      (options.headers as Record<string, string>)["X-CSRF-Token"] = csrfToken;
     }
   }
 
@@ -83,19 +84,19 @@ const request = async <TResponse = unknown, TBody = unknown>(
 
   let response = await fetch(`${API_URL}${url}`, options);
 
-  if (response.status === 403 && method !== 'GET' && url !== '/csrf') {
-    console.warn('Received 403 Forbidden. Retrying with fresh CSRF token...');
+  if (response.status === 403 && method !== "GET" && url !== "/csrf") {
+    console.warn("Received 403 Forbidden. Retrying with fresh CSRF token...");
     cachedCsrfToken = null;
     const newToken = await fetchCsrfToken();
-    
+
     if (newToken) {
       cachedCsrfToken = newToken;
-      (options.headers as Record<string, string>)['X-CSRF-Token'] = newToken;
+      (options.headers as Record<string, string>)["X-CSRF-Token"] = newToken;
       response = await fetch(`${API_URL}${url}`, options);
     }
   }
 
-  if (url === '/login' || url === '/logout' || url === '/register') {
+  if (url === "/login" || url === "/logout" || url === "/register") {
     cachedCsrfToken = null;
   }
 
@@ -119,56 +120,112 @@ const request = async <TResponse = unknown, TBody = unknown>(
 };
 
 export const apiClient = {
-  get: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
-    request<TResponse>('GET', url, null, headers),
+  get: <TResponse = unknown>(
+    url: string,
+    headers?: HeadersInit,
+  ): Promise<TResponse> => request<TResponse>("GET", url, null, headers),
 
-  post: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
-    request<TResponse, TBody>('POST', url, body, headers),
+  post: <TResponse = unknown, TBody = unknown>(
+    url: string,
+    body?: TBody,
+    headers?: HeadersInit,
+  ): Promise<TResponse> =>
+    request<TResponse, TBody>("POST", url, body, headers),
 
-  put: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
-    request<TResponse, TBody>('PUT', url, body, headers),
+  put: <TResponse = unknown, TBody = unknown>(
+    url: string,
+    body?: TBody,
+    headers?: HeadersInit,
+  ): Promise<TResponse> => request<TResponse, TBody>("PUT", url, body, headers),
 
-  patch: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
-    request<TResponse, TBody>('PATCH', url, body, headers),
+  patch: <TResponse = unknown, TBody = unknown>(
+    url: string,
+    body?: TBody,
+    headers?: HeadersInit,
+  ): Promise<TResponse> =>
+    request<TResponse, TBody>("PATCH", url, body, headers),
 
-  delete: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
-    request<TResponse>('DELETE', url, null, headers),
+  delete: <TResponse = unknown>(
+    url: string,
+    headers?: HeadersInit,
+  ): Promise<TResponse> => request<TResponse>("DELETE", url, null, headers),
 };
 
 export const authApi = {
-  checkAuth: () => apiClient.get('/me'),
-  logout: () => apiClient.post('/logout'),
+  checkAuth: () => apiClient.get("/me"),
+  logout: () => apiClient.post("/logout"),
 };
 
 export const profileApi = {
-  getProfile: () => apiClient.get('/profiles'),
-  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.post('/profiles/info', data),
-  updateAvatar: (formData: FormData) => apiClient.put('/profiles/avatar', formData),
-  deleteAvatar: () => apiClient.delete('/profiles/avatar'),
+  getProfile: () => apiClient.get("/profiles"),
+  getProfileByLink: (link: string) => apiClient.get(`/profiles/${link}`),
+  updateProfile: (data: { display_name: string; description_user: string }) =>
+    apiClient.post("/profiles/info", data),
+  updateAvatar: (formData: FormData) =>
+    apiClient.put("/profiles/avatar", formData),
+  deleteAvatar: () => apiClient.delete("/profiles/avatar"),
 };
 
 export const boardsApi = {
-  getBoards: () => apiClient.get('/boards'),
+  getBoards: () => apiClient.get("/boards"),
   getBoard: (id: string) => apiClient.get(`/boards/${id}`),
-  createBoard: (data: { name: string; description?: string, background?: string }) => apiClient.post('/boards', data),
-  updateBoard: (id: string, data: { name: string; description?: string, background?: string }) => apiClient.put(`/boards/${id}`, data),
-  updateBoardBackground: (id: string, formData: FormData) => apiClient.put(`/boards/${id}/background`, formData),
+  createBoard: (data: {
+    name: string;
+    description?: string;
+    background?: string;
+  }) => apiClient.post("/boards", data),
+  updateBoard: (
+    id: string,
+    data: { name: string; description?: string; background?: string },
+  ) => apiClient.put(`/boards/${id}`, data),
+  updateBoardBackground: (id: string, formData: FormData) =>
+    apiClient.put(`/boards/${id}/background`, formData),
   deleteBoard: (id: string) => apiClient.delete(`/boards/${id}`),
   getBoardUsers: (id: string) => apiClient.get(`/boards/${id}/users`),
 };
 
 export const kanbanApi = {
-  getSections: (boardId: string) => apiClient.get(`/boards/${boardId}/sections`),
-  reorderSections: (boardId: string, data: { list_links: Array<string> }) => apiClient.patch(`/boards/${boardId}/sections/reorder`, data),
-  createSection: (data: { board_link: string; section_name: string; max_tasks?: number; is_mandatory?: boolean; color?: string }) => apiClient.post(`/sections`, data),
+  getSections: (boardId: string) =>
+    apiClient.get(`/boards/${boardId}/sections`),
+  reorderSections: (boardId: string, data: { list_links: Array<string> }) =>
+    apiClient.patch(`/boards/${boardId}/sections/reorder`, data),
+  createSection: (data: {
+    board_link: string;
+    section_name: string;
+    max_tasks?: number;
+    is_mandatory?: boolean;
+    color?: string;
+  }) => apiClient.post(`/sections`, data),
   getSection: (sectionId: string) => apiClient.get(`/sections/${sectionId}`),
-  updateSection: (sectionId: string, data: any) => apiClient.put(`/sections/${sectionId}`, data),
-  deleteSection: (sectionId: string) => apiClient.delete(`/sections/${sectionId}`),
+  updateSection: (sectionId: string, data: any) =>
+    apiClient.put(`/sections/${sectionId}`, data),
+  deleteSection: (sectionId: string) =>
+    apiClient.delete(`/sections/${sectionId}`),
 
-  getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/cards`),
+  getTasks: (sectionId: string) =>
+    apiClient.get(`/sections/${sectionId}/cards`),
   getTask: (taskId: string) => apiClient.get(`/cards/${taskId}`),
-  createTask: (data: { title: string; link_section: string; description?: string; link_executer?: string; link_author?: string; data_dead_line?: string }) => apiClient.post(`/cards`, data),
-  updateTask: (taskId: string, data: { link_card: string; title: string; link_executer?: string; description?: string; data_dead_line?: string }) => apiClient.put(`/cards/${taskId}`, data),
+  createTask: (data: {
+    title: string;
+    link_section: string;
+    description?: string;
+    link_executer?: string;
+    link_author?: string;
+    data_dead_line?: string;
+  }) => apiClient.post(`/cards`, data),
+  updateTask: (
+    taskId: string,
+    data: {
+      link_card: string;
+      title: string;
+      link_executer?: string;
+      description?: string;
+      data_dead_line?: string;
+    },
+  ) => apiClient.put(`/cards/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/cards/${taskId}`),
-  reorderTask: (taskId: string, data: { link_card: string; link_section: string; position: number }) => apiClient.patch(`/cards/${taskId}/reorder`, data),
+  reorderTask: (
+    taskId: string,
+    data: { link_card: string; link_section: string; position: number },
+  ) => apiClient.patch(`/cards/${taskId}/reorder`, data),
 };

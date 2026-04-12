@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { authApi, boardsApi, kanbanApi } from "../api";
+import { authApi, boardsApi, kanbanApi, profileApi } from "../api";
 import { navigateTo } from "../router";
 import kanbanTpl from "../templates/kanban.hbs?raw";
 
@@ -9,6 +9,7 @@ interface BoardUser {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string;
 }
 
 export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
@@ -33,11 +34,28 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       : Array.isArray(usersRes)
         ? usersRes
         : [];
-    boardUsers = rawUsers.map((u: any) => ({
-      id: u.user_link || u.id,
-      name: u.display_name || u.username || "Без имени",
-      email: u.email || "",
-    }));
+
+    const userPromises = rawUsers.map(async (u: any) => {
+      const link = u.user_link || u.id || u;
+      try {
+        const pRes = (await profileApi.getProfileByLink(link)) as any;
+        const pData = pRes?.data || pRes;
+        return {
+          id: link,
+          name: pData.display_name || "Без имени",
+          email: pData.email || "",
+          avatarUrl: pData.avatar_url,
+        };
+      } catch (e) {
+        return {
+          id: link,
+          name: "Пользователь",
+          email: "",
+        };
+      }
+    });
+
+    boardUsers = await Promise.all(userPromises);
   } catch (err) {
     console.error("Error fetching board details/users", err);
   }
@@ -378,7 +396,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           const item = document.createElement("div");
           item.className = "assignee__dropdown-item";
           item.innerHTML = `
-            <div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>
+            ${
+              user.avatarUrl
+                ? `<img src="${user.avatarUrl}" class="assignee__avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`
+            }
             <div class="assignee__info">
               <span class="assignee__name">${user.name}</span>
               <span class="assignee__email">${user.email}</span>
@@ -441,7 +463,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
             item.classList.add("assignee__dropdown-item--selected");
 
           item.innerHTML = `
-            <div class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">${user.name.charAt(0).toUpperCase()}</div>
+            ${
+              user.avatarUrl
+                ? `<img src="${user.avatarUrl}" class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                : `<div class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">${user.name.charAt(0).toUpperCase()}</div>`
+            }
             <div class="assignee-info" style="display:flex;flex-direction:column;margin-left:8px;">
               <span class="assignee-name" style="color:white;font-weight:500;">${user.name}</span>
               <span class="assignee-email" style="color:#777;font-size:12px;">${user.email}</span>
