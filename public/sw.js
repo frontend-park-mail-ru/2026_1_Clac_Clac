@@ -1,6 +1,6 @@
-const CACHE_NAME = 'nexus-cache-v1';
+const CACHE_NAME = 'nexus-cache-v2';
 
-const staticAssets = [
+const staticAssets =[
   '/',
   '/index.html',
   '/manifest.json',
@@ -32,38 +32,26 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  if (request.method !== 'GET' || url.href.includes('clac-clac.mooo.com/api')) {
+  if (request.method !== 'GET' || url.pathname.startsWith('/api') || url.href.includes('clac-clac.mooo.com/api')) {
     return;
   }
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-          return response;
-        })
-        .catch(() => caches.match('/index.html'))
+      fetch(request).catch(() => caches.match('/index.html'))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
-          }
-          return networkResponse;
-        })
-        .catch((err) => {
-          console.warn('Network request failed, serving from cache if available:', err);
-        });
-
-      return cachedResponse || fetchPromise;
-    })
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(request))
   );
 });
