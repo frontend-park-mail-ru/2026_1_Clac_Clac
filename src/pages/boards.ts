@@ -60,7 +60,12 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
     eventController = new AbortController();
 
     appDiv.innerHTML = template({ boards: localBoards, user: currentUser });
-    attachEventListeners(appDiv, updateUI, eventController.signal);
+    
+    const reloadBoards = async () => {
+      await renderBoards(appDiv);
+    };
+
+    attachEventListeners(appDiv, reloadBoards, eventController.signal);
   };
   updateUI();
 };
@@ -105,10 +110,10 @@ async function loadData(): Promise<boolean> {
  * Инициализирует и прикрепляет слушатели событий на странице со списком досок.
  * 
  * @param {HTMLElement} appDiv - DOM-контейнер страницы.
- * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
+ * @param {Function} reloadBoards - Функция для полного обновления данных и интерфейса.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
  */
-const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void => {
+const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<void>, abortSignal: AbortSignal): void => {
   const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
   const modalCreate = appDiv.querySelector<HTMLElement>('#modal-create-board');
   const modalEdit = appDiv.querySelector<HTMLElement>('#modal-edit-board');
@@ -128,8 +133,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
     navigateTo('/login');
   }, { signal: abortSignal });
 
-  const closeModals = (): void => {
-    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => {
+  const closeModals = (): void => {[modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => {
       if (m) {
         m.classList.add('hidden');
       }
@@ -239,7 +243,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
       }
 
       closeModals();
-      updateUI();
+      await reloadBoards();
     } catch (err) {
       console.error('Create error', err);
     } finally {
@@ -311,7 +315,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
         await boardsApi.updateBoardBackground(currentBoardId, fd);
       }
       closeModals();
-      updateUI();
+      await reloadBoards();
     } finally {
       btnConfirmEdit.disabled = false;
     }
@@ -334,7 +338,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
       btnConfirmDelete.disabled = true;
       await boardsApi.deleteBoard(currentBoardId);
       closeModals();
-      updateUI();
+      await reloadBoards();
       currentBoardId = null;
       currentBoardName = null;
     } catch (err) {
