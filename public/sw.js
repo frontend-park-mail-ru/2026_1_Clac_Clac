@@ -1,6 +1,6 @@
 const CACHE_NAME = 'nexus-cache-v2';
 
-const staticAssets =[
+const staticAssets = [
   '/',
   '/index.html',
   '/manifest.json',
