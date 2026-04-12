@@ -455,12 +455,35 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
         const dropdown = document.createElement("div");
         dropdown.className = "assignee-dropdown";
+        dropdown.style.cssText = `
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 220px;
+          background: #2a2a2c;
+          border: 1px solid #444;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+          z-index: 1000;
+          max-height: 200px;
+          overflow-y: auto;
+          margin-top: 4px;
+        `;
 
         boardUsers.forEach((user) => {
           const item = document.createElement("div");
           item.className = "assignee-dropdown-item";
-          if (user.id === selectedAssigneeId)
-            item.classList.add("assignee__dropdown-item--selected");
+          item.style.cssText = `
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #333;
+          `;
+          if (user.id === selectedAssigneeId) {
+            item.style.backgroundColor = "#3a3a3c";
+          }
 
           item.innerHTML = `
             ${
@@ -468,23 +491,41 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                 ? `<img src="${user.avatarUrl}" class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
                 : `<div class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">${user.name.charAt(0).toUpperCase()}</div>`
             }
-            <div class="assignee-info" style="display:flex;flex-direction:column;margin-left:8px;">
-              <span class="assignee-name" style="color:white;font-weight:500;">${user.name}</span>
-              <span class="assignee-email" style="color:#777;font-size:12px;">${user.email}</span>
+            <div class="assignee-info" style="display:flex;flex-direction:column;margin-left:8px;min-width:0;">
+              <span class="assignee-name" style="color:white;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.name}</span>
+              <span class="assignee-email" style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</span>
             </div>
           `;
 
+          item.addEventListener("mouseenter", () => {
+            item.style.backgroundColor = "#333";
+          });
+          item.addEventListener("mouseleave", () => {
+            if (user.id !== selectedAssigneeId)
+              item.style.backgroundColor = "transparent";
+          });
+
           item.addEventListener("click", () => {
             selectedAssigneeId = user.id;
-            modalAssigneeBtn.textContent = user.name;
+            modalAssigneeBtn.innerHTML = `
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${
+                  user.avatarUrl
+                    ? `<img src="${user.avatarUrl}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                    : `<div style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;">${user.name.charAt(0).toUpperCase()}</div>`
+                }
+                <span style="color:white;font-size:14px;">${user.name}</span>
+              </div>
+            `;
             dropdown.remove();
           });
 
           dropdown.appendChild(item);
         });
 
-        modalAssigneeBtn.classList.add("relative-wrapper");
-        modalAssigneeBtn.appendChild(dropdown);
+        const parent = modalAssigneeBtn.parentElement!;
+        parent.style.position = "relative";
+        parent.appendChild(dropdown);
       });
     }
 
