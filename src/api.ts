@@ -18,16 +18,32 @@ const getCookie = (name: string): string | null => {
 
 let cachedCsrfToken: string | null = null;
 
-/**
- * Внутренняя функция для выполнения HTTP-запросов к API.
- * 
- * @param {string} method - HTTP-метод ('GET', 'POST', 'PUT', 'DELETE').
- * @param {string} url - Относительный путь API.
- * @param {Object|null} [body=null] - Тело запроса.
- * @param {Object} [headers={}] - Дополнительные HTTP-заголовки.
- * @returns {Promise<any>} Результат запроса.
- * @throws {Object} Объект ошибки, содержащий HTTP-статус и данные ошибки, если ответ не успешен.
- */
+const fetchCsrfToken = async (): Promise<string | null> => {
+  try {
+    const csrfRes = await fetch(`${API_URL}/csrf`, { credentials: 'include' });
+    
+    let token = csrfRes.headers.get('X-CSRF-Token') || csrfRes.headers.get('X-Csrf-Token');
+    
+    if (!token) {
+      try {
+        const data = await csrfRes.json();
+        token = data.csrf_token || data.token || data.csrfToken || null;
+      } catch {
+
+      }
+    }
+
+    if (!token) {
+      token = getCookie('csrf_token');
+    }
+
+    return token;
+  } catch (e) {
+    console.error('Failed to get CSRF token', e);
+    return null;
+  }
+};
+
 const request = async <TResponse = unknown, TBody = unknown>(
   method: HttpMethod,
   url: string,
@@ -48,26 +64,7 @@ const request = async <TResponse = unknown, TBody = unknown>(
     let csrfToken = getCookie('csrf_token') || cachedCsrfToken;
     
     if (!csrfToken && url !== '/csrf') {
-      try {
-        const csrfRes = await fetch(`${API_URL}/csrf`, { credentials: 'include' });
-        
-        csrfToken = csrfRes.headers.get('X-CSRF-Token') || csrfRes.headers.get('X-Csrf-Token');
-        
-        if (!csrfToken) {
-          try {
-            const data = await csrfRes.json();
-            csrfToken = data.csrf_token || data.token || data.csrfToken || null;
-          } catch {
-
-          }
-        }
-
-        if (!csrfToken) {
-          csrfToken = getCookie('csrf_token');
-        }
-      } catch (e) {
-        console.error('Failed to get CSRF token', e);
-      }
+      csrfToken = await fetchCsrfToken();
     }
     
     if (csrfToken) {
@@ -84,7 +81,27 @@ const request = async <TResponse = unknown, TBody = unknown>(
     }
   }
 
-  const response = await fetch(`${API_URL}${url}`, options);
+  let response = await fetch(`${API_URL}${url}`, options);
+
+  if (response.status === 403 && method !== 'GET' && url !== '/csrf') {
+    console.warn('Received 403 Forbidden. Retrying with fresh CSRF token...');
+    cachedCsrfToken = null;
+    const newToken = await fetchCsrfToken();
+    
+    if (newToken) {
+      cachedCsrfToken = newToken;
+      (options.headers as Record<string, string>)['X-CSRF-Token'] = newToken;
+      response = await fetch(`${API_URL}${url}`, options);
+    }
+  }
+
+  if (url === '/login' || url === '/logout' || url === '/register') {
+    cachedCsrfToken = null;
+  }
+
+  if (response.status === 401) {
+    cachedCsrfToken = null;
+  }
 
   let data: TResponse | null;
   try {
@@ -120,10 +137,7 @@ export const apiClient = {
 
 export const authApi = {
   checkAuth: () => apiClient.get('/me'),
-  logout: () => {
-    cachedCsrfToken = null;
-    return apiClient.post('/logout');
-  },
+  logout: () => apiClient.post('/logout'),
 };
 
 export const profileApi = {
