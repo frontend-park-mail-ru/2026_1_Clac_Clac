@@ -1,7 +1,7 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setInputError, setGlobalError, validateEmail, validatePassword } from '../utils';
-import { FormValidator, ValidationSchema } from '../utils/Validator';
+import { FormValidator, ValidationSchema } from '../utils/validator';
 
 import registerTpl from '../templates/register.hbs?raw';
 import { navigateTo } from '../router';

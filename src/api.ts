@@ -1,7 +1,6 @@
 const API_URL = 'https://clac-clac.mooo.com/api';
 
-
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 export interface ApiError<T = unknown> {
   status: number;
@@ -33,9 +32,7 @@ const request = async <TResponse = unknown, TBody = unknown>(
 ): Promise<TResponse> => {
   const options: RequestInit = {
     method,
-    headers: {
-      ...headers,
-    },
+    headers: { ...headers },
     credentials: 'include',
   };
 
@@ -93,6 +90,9 @@ export const apiClient = {
   put: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse, TBody>('PUT', url, body, headers),
 
+  patch: <TResponse = unknown, TBody = unknown>(url: string, body?: TBody, headers?: HeadersInit): Promise<TResponse> =>
+    request<TResponse, TBody>('PATCH', url, body, headers),
+
   delete: <TResponse = unknown>(url: string, headers?: HeadersInit): Promise<TResponse> =>
     request<TResponse>('DELETE', url, null, headers),
 };
@@ -103,27 +103,30 @@ export const authApi = {
 };
 
 export const profileApi = {
-  getProfile: () => apiClient.get('/profile'),
-  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.post('/update-profile', data),
-  updateAvatar: (formData: FormData) => apiClient.post('/update-avatar', formData),
-  deleteAvatar: () => apiClient.delete('/delete-avatar'),
+  getProfile: () => apiClient.get('/profiles'),
+  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.put('/profiles', data),
+  updateAvatar: (formData: FormData) => apiClient.put('/profiles/avatar', formData),
+  deleteAvatar: () => apiClient.delete('/profiles/avatar'),
 };
 
 export const boardsApi = {
-  getBoards: () => apiClient.get('/home'),
-  createBoard: (data: { board_name: string; description?: string }) => apiClient.post('/boards', data),
-  updateBoard: (id: string, data: { board_name: string; description?: string }) => apiClient.put(`/boards/${id}`, data),
+  getBoards: () => apiClient.get('/boards'),
+  getBoard: (id: string) => apiClient.get(`/boards/${id}`),
+  createBoard: (data: { name: string; description?: string, background?: string }) => apiClient.post('/boards', data),
+  updateBoard: (id: string, data: { name: string; description?: string, background?: string }) => apiClient.put(`/boards/${id}`, { link: id, ...data }),
+  updateBoardBackground: (id: string, formData: FormData) => apiClient.put(`/boards/${id}/background`, formData),
   deleteBoard: (id: string) => apiClient.delete(`/boards/${id}`),
 };
 
 export const kanbanApi = {
   getSections: (boardId: string) => apiClient.get(`/boards/${boardId}/sections`),
-  createSection: (boardId: string, data: { section_name: string; position: number }) => apiClient.post(`/boards/${boardId}/sections`, data),
-  updateSection: (sectionId: string, data: { section_name: string }) => apiClient.put(`/sections/${sectionId}`, data),
+  createSection: (data: { board_link: string; section_name: string; max_tasks?: number; is_mandatory?: boolean; color?: string }) => apiClient.post(`/sections`, data),
+  updateSection: (sectionId: string, data: any) => apiClient.put(`/sections/${sectionId}`, data),
   deleteSection: (sectionId: string) => apiClient.delete(`/sections/${sectionId}`),
 
   getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/tasks`),
-  createTask: (sectionId: string, data: { title: string, due_date?: string }) => apiClient.post(`/sections/${sectionId}/tasks`, data),
-  updateTask: (taskId: string, data: { title: string, section_id?: string, assignee_id?: number | null }) => apiClient.put(`/tasks/${taskId}`, data),
-  deleteTask: (taskId: string) => apiClient.delete(`/tasks/${taskId}`),
+  getTask: (taskId: string) => apiClient.get(`/cards/${taskId}`),
+  createTask: (data: { title: string; link_section: string; description?: string; link_executer?: string; link_author?: string; data_dead_line?: string }) => apiClient.post(`/cards`, data),
+  updateTask: (taskId: string, data: { link_card: string; title: string; link_executer?: string; description?: string; data_dead_line?: string }) => apiClient.put(`/cards/${taskId}`, data),
+  deleteTask: (taskId: string) => apiClient.delete(`/cards/${taskId}`),
 };

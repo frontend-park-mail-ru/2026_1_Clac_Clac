@@ -15,9 +15,11 @@ interface User {
 interface RawBoard {
   id?: string;
   link?: string;
+  name?: string;
   board_name?: string;
   title?: string;
   description?: string;
+  background?: string;
   backlog?: number;
   hot?: number;
   members?: number;
@@ -27,6 +29,7 @@ interface Board {
   id: string;
   board_name: string;
   description: string;
+  background: string;
   backlog: number;
   hot: number;
   members: number;
@@ -78,8 +81,9 @@ async function loadData(): Promise<boolean> {
 
     localBoards = rawBoards.map(board => ({
       id: board.link || board.id || '',
-      board_name: board.board_name || board.title || 'Без названия',
-      description: board.description || 'Создаём аналог Trello',
+      board_name: board.name || board.board_name || board.title || 'Без названия',
+      description: board.description || 'Без описания',
+      background: board.background || '',
       backlog: board.backlog || 0,
       hot: board.hot || 0,
       members: board.members || 0
@@ -113,12 +117,13 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try { await authApi.logout(); } catch {}
+    try { await authApi.logout(); } catch { }
     localStorage.removeItem('isAuth');
     navigateTo('/login');
   }, { signal: abortSignal });
 
-  const closeModals = (): void => {[modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
+  const closeModals = (): void => {
+    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
   };
 
   appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
@@ -198,7 +203,16 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     if (!boardName) return;
     try {
       btnConfirmCreate.disabled = true;
-      await boardsApi.createBoard({ board_name: boardName, description: 'Создаём аналог Trello' });
+      const res = await boardsApi.createBoard({ name: boardName, description: 'Создаём аналог Trello' }) as any;
+      const newBoardId = res.data?.link;
+
+      const file = createImgInput?.files?.[0];
+      if (file && newBoardId) {
+        const fd = new FormData();
+        fd.append('background', file);
+        await boardsApi.updateBoardBackground(newBoardId, fd);
+      }
+
       closeModals();
       updateUI();
     } catch (err) {
@@ -222,13 +236,13 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
       currentBoardName = name;
 
       if (editBoardNameInput) {
-        editBoardNameInput.value = '';
+        editBoardNameInput.value = name;
         editBoardNameInput.placeholder = 'Например, Запуск продукта';
       }
       if (editImgInput) editImgInput.value = '';
       if (editImgName) editImgName.textContent = 'Изображение доски';
 
-      if (btnConfirmEdit) btnConfirmEdit.disabled = true;
+      if (btnConfirmEdit) btnConfirmEdit.disabled = false;
 
       modalOverlay?.classList.remove('hidden');
       modalEdit?.classList.remove('hidden');
@@ -246,10 +260,19 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   btnConfirmEdit?.addEventListener('click', async () => {
     const name = editBoardNameInput?.value.trim();
-    if (!name || !currentBoardId) return;
+    if (!currentBoardId) return;
     try {
       btnConfirmEdit.disabled = true;
-      await boardsApi.updateBoard(currentBoardId, { board_name: name });
+      if (name) {
+        await boardsApi.updateBoard(currentBoardId, { name: name, description: 'Создаём аналог Trello' });
+      }
+
+      const file = editImgInput?.files?.[0];
+      if (file) {
+        const fd = new FormData();
+        fd.append('background', file);
+        await boardsApi.updateBoardBackground(currentBoardId, fd);
+      }
       closeModals();
       updateUI();
     } finally {

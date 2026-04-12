@@ -41,16 +41,22 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
         btnSave.disabled = true;
       }
     };
+
     nameInput.addEventListener('input', checkChanges);
     descInput.addEventListener('input', checkChanges);
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
-        await profileApi.updateProfile({ display_name: nameInput.value, description_user: descInput.value });
+        btnSave.disabled = true;
+        await profileApi.updateProfile({
+          display_name: nameInput.value.trim(),
+          description_user: descInput.value.trim()
+        });
         renderProfile(appDiv);
       } catch (e) {
-        console.error('Save failed', e);
+        console.error('Save profile failed', e);
+        btnSave.disabled = false;
       }
     });
 
@@ -60,8 +66,12 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       if (file) {
         const fd = new FormData();
         fd.append('avatar', file);
-        await profileApi.updateAvatar(fd);
-        renderProfile(appDiv);
+        try {
+          await profileApi.updateAvatar(fd);
+          renderProfile(appDiv);
+        } catch (err) {
+          console.error('Avatar upload error', err);
+        }
       }
     });
 
@@ -71,24 +81,33 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       modalOverlay.classList.remove('hidden');
       modalDelete.classList.remove('hidden');
     });
+
     document.querySelectorAll('.close-modal-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         modalOverlay.classList.add('hidden');
         modalDelete.classList.add('hidden');
       });
     });
+
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) {
         modalOverlay.classList.add('hidden');
         modalDelete.classList.add('hidden');
       }
     });
+
     document.getElementById('confirm-delete-avatar')?.addEventListener('click', async () => {
-      await profileApi.deleteAvatar();
-      renderProfile(appDiv);
+      try {
+        await profileApi.deleteAvatar();
+        renderProfile(appDiv);
+      } catch (err) {
+        console.error('Avatar delete error', err);
+      }
     });
 
   } catch (err) {
+    console.error(err);
+    localStorage.removeItem('isAuth');
     navigateTo('/login');
   }
 };

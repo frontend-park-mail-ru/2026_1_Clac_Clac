@@ -37,12 +37,16 @@
           <div class="board-header"
             style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
             <div class="board-title-group" style="display: flex; gap: 1rem; align-items: center;">
-              <div class="board-icon-monitor">
+              <div class="board-icon-monitor" {{#if
+                background}}style="background-image: url('{{background}}'); background-size: cover; background-position: center;"
+                {{/if}}>
+                {{#unless background}}
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="12" rx="2"></rect>
                   <path d="M12 16v4M8 22l4-4 4 4"></path>
                 </svg>
+                {{/unless}}
               </div>
               <div style="display: flex; flex-direction: column; gap: 0.3rem;">
                 <h2 class="board-name" style="font-size: 1.15rem; font-weight: bold; margin: 0; color: white;">

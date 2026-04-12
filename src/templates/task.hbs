@@ -33,8 +33,8 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span style="font-size: 0.95rem;">Исп.: <strong
-              style="color: white; font-weight: normal;">Demo</strong></span>
+          <span style="font-size: 0.95rem;">Исп.: <strong style="color: white; font-weight: normal;">{{#if
+              task.executor}}{{task.executor}}{{else}}Demo{{/if}}</strong></span>
         </div>
         {{#if task.due_date}}
         <div class="task-meta-item" style="display: flex; align-items: center; gap: 0.8rem;">
@@ -55,6 +55,15 @@
         </div>
         {{/if}}
       </div>
+
+      {{#if task.description}}
+      <div class="task-description mt-1"
+        style="margin-top: 3rem; color: #ccc; line-height: 1.6; font-size: 1rem; background: #252527; padding: 1.5rem; border-radius: 12px; border: 1px solid #333;">
+        <h3 style="color: white; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;">Описание</h3>
+        <p style="white-space: pre-wrap; margin: 0;">{{task.description}}</p>
+      </div>
+      {{/if}}
+
     </div>
   </div>
 </div>

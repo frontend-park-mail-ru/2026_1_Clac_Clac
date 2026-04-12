@@ -11,50 +11,84 @@ export type ValidationSchema = Record<string, ValidationRule[]>;
 type SetErrorFn = (fieldId: string, message: string | null) => void;
 
 export class FormValidator {
-  // private formId: string; // Удаляем это поле
-  private schema: ValidationSchema;
-  private onValidityChange?: (isValid: boolean) => void;
-  private setErrorFn: SetErrorFn;
-
   constructor(
-    // formId: string, // Удаляем этот аргумент
-    schema: ValidationSchema,
-    onError: SetErrorFn,
-    onValidityChange?: (isValid: boolean) => void
+    private readonly schema: ValidationSchema,
+    private readonly onError: SetErrorFn,
+    private readonly onValidityChange?: (isValid: boolean) => void
   ) {
-    // this.formId = formId; // Удаляем присваивание
-    this.schema = schema;
-    this.setErrorFn = onError;
-    this.onValidityChange = onValidityChange;
+
   }
 
+  /**
+   * Выполняет активную проверку всех полей. 
+   * Подсвечивает ошибки во всех невалидных полях.
+   * Возвращает true, если форма валидна.
+   */
   public validate(): boolean {
     let isFormValid = true;
 
     for (const [fieldId, rules] of Object.entries(this.schema)) {
-      // Ищем элемент по fieldId напрямую. 
-      // Это предполагает, что ID полей уникальны на всей странице, что обычно верно для форм.
-      const field = document.getElementById(fieldId) as HTMLInputElement | null;
+      const field = this.getField(fieldId);
       if (!field) continue;
 
-      const value = field.value.trim();
-      const error = this.checkFieldRules(value, rules);
+      const error = this.checkFieldRules(field.value.trim(), rules);
+      this.onError(fieldId, error);
 
       if (error) {
-        this.setErrorFn(fieldId, error);
         isFormValid = false;
-      } else {
-        this.setErrorFn(fieldId, null);
       }
     }
 
-    if (this.onValidityChange) {
-      this.onValidityChange(isFormValid);
-    }
-
+    this.onValidityChange?.(isFormValid);
     return isFormValid;
   }
 
+  /**
+   * Сбрасывает все визуальные ошибки формы.
+   */
+  public clearErrors(): void {
+    for (const fieldId of Object.keys(this.schema)) {
+      this.onError(fieldId, null);
+    }
+  }
+
+  /**
+   * Подвешивает слушатели на поля для проверки на лету.
+   */
+  public attachLiveValidation(): void {
+    for (const [fieldId, rules] of Object.entries(this.schema)) {
+      const field = this.getField(fieldId);
+      if (!field) continue;
+
+      field.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+        const error = this.checkFieldRules(target.value.trim(), rules);
+
+        this.onError(fieldId, error);
+
+        this.onValidityChange?.(this.isFormValidPassively());
+      });
+    }
+  }
+
+  /**
+   * Фоновая проверка формы без вызова коллбека отображения ошибок (onError).
+   */
+  private isFormValidPassively(): boolean {
+    for (const [fieldId, rules] of Object.entries(this.schema)) {
+      const field = this.getField(fieldId);
+      if (!field) continue;
+
+      if (this.checkFieldRules(field.value.trim(), rules) !== null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Логика проверки конкретного поля по его правилам.
+   */
   private checkFieldRules(value: string, rules: ValidationRule[]): string | null {
     for (const rule of rules) {
       if (rule.required && !value) {
@@ -76,28 +110,10 @@ export class FormValidator {
     return null;
   }
 
-  public clearErrors(): void {
-    for (const fieldId of Object.keys(this.schema)) {
-      this.setErrorFn(fieldId, null);
-    }
-  }
-
-  public attachLiveValidation(): void {
-    for (const fieldId of Object.keys(this.schema)) {
-      const field = document.getElementById(fieldId) as HTMLInputElement | null;
-      if (!field) continue;
-
-      field.addEventListener('input', () => {
-        const value = field.value.trim();
-        const rules = this.schema[fieldId];
-        const error = this.checkFieldRules(value, rules);
-        
-        this.setErrorFn(fieldId, error);
-        
-        if (this.onValidityChange) {
-          this.onValidityChange(this.validate());
-        }
-      });
-    }
+  /**
+   * Вспомогательный метод для безопасного получения поля формы (input или textarea).
+   */
+  private getField(fieldId: string): HTMLInputElement | HTMLTextAreaElement | null {
+    return document.getElementById(fieldId) as HTMLInputElement | HTMLTextAreaElement | null;
   }
 }

@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { authApi, kanbanApi } from '../api';
+import { authApi, boardsApi, kanbanApi } from '../api';
 import { navigateTo } from '../router';
 import kanbanTpl from '../templates/kanban.hbs?raw';
 
@@ -10,78 +10,48 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
   const boardId = urlParams.get('id');
   if (!boardId) return navigateTo('/boards');
 
+  let boardName = "Без названия";
+  try {
+    const boardRes = await boardsApi.getBoard(boardId) as any;
+    if (boardRes?.data?.name) {
+      boardName = boardRes.data.name;
+    }
+  } catch {
+
+  }
+
   try {
     const res = await kanbanApi.getSections(boardId) as any;
-    let sections = Array.isArray(res.data) ? res.data : (res || []);
+    let sections = res.data?.sections || res.sections || res.data || res || [];
+    if (!Array.isArray(sections)) sections = [];
 
     const colors = ['#666', '#8b5cf6', '#f59e0b', '#10b981'];
 
     for (let i = 0; i < sections.length; i++) {
-      sections[i].color = colors[i % colors.length];
+      sections[i].id = sections[i].section_link || sections[i].id;
+      sections[i].color = sections[i].color || colors[i % colors.length];
       try {
         const tasksRes = await kanbanApi.getTasks(sections[i].id) as any;
-        const tasksList = Array.isArray(tasksRes.data) ? tasksRes.data : [];
-
-
-        sections[i].tasks = tasksList.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          due_date: '17 марта, 2026',
-          time: 'До 23:59'
-        }));
-
-        if (sections[i].id === 1) { 
-          sections[i].tasks.push({
-            id: 9999,
-            title: "ТЕСТОВАЯ КАРТОЧКА ФРОНТА",
-            due_date: "Сегодня",
-            time: "12:00"
-          });
-          console.log("⚠️ Добавлена тестовая карточка для проверки рендера");
-        }
+        const tasksList = Array.isArray(tasksRes?.data) ? tasksRes.data : (Array.isArray(tasksRes) ? tasksRes : []);
 
         sections[i].tasks = tasksList.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          due_date: '17 марта, 2026',
-          time: 'До 23:59'
+          id: t.link_card || t.id,
+          title: t.title || 'Без названия',
+          due_date: t.data_dead_line ? new Date(t.data_dead_line).toLocaleDateString() : '17 марта, 2026',
+          time: t.data_dead_line ? new Date(t.data_dead_line).toLocaleTimeString() : 'До 23:59',
+          executor: t.name_executer || t.link_executer || 'Demo'
         }));
       } catch {
         sections[i].tasks = [];
       }
     }
 
-    appDiv.innerHTML = template({ board_name: "NeXuS (Trello)", sections });
-
-    console.log("=== ПРОВЕРКА ПЕРЕД РЕНДЕРОМ ===");
-    console.log("Количество секций:", sections.length);
-    
-    if (sections.length > 0) {
-        if (!sections[0].tasks) sections[0].tasks = [];
-        
-        console.log("Задачи в первой секции (ID=1):", sections[0].tasks);
-    } else {
-        console.error("ОШИБКА: Секции пусты!");
-    }
-
-    appDiv.innerHTML = template({ board_name: "NeXuS (Trello)", sections });
-    
-    const firstColumnCards = document.querySelector('[data-section-id="1"]');
-    if (firstColumnCards) {
-        console.log("HTML внутри первой колонки:", firstColumnCards.innerHTML);
-    }
-
-
-
+    appDiv.innerHTML = template({ board_name: boardName, sections });
 
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
     document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
-      try {
-        await authApi.logout();
-      } catch {
-        
-      }
+      try { await authApi.logout(); } catch { }
       localStorage.removeItem('isAuth');
       navigateTo('/login');
     });
@@ -126,6 +96,14 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         document.body.appendChild(menu);
         activeMenu = menu;
 
+        menu.querySelector('#ctx-edit-list')?.addEventListener('click', async () => {
+          const newName = prompt('Введите новое имя списка:');
+          if (newName && newName.trim() && sectionId) {
+            await kanbanApi.updateSection(sectionId, { section_link: sectionId, section_name: newName.trim(), is_mandatory: false, max_tasks: 100, color: 'gray', position: 1 });
+            renderKanban(appDiv);
+          }
+        });
+
         menu.querySelector('#ctx-delete-list')?.addEventListener('click', async () => {
           if (sectionId) {
             await kanbanApi.deleteSection(sectionId);
@@ -153,6 +131,14 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         document.body.appendChild(menu);
         activeMenu = menu;
 
+        menu.querySelector('#ctx-edit-card')?.addEventListener('click', async () => {
+          const newName = prompt('Введите новое имя карточки:', title || '');
+          if (newName && newName.trim() && taskId) {
+            await kanbanApi.updateTask(taskId, { link_card: taskId, title: newName.trim(), description: '' });
+            renderKanban(appDiv);
+          }
+        });
+
         menu.querySelector('#ctx-delete-card')?.addEventListener('click', () => {
           document.getElementById('delete-card-name')!.textContent = title || '';
           modalOverlay.classList.remove('hidden');
@@ -175,7 +161,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
         parent.innerHTML = `
           <div class="add-card-form" style="background: #1e1e20; border: 1px dashed #444; border-radius: 12px; padding: 1.2rem;">
-            <textarea class="add-card-input" id="inline-new-task-\${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus style="width: 100%; background: transparent; border: none; color: white; font-size: 0.95rem; resize: none; outline: none; min-height: 40px;"></textarea>
+            <textarea class="add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus style="width: 100%; background: transparent; border: none; color: white; font-size: 0.95rem; resize: none; outline: none; min-height: 40px;"></textarea>
           </div>
         `;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
@@ -184,7 +170,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const saveTask = async () => {
           const val = input.value.trim();
           if (val) {
-            await kanbanApi.createTask(sectionId, { title: val });
+            await kanbanApi.createTask({ title: val, link_section: sectionId, description: '' });
             renderKanban(appDiv);
           } else {
             renderKanban(appDiv);
@@ -219,7 +205,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const saveColumn = async () => {
           const val = input.value.trim();
           if (val) {
-            await kanbanApi.createSection(boardId, { section_name: val, position: sections.length });
+            await kanbanApi.createSection({ board_link: boardId, section_name: val, max_tasks: 100, is_mandatory: false, color: 'gray' });
           }
           renderKanban(appDiv);
         };
@@ -241,22 +227,33 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       });
     });
 
+    const updateTaskAssignee = async (taskId: string | null, userId: number) => {
+      if (!taskId) return;
+      try {
+        const taskNode = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
+        const title = taskNode?.getAttribute('data-title') || '';
+        await kanbanApi.updateTask(taskId, { link_card: taskId, title: title, link_executer: userId.toString(), description: '' });
+      } catch (error) {
+        console.error('Ошибка при обновлении исполнителя:', error);
+      }
+    };
+
     document.querySelectorAll('.assignee-select-btn').forEach(btn => {
       if (btn.id === 'assignee-select-btn') return;
 
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const taskId = btn.getAttribute('data-task-id');
-        
+
         document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
-        
+
         const dropdown = document.createElement('div');
         dropdown.className = 'assignee-dropdown';
-        
+
         const users = [
           { id: 1, name: 'Demo User', email: 'demo@demo.ru' }
         ];
-        
+
         users.forEach(user => {
           const item = document.createElement('div');
           item.className = 'assignee-dropdown-item';
@@ -267,52 +264,37 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
               <div style="font-size: 0.75rem; color: #777;">${user.email}</div>
             </div>
           `;
-          
+
           item.addEventListener('click', () => {
             btn.textContent = user.name;
             btn.setAttribute('data-selected-user-id', user.id.toString());
-            
             updateTaskAssignee(taskId, user.id);
-            
             dropdown.remove();
           });
-          
+
           dropdown.appendChild(item);
         });
-        
+
         btn.parentElement!.style.position = 'relative';
         btn.parentElement!.appendChild(dropdown);
       });
     });
-
-    const updateTaskAssignee = async (taskId: string | null, userId: number) => {
-      if (!taskId) return;
-      
-      try {
-        await kanbanApi.updateTask(taskId, { title: '', assignee_id: userId });
-      } catch (error) {
-        console.error('Ошибка при обновлении исполнителя:', error);
-      }
-    };
 
     const modalCreateTask = document.getElementById('modal-create-task')!;
     const newTaskInput = document.getElementById('new-task-title') as HTMLInputElement;
     const btnConfirmCreate = document.getElementById('btn-confirm-create-task')!;
     const btnNewTask = document.getElementById('btn-new-task');
     const modalAssigneeBtn = document.getElementById('assignee-select-btn');
-    
-    // Переменная для хранения выбранного исполнителя в модалке
+
     let selectedAssigneeId: number | null = null;
 
-    // Открытие модалки
     if (btnNewTask) {
       btnNewTask.addEventListener('click', () => {
         modalOverlay.classList.remove('hidden');
         modalCreateTask.classList.remove('hidden');
         newTaskInput.value = '';
         newTaskInput.focus();
-        
-        // Сброс исполнителя при каждом открытии модалки
+
         selectedAssigneeId = null;
         if (modalAssigneeBtn) {
           modalAssigneeBtn.textContent = 'Выбрать...';
@@ -320,28 +302,23 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       });
     }
 
-    // Выбор исполнителя ВНУТРИ модалки
     if (modalAssigneeBtn) {
       modalAssigneeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        
-        // Закрываем другие открытые дропдауны
         document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
-        
+
         const dropdown = document.createElement('div');
         dropdown.className = 'assignee-dropdown';
-        
+
         const users = [
           { id: 1, name: 'Demo User', email: 'demo@demo.ru' }
         ];
-        
+
         users.forEach(user => {
           const item = document.createElement('div');
           item.className = 'assignee-dropdown-item';
-          if (user.id === selectedAssigneeId) {
-            item.classList.add('selected');
-          }
-          
+          if (user.id === selectedAssigneeId) item.classList.add('selected');
+
           item.innerHTML = `
             <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
             <div class="assignee-info">
@@ -349,16 +326,16 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
               <span class="assignee-email">${user.email}</span>
             </div>
           `;
-          
+
           item.addEventListener('click', () => {
             selectedAssigneeId = user.id;
             modalAssigneeBtn.textContent = user.name;
             dropdown.remove();
           });
-          
+
           dropdown.appendChild(item);
         });
-        
+
         modalAssigneeBtn.style.position = 'relative';
         modalAssigneeBtn.appendChild(dropdown);
       });
@@ -370,20 +347,18 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
       try {
         if (sections.length > 0) {
-          const taskData: { title: string; assignee_id?: number | null } = {
+          await kanbanApi.createTask({
             title,
-            assignee_id: selectedAssigneeId
-          };
-          
-          await kanbanApi.createTask(sections[0].id, taskData);
-          
+            link_section: sections[0].id,
+            description: '',
+            link_executer: selectedAssigneeId ? selectedAssigneeId.toString() : undefined
+          });
+
           closeModals();
           await renderKanban(appDiv);
-          
+
           selectedAssigneeId = null;
-          if (modalAssigneeBtn) {
-            modalAssigneeBtn.textContent = 'Выбрать...';
-          }
+          if (modalAssigneeBtn) modalAssigneeBtn.textContent = 'Выбрать...';
         } else {
           alert('Сначала создайте колонку');
         }
@@ -394,7 +369,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     };
 
     btnConfirmCreate.addEventListener('click', handleCreateTask);
-    
+
     newTaskInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();

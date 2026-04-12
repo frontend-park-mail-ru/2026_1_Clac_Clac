@@ -1,7 +1,7 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
 import { setGlobalError, validateEmail } from '../utils';
-import { FormValidator, ValidationSchema } from '../utils/Validator';
+import { FormValidator, ValidationSchema } from '../utils/validator';
 import config from '../config';
 
 import loginTpl from '../templates/login.hbs?raw';
