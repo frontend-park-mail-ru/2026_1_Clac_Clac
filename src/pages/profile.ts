@@ -16,8 +16,8 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
       try {
         await authApi.logout();
-      } catch {
-
+      } catch (err) {
+        console.error('Logout error', err);
       }
       localStorage.removeItem('isAuth');
       navigateTo('/login');
@@ -30,14 +30,12 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
 
     const checkChanges = () => {
       if (nameInput.value !== user.display_name || descInput.value !== (user.description_user || '')) {
-        btnSave.style.background = 'var(--primary)';
-        btnSave.style.color = 'white';
-        btnSave.style.cursor = 'pointer';
+        btnSave.classList.add('profile-btn-active');
+        btnSave.classList.remove('profile-btn-disabled');
         btnSave.disabled = false;
       } else {
-        btnSave.style.background = '#555';
-        btnSave.style.color = '#999';
-        btnSave.style.cursor = 'not-allowed';
+        btnSave.classList.add('profile-btn-disabled');
+        btnSave.classList.remove('profile-btn-active');
         btnSave.disabled = true;
       }
     };
@@ -105,9 +103,11 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       }
     });
 
-  } catch (err) {
-    console.error(err);
-    localStorage.removeItem('isAuth');
-    navigateTo('/login');
+  } catch (err: any) {
+    console.error('Profile fetch error', err);
+    if (err?.status === 401) {
+      localStorage.removeItem('isAuth');
+      navigateTo('/login');
+    }
   }
 };

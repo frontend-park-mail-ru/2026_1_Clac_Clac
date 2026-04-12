@@ -105,16 +105,22 @@ export const validatePassword = (password: string): string | null => {
 export const initGlobalListeners = (): void => {
   document.body.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    const btn = target.closest('.toggle-password-btn');
 
-    if (!btn) return;
+    const btn = target.closest('.toggle-password-btn');
+    if (!btn) {
+      return;
+    }
 
     const inputId = btn.getAttribute('data-target');
-    if (!inputId) return;
+    if (!inputId) {
+      return;
+    }
 
     const input = document.getElementById(inputId) as HTMLInputElement | null;
 
-    if (!input) return;
+    if (!input) {
+      return;
+    }
 
     const eyeSlash = btn.querySelector('.icon-eye-slash');
     const eye = btn.querySelector('.icon-eye');

@@ -1,16 +1,14 @@
 <div class="boards-layout">
   {{> sidebar activeBoards=true}}
 
-  <div class="main-content" style="padding: 2rem 4rem;">
-    <div class="task-header-bar" style="display: flex; justify-content: space-between; margin-bottom: 3rem;">
-      <button class="btn btn-secondary" id="btn-back"
-        style="background: transparent; border: 1px solid #444; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #ccc;">
+  <div class="main-content task-page-container">
+    <div class="task-header-bar">
+      <button class="btn task-btn" id="btn-back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg> Назад
       </button>
-      <button class="btn btn-secondary" id="btn-share"
-        style="background: #252527; border: 1px solid #333; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #ccc;">
+      <button class="btn task-btn task-btn-share" id="btn-share">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="18" cy="5" r="3"></circle>
           <circle cx="6" cy="12" r="3"></circle>
@@ -22,45 +20,42 @@
     </div>
 
     <div class="task-content">
-      <div class="task-board-title" style="color: white; font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">
-        {{board_name}}</div>
-      <h1 class="task-title" style="color: white; font-size: 2.8rem; font-weight: bold; margin-bottom: 3rem;">
-        {{task.title}}</h1>
+      <div class="task-board-title">{{board_name}}</div>
+      <h1 class="task-title">{{task.title}}</h1>
 
-      <div class="task-meta-list" style="display: flex; flex-direction: column; gap: 1.2rem; color: #999;">
-        <div class="task-meta-item" style="display: flex; align-items: center; gap: 0.8rem;">
+      <div class="task-meta-list">
+        <div class="task-meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span style="font-size: 0.95rem;">Исп.: <strong style="color: white; font-weight: normal;">{{#if
+          <span class="task-meta-text">Исп.: <strong class="task-meta-strong">{{#if
               task.executor}}{{task.executor}}{{else}}Demo{{/if}}</strong></span>
         </div>
         {{#if task.due_date}}
-        <div class="task-meta-item" style="display: flex; align-items: center; gap: 0.8rem;">
+        <div class="task-meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span style="font-size: 0.95rem;">{{task.due_date}}</span>
+          <span class="task-meta-text">{{task.due_date}}</span>
         </div>
-        <div class="task-meta-item" style="display: flex; align-items: center; gap: 0.8rem;">
+        <div class="task-meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span style="font-size: 0.95rem;">{{task.time}}</span>
+          <span class="task-meta-text">{{task.time}}</span>
         </div>
         {{/if}}
       </div>
 
       {{#if task.description}}
-      <div class="task-description mt-1"
-        style="margin-top: 3rem; color: #ccc; line-height: 1.6; font-size: 1rem; background: #252527; padding: 1.5rem; border-radius: 12px; border: 1px solid #333;">
-        <h3 style="color: white; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;">Описание</h3>
-        <p style="white-space: pre-wrap; margin: 0;">{{task.description}}</p>
+      <div class="task-description-box">
+        <h3 class="task-desc-title">Описание</h3>
+        <p class="task-desc-text">{{task.description}}</p>
       </div>
       {{/if}}
 

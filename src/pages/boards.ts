@@ -13,16 +13,16 @@ interface User {
 }
 
 interface RawBoard {
-  id?: string;
-  link?: string;
-  name?: string;
-  board_name?: string;
-  title?: string;
-  description?: string;
-  background?: string;
-  backlog?: number;
-  hot?: number;
-  members?: number;
+  id: string;
+  link: string;
+  name: string;
+  board_name: string;
+  title: string;
+  description: string;
+  background: string;
+  backlog: number;
+  hot: number;
+  members: number;
 }
 
 interface Board {
@@ -46,7 +46,9 @@ let eventController: AbortController | null = null;
  */
 export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
   const success = await loadData();
-  if (!success) return;
+  if (!success) {
+    return;
+  }
 
   /**
    * Обновляет UI интерфейс досок, перерисовывая шаблон и перенавешивая слушатели.
@@ -72,7 +74,7 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
 async function loadData(): Promise<boolean> {
   try {
     const res = await boardsApi.getBoards() as any;
-    let rawBoards: RawBoard[] = [];
+    let rawBoards: Partial<RawBoard>[] = [];
     if (res && res.data) {
       rawBoards = Array.isArray(res.data) ? res.data : [res.data];
     } else if (Array.isArray(res)) {
@@ -106,7 +108,7 @@ async function loadData(): Promise<boolean> {
  * @param {Function} updateUI - Функция для обновления интерфейса при изменении данных.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
  */
-function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void {
+const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSignal: AbortSignal): void => {
   const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
   const modalCreate = appDiv.querySelector<HTMLElement>('#modal-create-board');
   const modalEdit = appDiv.querySelector<HTMLElement>('#modal-edit-board');
@@ -117,13 +119,21 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try { await authApi.logout(); } catch { }
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.error('Logout error', err);
+    }
     localStorage.removeItem('isAuth');
     navigateTo('/login');
   }, { signal: abortSignal });
 
   const closeModals = (): void => {
-    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => m?.classList.add('hidden'));
+    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => {
+      if (m) {
+        m.classList.add('hidden');
+      }
+    });
   };
 
   appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
@@ -133,7 +143,9 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
   if (modalOverlay) {
     modalOverlay.addEventListener('click', (e: MouseEvent) => {
-      if (e.target === modalOverlay) closeModals();
+      if (e.target === modalOverlay) {
+        closeModals();
+      }
     });
   }
 
@@ -141,14 +153,18 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   const createImgName = appDiv.querySelector<HTMLElement>('#create-board-image-name');
   createImgInput?.addEventListener('change', (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
-    if (file && createImgName) createImgName.textContent = file.name;
+    if (file && createImgName) {
+      createImgName.textContent = file.name;
+    }
   });
 
   const editImgInput = appDiv.querySelector<HTMLInputElement>('#edit-board-image');
   const editImgName = appDiv.querySelector<HTMLElement>('#edit-board-image-name');
   editImgInput?.addEventListener('change', (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
-    if (file && editImgName) editImgName.textContent = file.name;
+    if (file && editImgName) {
+      editImgName.textContent = file.name;
+    }
   });
 
   const openCreateModal = () => {
@@ -160,16 +176,21 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
 
     if (inputNewBoard) {
       inputNewBoard.value = '';
-      inputNewBoard.style.borderColor = 'transparent';
+      inputNewBoard.classList.remove('error');
     }
     if (errorNewBoard) {
-      errorNewBoard.style.display = 'none';
       errorNewBoard.classList.remove('visible');
     }
-    if (createImgInput) createImgInput.value = '';
-    if (createImgName) createImgName.textContent = 'Изображение доски';
+    if (createImgInput) {
+      createImgInput.value = '';
+    }
+    if (createImgName) {
+      createImgName.textContent = 'Изображение доски';
+    }
 
-    if (btnConfirmCreate) btnConfirmCreate.disabled = true;
+    if (btnConfirmCreate) {
+      btnConfirmCreate.disabled = true;
+    }
   };
 
   appDiv.querySelector('#btn-create-board')?.addEventListener('click', openCreateModal);
@@ -183,24 +204,28 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
     const val = inputNewBoard.value.trim();
     if (val) {
       if (errorNewBoard) {
-        errorNewBoard.style.display = 'none';
         errorNewBoard.classList.remove('visible');
       }
-      if (btnConfirmCreate) btnConfirmCreate.disabled = false;
-      inputNewBoard.style.borderColor = 'transparent';
+      if (btnConfirmCreate) {
+        btnConfirmCreate.disabled = false;
+      }
+      inputNewBoard.classList.remove('error');
     } else {
       if (errorNewBoard) {
-        errorNewBoard.style.display = 'block';
         errorNewBoard.classList.add('visible');
       }
-      if (btnConfirmCreate) btnConfirmCreate.disabled = true;
-      inputNewBoard.style.borderColor = '#ff5c5c';
+      if (btnConfirmCreate) {
+        btnConfirmCreate.disabled = true;
+      }
+      inputNewBoard.classList.add('error');
     }
   });
 
   btnConfirmCreate?.addEventListener('click', async () => {
     const boardName = inputNewBoard?.value.trim();
-    if (!boardName) return;
+    if (!boardName) {
+      return;
+    }
     try {
       btnConfirmCreate.disabled = true;
       const res = await boardsApi.createBoard({ name: boardName, description: 'Создаём аналог Trello' }) as any;
@@ -239,10 +264,16 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
         editBoardNameInput.value = name;
         editBoardNameInput.placeholder = 'Например, Запуск продукта';
       }
-      if (editImgInput) editImgInput.value = '';
-      if (editImgName) editImgName.textContent = 'Изображение доски';
+      if (editImgInput) {
+        editImgInput.value = '';
+      }
+      if (editImgName) {
+        editImgName.textContent = 'Изображение доски';
+      }
 
-      if (btnConfirmEdit) btnConfirmEdit.disabled = false;
+      if (btnConfirmEdit) {
+        btnConfirmEdit.disabled = false;
+      }
 
       modalOverlay?.classList.remove('hidden');
       modalEdit?.classList.remove('hidden');
@@ -252,15 +283,21 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   editBoardNameInput?.addEventListener('input', () => {
     const val = editBoardNameInput.value.trim();
     if (val) {
-      if (btnConfirmEdit) btnConfirmEdit.disabled = false;
+      if (btnConfirmEdit) {
+        btnConfirmEdit.disabled = false;
+      }
     } else {
-      if (btnConfirmEdit) btnConfirmEdit.disabled = true;
+      if (btnConfirmEdit) {
+        btnConfirmEdit.disabled = true;
+      }
     }
   });
 
   btnConfirmEdit?.addEventListener('click', async () => {
     const name = editBoardNameInput?.value.trim();
-    if (!currentBoardId) return;
+    if (!currentBoardId) {
+      return;
+    }
     try {
       btnConfirmEdit.disabled = true;
       if (name) {
@@ -290,24 +327,30 @@ function attachEventListeners(appDiv: HTMLElement, updateUI: () => void, abortSi
   });
 
   btnConfirmDelete?.addEventListener('click', async () => {
-    if (!currentBoardId) return;
+    if (!currentBoardId) {
+      return;
+    }
     try {
       btnConfirmDelete.disabled = true;
       await boardsApi.deleteBoard(currentBoardId);
       closeModals();
       updateUI();
-    } finally {
-      btnConfirmDelete.disabled = false;
       currentBoardId = null;
       currentBoardName = null;
+    } catch (err) {
+      console.error('Delete board error', err);
+    } finally {
+      btnConfirmDelete.disabled = false;
     }
   });
 
   appDiv.querySelectorAll('.board-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.board-options-btn')) return;
+      if ((e.target as HTMLElement).closest('.board-options-btn')) {
+        return;
+      }
       const id = card.getAttribute('data-id');
       navigateTo(`/board?id=${id}`);
     });
   });
-}
+};

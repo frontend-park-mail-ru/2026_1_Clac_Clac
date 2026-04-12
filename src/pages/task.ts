@@ -18,8 +18,12 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   if (boardId) {
     try {
       const boardRes = await boardsApi.getBoard(boardId) as any;
-      if (boardRes?.data?.name) boardName = boardRes.data.name;
-    } catch (e) { }
+      if (boardRes?.data?.name) {
+        boardName = boardRes.data.name;
+      }
+    } catch (e) {
+      console.error('Board fetch error', e);
+    }
   }
 
   if (taskId) {
@@ -34,8 +38,8 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
         }
         description = taskRes.description || '';
       }
-    } catch {
-
+    } catch (err) {
+      console.error('Task fetch error', err);
     }
   }
 
@@ -52,7 +56,11 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
   document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try { await authApi.logout(); } catch { }
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.error('Logout error', err);
+    }
     localStorage.removeItem('isAuth');
     navigateTo('/login');
   });

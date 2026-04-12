@@ -7,9 +7,9 @@ import registerTpl from '../templates/register.hbs?raw';
 import { navigateTo } from '../router';
 
 type LocalApiError = {
-  data?: {
-    message?: string;
-    error?: string
+  data: {
+    message: string;
+    error: string
   }
 };
 

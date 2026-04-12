@@ -8,7 +8,9 @@ const template = Handlebars.compile(kanbanTpl);
 export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const boardId = urlParams.get('id');
-  if (!boardId) return navigateTo('/boards');
+  if (!boardId) {
+    return navigateTo('/boards');
+  }
 
   let boardName = "Без названия";
   try {
@@ -16,14 +18,16 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     if (boardRes?.data?.name) {
       boardName = boardRes.data.name;
     }
-  } catch {
-
+  } catch (err) {
+    console.error('Error fetching board name', err);
   }
 
   try {
     const res = await kanbanApi.getSections(boardId) as any;
     let sections = res.data?.sections || res.sections || res.data || res || [];
-    if (!Array.isArray(sections)) sections = [];
+    if (!Array.isArray(sections)) {
+      sections = [];
+    }
 
     const colors = ['#666', '#8b5cf6', '#f59e0b', '#10b981'];
 
@@ -41,8 +45,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           time: t.data_dead_line ? new Date(t.data_dead_line).toLocaleTimeString() : 'До 23:59',
           executor: t.name_executer || t.link_executer || 'Demo'
         }));
-      } catch {
+      } catch (err) {
         sections[i].tasks = [];
+        console.error('Error fetching tasks', err);
       }
     }
 
@@ -51,7 +56,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
     document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
-      try { await authApi.logout(); } catch { }
+      try {
+        await authApi.logout();
+      } catch (err) {
+        console.error('Logout error', err);
+      }
       localStorage.removeItem('isAuth');
       navigateTo('/login');
     });
@@ -66,7 +75,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
     document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
     modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) closeModals();
+      if (e.target === modalOverlay) {
+        closeModals();
+      }
     });
 
     let activeMenu: HTMLElement | null = null;
@@ -160,8 +171,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const sectionId = parent.getAttribute('data-section-id')!;
 
         parent.innerHTML = `
-          <div class="add-card-form" style="background: #1e1e20; border: 1px dashed #444; border-radius: 12px; padding: 1.2rem;">
-            <textarea class="add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus style="width: 100%; background: transparent; border: none; color: white; font-size: 0.95rem; resize: none; outline: none; min-height: 40px;"></textarea>
+          <div class="add-card-form">
+            <textarea class="add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea>
           </div>
         `;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
@@ -195,8 +206,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       addColumnBtn.addEventListener('click', () => {
         const parent = addColumnBtn.parentElement!;
         parent.innerHTML = `
-          <div class="add-column-form" style="background: #1e1e20; border: 1px dashed #444; border-radius: 12px; padding: 1.2rem; min-height: 75px; display: flex; align-items: center;">
-            <input type="text" class="add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus style="background: transparent; border: none; color: white; font-size: 0.95rem; outline: none; width: 100%;">
+          <div class="add-column-form">
+            <input type="text" class="add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus>
           </div>
         `;
         const input = document.getElementById('inline-new-col-name') as HTMLInputElement;
@@ -212,15 +223,21 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
         input.addEventListener('blur', saveColumn);
         input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') input.blur();
-          else if (e.key === 'Escape') { input.value = ''; input.blur(); }
+          if (e.key === 'Enter') {
+            input.blur();
+          } else if (e.key === 'Escape') {
+            input.value = '';
+            input.blur();
+          }
         });
       });
     }
 
     document.querySelectorAll('.kanban-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('.btn-card-options')) return;
+        if ((e.target as HTMLElement).closest('.btn-card-options')) {
+          return;
+        }
         const taskId = card.getAttribute('data-id');
         const title = card.getAttribute('data-title') || '';
         navigateTo(`/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title)}`);
@@ -228,7 +245,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     });
 
     const updateTaskAssignee = async (taskId: string | null, userId: number) => {
-      if (!taskId) return;
+      if (!taskId) {
+        return;
+      }
       try {
         const taskNode = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
         const title = taskNode?.getAttribute('data-title') || '';
@@ -239,7 +258,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     };
 
     document.querySelectorAll('.assignee-select-btn').forEach(btn => {
-      if (btn.id === 'assignee-select-btn') return;
+      if (btn.id === 'assignee-select-btn') {
+        return;
+      }
 
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -260,8 +281,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           item.innerHTML = `
             <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
             <div>
-              <div style="font-weight: 500;">${user.name}</div>
-              <div style="font-size: 0.75rem; color: #777;">${user.email}</div>
+              <div class="kanban-assignee-name">${user.name}</div>
+              <div class="kanban-assignee-email">${user.email}</div>
             </div>
           `;
 
@@ -275,7 +296,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           dropdown.appendChild(item);
         });
 
-        btn.parentElement!.style.position = 'relative';
+        btn.parentElement!.classList.add('relative-wrapper');
         btn.parentElement!.appendChild(dropdown);
       });
     });
@@ -317,7 +338,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         users.forEach(user => {
           const item = document.createElement('div');
           item.className = 'assignee-dropdown-item';
-          if (user.id === selectedAssigneeId) item.classList.add('selected');
+          if (user.id === selectedAssigneeId) {
+            item.classList.add('selected');
+          }
 
           item.innerHTML = `
             <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
@@ -336,14 +359,16 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           dropdown.appendChild(item);
         });
 
-        modalAssigneeBtn.style.position = 'relative';
+        modalAssigneeBtn.classList.add('relative-wrapper');
         modalAssigneeBtn.appendChild(dropdown);
       });
     }
 
     const handleCreateTask = async () => {
       const title = newTaskInput.value.trim();
-      if (!title) return;
+      if (!title) {
+        return;
+      }
 
       try {
         if (sections.length > 0) {
@@ -358,7 +383,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           await renderKanban(appDiv);
 
           selectedAssigneeId = null;
-          if (modalAssigneeBtn) modalAssigneeBtn.textContent = 'Выбрать...';
+          if (modalAssigneeBtn) {
+            modalAssigneeBtn.textContent = 'Выбрать...';
+          }
         } else {
           alert('Сначала создайте колонку');
         }

@@ -35,24 +35,35 @@ const stepEmail = (appDiv: HTMLElement): void => {
   const backLink = document.getElementById('back-link-email') as HTMLAnchorElement | null;
 
   if (backLink) {
-    backLink.addEventListener('click', (e) => { e.preventDefault(); navigateTo('/login'); });
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo('/login');
+    });
   }
 
   /**
    * Проверяет наличие введенного адреса электронной почты и разблокирует/блокирует кнопку.
    */
   const checkForm = (): void => {
-    if (submitBtn && emailInput) submitBtn.disabled = !emailInput.value.trim();
+    if (submitBtn && emailInput) {
+      submitBtn.disabled = !emailInput.value.trim();
+    }
   };
 
-  if (emailInput && recoveryState.email) emailInput.value = recoveryState.email;
-  if (emailInput) emailInput.addEventListener('input', checkForm);
+  if (emailInput && recoveryState.email) {
+    emailInput.value = recoveryState.email;
+  }
+  if (emailInput) {
+    emailInput.addEventListener('input', checkForm);
+  }
   checkForm();
 
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-      if (!emailInput || !submitBtn) return;
+      if (!emailInput || !submitBtn) {
+        return;
+      }
 
       const email = emailInput.value.trim();
       if (!validateEmail(email)) {
@@ -81,11 +92,6 @@ const stepEmail = (appDiv: HTMLElement): void => {
   }
 };
 
-/**
- * Отрисовывает второй шаг восстановления пароля: ввод кода подтверждения.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер для рендеринга.
- */
 const stepCode = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = renderStepCode({ email: recoveryState.email });
 
@@ -99,10 +105,14 @@ const stepCode = (appDiv: HTMLElement): void => {
    * Проверяет заполненность поля кода и активирует/деактивирует кнопку подтверждения.
    */
   const checkForm = (): void => {
-    if (submitBtn && codeInput) submitBtn.disabled = !codeInput.value.trim();
+    if (submitBtn && codeInput) {
+      submitBtn.disabled = !codeInput.value.trim();
+    }
   };
 
-  if (codeInput) codeInput.addEventListener('input', checkForm);
+  if (codeInput) {
+    codeInput.addEventListener('input', checkForm);
+  }
   checkForm();
 
   let timeLeft = 59;
@@ -114,9 +124,13 @@ const stepCode = (appDiv: HTMLElement): void => {
   const updateTimer = (): void => {
     if (timeLeft > 0) {
       timeLeft--;
-      if (timerSpan) timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
+      if (timerSpan) {
+        timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
+      }
     } else {
-      if (timerInterval) clearInterval(timerInterval);
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
       if (resendLink) {
         resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
         document.getElementById('resend-action')?.addEventListener('click', async (e) => {
@@ -124,8 +138,9 @@ const stepCode = (appDiv: HTMLElement): void => {
           try {
             await apiClient.post('/forgot-password', { email: recoveryState.email });
             stepCode(appDiv);
-          } catch {
+          } catch (err) {
             setInputError('code', 'Не удалось отправить код повторно');
+            console.error('Resend code error:', err);
           }
         });
       }
@@ -136,24 +151,31 @@ const stepCode = (appDiv: HTMLElement): void => {
 
   document.getElementById('back-link')?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (timerInterval) clearInterval(timerInterval);
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
     stepEmail(appDiv);
   });
 
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-      if (!codeInput || !submitBtn) return;
+      if (!codeInput || !submitBtn) {
+        return;
+      }
       const code = codeInput.value.trim();
 
       try {
         submitBtn.disabled = true;
         await apiClient.post('/check-code', { code });
-        if (timerInterval) clearInterval(timerInterval);
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
         recoveryState.code = code;
         stepNewPass(appDiv);
-      } catch {
+      } catch (err) {
         setInputError('code', 'Неверный или недействительный код');
+        console.error('Verify code error:', err);
       } finally {
         submitBtn.disabled = false;
       }
@@ -189,7 +211,9 @@ const stepNewPass = (appDiv: HTMLElement): void => {
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-      if (!password || !repeatPassword || !submitBtn) return;
+      if (!password || !repeatPassword || !submitBtn) {
+        return;
+      }
 
       let hasError = false;
       setInputError('password', null);
@@ -207,7 +231,9 @@ const stepNewPass = (appDiv: HTMLElement): void => {
         hasError = true;
       }
 
-      if (hasError) return;
+      if (hasError) {
+        return;
+      }
 
       try {
         submitBtn.disabled = true;

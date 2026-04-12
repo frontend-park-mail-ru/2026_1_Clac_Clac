@@ -23,7 +23,9 @@ export const navigateTo = (path: string): void => {
 
 export const handleRoute = (): void => {
   const appDiv = document.getElementById('app') as HTMLDivElement | null;
-  if (!appDiv) return;
+  if (!appDiv) {
+    return;
+  }
 
   const path = window.location.pathname;
   const isAuth = localStorage.getItem('isAuth') === 'true';
