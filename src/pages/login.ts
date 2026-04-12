@@ -53,7 +53,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   const loginSchema: ValidationSchema = {
     email: [
       { required: true, message: 'Введите адрес электронной почты' },
-      { 
+      {
         customValidator: (value: string) => validateEmail(value) ? null : 'Неверный формат email',
         message: 'Неверный формат email'
       }
@@ -87,7 +87,7 @@ export const renderLogin = (appDiv: HTMLElement): void => {
     });
   }
 
-  const btnVk = document.querySelector('.btn-vk');
+  const btnVk = document.querySelector('.btn--vk');
   if (btnVk) {
     btnVk.addEventListener('click', () => {
       window.location.href = config.vkAuthUrl;
@@ -117,8 +117,8 @@ export const renderLogin = (appDiv: HTMLElement): void => {
 
       if (err.status === 401 || (errMsg && (errMsg.includes('wrong') || errMsg.includes('exist') || errMsg.includes('invalid')))) {
         setGlobalError('Неверный email или пароль');
-        emailInput?.classList.add('error');
-        passwordInput?.classList.add('error');
+        emailInput?.classList.add('input-group__field--error');
+        passwordInput?.classList.add('input-group__field--error');
       } else if (errMsg) {
         setGlobalError(errMsg);
       } else {
