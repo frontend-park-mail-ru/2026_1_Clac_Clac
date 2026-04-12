@@ -9,17 +9,28 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const taskId = urlParams.get('taskId');
   const boardId = urlParams.get('boardId') || '';
+  
   let title = urlParams.get('title') || 'Задача';
-  let due_date = '17 марта, 2026';
-  let time = 'До 23:59';
+  let dueDate = '';
+  let timeStr = '';
   let boardName = 'Без названия';
-  let description = '';
+  let descriptionText = '';
+  let executorName = 'Не назначен';
+
+  let usersList = new Array();
 
   if (boardId) {
     try {
       const boardRes = await boardsApi.getBoard(boardId) as any;
-      if (boardRes?.data?.name) {
+      if (boardRes && boardRes.data && boardRes.data.name) {
         boardName = boardRes.data.name;
+      }
+
+      const usersRes = await boardsApi.getBoardUsers(boardId) as any;
+      if (usersRes && usersRes.data && Array.isArray(usersRes.data)) {
+        usersList = usersRes.data;
+      } else if (Array.isArray(usersRes)) {
+        usersList = usersRes;
       }
     } catch (e) {
       console.error('Board fetch error', e);
@@ -29,14 +40,41 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   if (taskId) {
     try {
       const taskRes = await kanbanApi.getTask(taskId) as any;
-      if (taskRes) {
-        title = taskRes.title || title;
-        if (taskRes.data_dead_line) {
-          const d = new Date(taskRes.data_dead_line);
-          due_date = d.toLocaleDateString();
-          time = d.toLocaleTimeString();
+      let taskData = taskRes;
+      
+      if (taskRes && taskRes.data) {
+        taskData = taskRes.data;
+      }
+
+      if (taskData) {
+        if (taskData.title) {
+          title = taskData.title;
         }
-        description = taskRes.description || '';
+        if (taskData.description) {
+          descriptionText = taskData.description;
+        }
+        if (taskData.data_dead_line) {
+          const d = new Date(taskData.data_dead_line);
+          dueDate = d.toLocaleDateString();
+          timeStr = d.toLocaleTimeString();
+        }
+        
+        if (taskData.link_executer) {
+          let foundUser = null;
+          
+          for (let i = 0; i < usersList.length; i++) {
+            const u = usersList[i];
+            const uId = u.user_link || u.id;
+            if (uId === taskData.link_executer) {
+              foundUser = u;
+              break;
+            }
+          }
+          
+          if (foundUser) {
+            executorName = foundUser.display_name || foundUser.username || 'Без имени';
+          }
+        }
       }
     } catch (err) {
       console.error('Task fetch error', err);
@@ -47,29 +85,44 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     board_name: boardName,
     task: {
       title: title,
-      due_date: due_date,
-      time: time,
-      description: description
+      due_date: dueDate,
+      time: timeStr,
+      description: descriptionText,
+      executor: executorName
     }
   });
 
-  document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
-  document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try {
-      await authApi.logout();
-    } catch (err) {
-      console.error('Logout error', err);
-    }
-    localStorage.removeItem('isAuth');
-    navigateTo('/login');
-  });
+  const navBoards = document.getElementById('nav-boards');
+  if (navBoards) {
+    navBoards.addEventListener('click', () => navigateTo('/boards'));
+  }
 
-  document.getElementById('btn-back')?.addEventListener('click', () => {
-    if (boardId) {
-      navigateTo(`/board?id=${boardId}`);
-    } else {
-      navigateTo('/boards');
-    }
-  });
+  const navProfile = document.getElementById('nav-profile');
+  if (navProfile) {
+    navProfile.addEventListener('click', () => navigateTo('/profile'));
+  }
+
+  const btnLogout = document.getElementById('logout-btn');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      try {
+        await authApi.logout();
+      } catch (err) {
+        console.error('Logout error', err);
+      }
+      localStorage.removeItem('isAuth');
+      navigateTo('/login');
+    });
+  }
+
+  const btnBack = document.getElementById('btn-back');
+  if (btnBack) {
+    btnBack.addEventListener('click', () => {
+      if (boardId) {
+        navigateTo(`/board?id=${boardId}`);
+      } else {
+        navigateTo('/boards');
+      }
+    });
+  }
 };

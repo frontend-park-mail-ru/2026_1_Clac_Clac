@@ -106,7 +106,7 @@ export const authApi = {
 
 export const profileApi = {
   getProfile: () => apiClient.get('/profiles'),
-  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.put('/profiles', data),
+  updateProfile: (data: { display_name: string; description_user: string }) => apiClient.post('/profiles/info', data),
   updateAvatar: (formData: FormData) => apiClient.put('/profiles/avatar', formData),
   deleteAvatar: () => apiClient.delete('/profiles/avatar'),
 };
@@ -115,14 +115,17 @@ export const boardsApi = {
   getBoards: () => apiClient.get('/boards'),
   getBoard: (id: string) => apiClient.get(`/boards/${id}`),
   createBoard: (data: { name: string; description?: string, background?: string }) => apiClient.post('/boards', data),
-  updateBoard: (id: string, data: { name: string; description?: string, background?: string }) => apiClient.put(`/boards/${id}`, { link: id, ...data }),
+  updateBoard: (id: string, data: { name: string; description?: string, background?: string }) => apiClient.put(`/boards/${id}`, data),
   updateBoardBackground: (id: string, formData: FormData) => apiClient.put(`/boards/${id}/background`, formData),
   deleteBoard: (id: string) => apiClient.delete(`/boards/${id}`),
+  getBoardUsers: (id: string) => apiClient.get(`/boards/${id}/users`),
 };
 
 export const kanbanApi = {
   getSections: (boardId: string) => apiClient.get(`/boards/${boardId}/sections`),
+  reorderSections: (boardId: string, data: { list_links: Array<string> }) => apiClient.patch(`/boards/${boardId}/sections/reorder`, data),
   createSection: (data: { board_link: string; section_name: string; max_tasks?: number; is_mandatory?: boolean; color?: string }) => apiClient.post(`/sections`, data),
+  getSection: (sectionId: string) => apiClient.get(`/sections/${sectionId}`),
   updateSection: (sectionId: string, data: any) => apiClient.put(`/sections/${sectionId}`, data),
   deleteSection: (sectionId: string) => apiClient.delete(`/sections/${sectionId}`),
 
@@ -131,4 +134,5 @@ export const kanbanApi = {
   createTask: (data: { title: string; link_section: string; description?: string; link_executer?: string; link_author?: string; data_dead_line?: string }) => apiClient.post(`/cards`, data),
   updateTask: (taskId: string, data: { link_card: string; title: string; link_executer?: string; description?: string; data_dead_line?: string }) => apiClient.put(`/cards/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/cards/${taskId}`),
+  reorderTask: (taskId: string, data: { link_card: string; link_section: string; position: number }) => apiClient.patch(`/cards/${taskId}/reorder`, data),
 };
