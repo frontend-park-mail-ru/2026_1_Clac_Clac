@@ -16,6 +16,8 @@ const getCookie = (name: string): string | null => {
   return null;
 };
 
+let cachedCsrfToken: string | null = null;
+
 /**
  * Внутренняя функция для выполнения HTTP-запросов к API.
  * 
@@ -43,16 +45,33 @@ const request = async <TResponse = unknown, TBody = unknown>(
   }
 
   if (method !== 'GET') {
-    let csrfToken = getCookie('csrf_token');
+    let csrfToken = getCookie('csrf_token') || cachedCsrfToken;
+    
     if (!csrfToken && url !== '/csrf') {
       try {
-        await fetch(`${API_URL}/csrf`, { credentials: 'include' });
-        csrfToken = getCookie('csrf_token');
+        const csrfRes = await fetch(`${API_URL}/csrf`, { credentials: 'include' });
+        
+        csrfToken = csrfRes.headers.get('X-CSRF-Token') || csrfRes.headers.get('X-Csrf-Token');
+        
+        if (!csrfToken) {
+          try {
+            const data = await csrfRes.json();
+            csrfToken = data.csrf_token || data.token || data.csrfToken || null;
+          } catch {
+
+          }
+        }
+
+        if (!csrfToken) {
+          csrfToken = getCookie('csrf_token');
+        }
       } catch (e) {
         console.error('Failed to get CSRF token', e);
       }
     }
+    
     if (csrfToken) {
+      cachedCsrfToken = csrfToken;
       (options.headers as Record<string, string>)['X-CSRF-Token'] = csrfToken;
     }
   }
@@ -101,7 +120,10 @@ export const apiClient = {
 
 export const authApi = {
   checkAuth: () => apiClient.get('/me'),
-  logout: () => apiClient.post('/logout'),
+  logout: () => {
+    cachedCsrfToken = null;
+    return apiClient.post('/logout');
+  },
 };
 
 export const profileApi = {
