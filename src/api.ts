@@ -126,7 +126,7 @@ export const kanbanApi = {
   updateSection: (sectionId: string, data: any) => apiClient.put(`/sections/${sectionId}`, data),
   deleteSection: (sectionId: string) => apiClient.delete(`/sections/${sectionId}`),
 
-  getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/tasks`),
+  getTasks: (sectionId: string) => apiClient.get(`/sections/${sectionId}/cards`),
   getTask: (taskId: string) => apiClient.get(`/cards/${taskId}`),
   createTask: (data: { title: string; link_section: string; description?: string; link_executer?: string; link_author?: string; data_dead_line?: string }) => apiClient.post(`/cards`, data),
   updateTask: (taskId: string, data: { link_card: string; title: string; link_executer?: string; description?: string; data_dead_line?: string }) => apiClient.put(`/cards/${taskId}`, data),
