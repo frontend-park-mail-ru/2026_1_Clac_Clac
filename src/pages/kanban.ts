@@ -73,7 +73,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       modalDeleteCard.classList.add('hidden');
     };
 
-    document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
+    document.querySelectorAll('.modal__close-btn').forEach(btn => btn.addEventListener('click', closeModals));
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) {
         closeModals();
@@ -89,7 +89,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     };
     document.addEventListener('click', closeMenu);
 
-    document.querySelectorAll('.btn-col-options').forEach(btn => {
+    document.querySelectorAll('.kanban__btn-col-options').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeMenu();
@@ -97,9 +97,9 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const menu = document.createElement('div');
         menu.className = 'context-menu';
         menu.innerHTML = `
-          <div class="context-menu-item" id="ctx-add-card">Добавить карточку</div>
-          <div class="context-menu-item" id="ctx-edit-list">Изменить имя списка</div>
-          <div class="context-menu-item text-danger" id="ctx-delete-list">Удалить список</div>
+          <div class="context-menu__item" id="ctx-add-card">Добавить карточку</div>
+          <div class="context-menu__item" id="ctx-edit-list">Изменить имя списка</div>
+          <div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить список</div>
         `;
         const rect = btn.getBoundingClientRect();
         menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
@@ -124,7 +124,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       });
     });
 
-    document.querySelectorAll('.btn-card-options').forEach(btn => {
+    document.querySelectorAll('.kanban-card__options-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeMenu();
@@ -133,8 +133,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const menu = document.createElement('div');
         menu.className = 'context-menu';
         menu.innerHTML = `
-          <div class="context-menu-item" id="ctx-edit-card">Изменить имя</div>
-          <div class="context-menu-item text-danger" id="ctx-delete-card">Удалить карточку</div>
+          <div class="context-menu__item" id="ctx-edit-card">Изменить имя</div>
+          <div class="context-menu__item context-menu__item--danger" id="ctx-delete-card">Удалить карточку</div>
         `;
         const rect = btn.getBoundingClientRect();
         menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
@@ -165,14 +165,14 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       });
     });
 
-    document.querySelectorAll('.add-card-btn').forEach(btn => {
+    document.querySelectorAll('.kanban__add-card-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const parent = btn.parentElement!;
         const sectionId = parent.getAttribute('data-section-id')!;
 
         parent.innerHTML = `
-          <div class="add-card-form">
-            <textarea class="add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea>
+          <div class="kanban__add-card-form">
+            <textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea>
           </div>
         `;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
@@ -206,8 +206,8 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       addColumnBtn.addEventListener('click', () => {
         const parent = addColumnBtn.parentElement!;
         parent.innerHTML = `
-          <div class="add-column-form">
-            <input type="text" class="add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus>
+          <div class="kanban__add-column-form">
+            <input type="text" class="kanban__add-column-input" id="inline-new-col-name" placeholder="Введите имя колонки..." autofocus>
           </div>
         `;
         const input = document.getElementById('inline-new-col-name') as HTMLInputElement;
@@ -235,7 +235,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
     document.querySelectorAll('.kanban-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('.btn-card-options')) {
+        if ((e.target as HTMLElement).closest('.kanban-card__options-btn')) {
           return;
         }
         const taskId = card.getAttribute('data-id');
@@ -257,7 +257,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       }
     };
 
-    document.querySelectorAll('.assignee-select-btn').forEach(btn => {
+    document.querySelectorAll('.assignee__select-btn').forEach(btn => {
       if (btn.id === 'assignee-select-btn') {
         return;
       }
@@ -266,10 +266,10 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         e.stopPropagation();
         const taskId = btn.getAttribute('data-task-id');
 
-        document.querySelectorAll('.assignee-dropdown').forEach(dd => dd.remove());
+        document.querySelectorAll('.assignee__dropdown').forEach(dd => dd.remove());
 
         const dropdown = document.createElement('div');
-        dropdown.className = 'assignee-dropdown';
+        dropdown.className = 'assignee__dropdown';
 
         const users = [
           { id: 1, name: 'Demo User', email: 'demo@demo.ru' }
@@ -277,12 +277,12 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
         users.forEach(user => {
           const item = document.createElement('div');
-          item.className = 'assignee-dropdown-item';
+          item.className = 'assignee__dropdown-item';
           item.innerHTML = `
-            <div class="assignee-avatar">${user.name.charAt(0).toUpperCase()}</div>
-            <div>
-              <div class="kanban-assignee-name">${user.name}</div>
-              <div class="kanban-assignee-email">${user.email}</div>
+            <div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>
+            <div class="assignee__info">
+              <span class="assignee__name">${user.name}</span>
+              <span class="assignee__email">${user.email}</span>
             </div>
           `;
 
@@ -339,7 +339,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           const item = document.createElement('div');
           item.className = 'assignee-dropdown-item';
           if (user.id === selectedAssigneeId) {
-            item.classList.add('selected');
+            item.classList.add('assignee__dropdown-item--selected');
           }
 
           item.innerHTML = `

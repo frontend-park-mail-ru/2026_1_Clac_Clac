@@ -30,12 +30,12 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
 
     const checkChanges = () => {
       if (nameInput.value !== user.display_name || descInput.value !== (user.description_user || '')) {
-        btnSave.classList.add('profile-btn-active');
-        btnSave.classList.remove('profile-btn-disabled');
+        btnSave.classList.add('profile__btn-active');
+        btnSave.classList.remove('profile__btn-disabled');
         btnSave.disabled = false;
       } else {
-        btnSave.classList.add('profile-btn-disabled');
-        btnSave.classList.remove('profile-btn-active');
+        btnSave.classList.add('profile__btn-disabled');
+        btnSave.classList.remove('profile__btn-active');
         btnSave.disabled = true;
       }
     };
@@ -80,7 +80,7 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       modalDelete.classList.remove('hidden');
     });
 
-    document.querySelectorAll('.close-modal-btn').forEach(btn => {
+    document.querySelectorAll('.modal__close-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         modalOverlay.classList.add('hidden');
         modalDelete.classList.add('hidden');

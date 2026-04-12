@@ -136,7 +136,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
     });
   };
 
-  appDiv.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+  appDiv.querySelectorAll('.modal__close-btn').forEach(btn => btn.addEventListener('click', (e) => {
     e.preventDefault();
     closeModals();
   }));
@@ -176,10 +176,10 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
 
     if (inputNewBoard) {
       inputNewBoard.value = '';
-      inputNewBoard.classList.remove('error');
+      inputNewBoard.classList.remove('modal__input-field--error');
     }
     if (errorNewBoard) {
-      errorNewBoard.classList.remove('visible');
+      errorNewBoard.classList.remove('modal__input-error--visible');
     }
     if (createImgInput) {
       createImgInput.value = '';
@@ -204,20 +204,20 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
     const val = inputNewBoard.value.trim();
     if (val) {
       if (errorNewBoard) {
-        errorNewBoard.classList.remove('visible');
+        errorNewBoard.classList.remove('modal__input-error--visible');
       }
       if (btnConfirmCreate) {
         btnConfirmCreate.disabled = false;
       }
-      inputNewBoard.classList.remove('error');
+      inputNewBoard.classList.remove('modal__input-field--error');
     } else {
       if (errorNewBoard) {
-        errorNewBoard.classList.add('visible');
+        errorNewBoard.classList.add('modal__input-error--visible');
       }
       if (btnConfirmCreate) {
         btnConfirmCreate.disabled = true;
       }
-      inputNewBoard.classList.add('error');
+      inputNewBoard.classList.add('modal__input-field--error');
     }
   });
 
@@ -252,7 +252,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
   const btnOpenDelete = appDiv.querySelector<HTMLButtonElement>('#btn-open-delete');
   const btnConfirmDelete = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-delete');
 
-  appDiv.querySelectorAll('.board-options-btn').forEach(btn => {
+  appDiv.querySelectorAll('.board-card__options-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = (e.currentTarget as HTMLElement).getAttribute('data-id')!;
@@ -346,7 +346,7 @@ const attachEventListeners = (appDiv: HTMLElement, updateUI: () => void, abortSi
 
   appDiv.querySelectorAll('.board-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.board-options-btn')) {
+      if ((e.target as HTMLElement).closest('.board-card__options-btn')) {
         return;
       }
       const id = card.getAttribute('data-id');

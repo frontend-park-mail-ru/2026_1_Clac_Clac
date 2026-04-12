@@ -1,16 +1,16 @@
 <div class="input-group">
-  <div class="input-header">
-    <label class="input-label" for="{{id}}">{{label}}</label>
+  <div class="input-group__header">
+    <label class="input-group__label" for="{{id}}">{{label}}</label>
     {{#if forgotPassword}}
     <a href="#" class="forgot-link">Забыли пароль?</a>
     {{/if}}
   </div>
-  <div class="input-wrapper">
-    <input type="{{type}}" id="{{id}}" class="input-field" placeholder="{{placeholder}}" {{#if disabled}}disabled{{/if}}
-      {{#if maxlength}}maxlength="{{maxlength}}" {{/if}}>
+  <div class="input-group__wrapper">
+    <input type="{{type}}" id="{{id}}" class="input-group__field" placeholder="{{placeholder}}" {{#if
+      disabled}}disabled{{/if}} {{#if maxlength}}maxlength="{{maxlength}}" {{/if}}>
 
     {{#if isPassword}}
-    <button type="button" class="toggle-password-btn" data-target="{{id}}">
+    <button type="button" class="input-group__toggle-btn" data-target="{{id}}">
       <svg class="icon-eye-slash" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path
@@ -26,5 +26,5 @@
     </button>
     {{/if}}
   </div>
-  <span id="{{id}}-error" class="input-error-msg"></span>
+  <span id="{{id}}-error" class="input-group__error-msg"></span>
 </div>

@@ -1,14 +1,14 @@
-<div class="boards-layout">
+<div class="boards__layout">
   {{> sidebar activeBoards=true}}
 
-  <div class="main-content task-page-container">
-    <div class="task-header-bar">
-      <button class="btn task-btn" id="btn-back">
+  <div class="main-content task__page-container">
+    <div class="task__header-bar">
+      <button class="btn task__btn" id="btn-back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg> Назад
       </button>
-      <button class="btn task-btn task-btn-share" id="btn-share">
+      <button class="btn task__btn task__btn--share" id="btn-share">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="18" cy="5" r="3"></circle>
           <circle cx="6" cy="12" r="3"></circle>
@@ -19,43 +19,43 @@
       </button>
     </div>
 
-    <div class="task-content">
-      <div class="task-board-title">{{board_name}}</div>
-      <h1 class="task-title">{{task.title}}</h1>
+    <div class="task__content">
+      <div class="task__board-title">{{board_name}}</div>
+      <h1 class="task__title">{{task.title}}</h1>
 
-      <div class="task-meta-list">
-        <div class="task-meta-item">
+      <div class="task__meta-list">
+        <div class="task__meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span class="task-meta-text">Исп.: <strong class="task-meta-strong">{{#if
+          <span class="task__meta-text">Исп.: <strong class="task__meta-strong">{{#if
               task.executor}}{{task.executor}}{{else}}Demo{{/if}}</strong></span>
         </div>
         {{#if task.due_date}}
-        <div class="task-meta-item">
+        <div class="task__meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span class="task-meta-text">{{task.due_date}}</span>
+          <span class="task__meta-text">{{task.due_date}}</span>
         </div>
-        <div class="task-meta-item">
+        <div class="task__meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span class="task-meta-text">{{task.time}}</span>
+          <span class="task__meta-text">{{task.time}}</span>
         </div>
         {{/if}}
       </div>
 
       {{#if task.description}}
-      <div class="task-description-box">
-        <h3 class="task-desc-title">Описание</h3>
-        <p class="task-desc-text">{{task.description}}</p>
+      <div class="task__description-box">
+        <h3 class="task__desc-title">Описание</h3>
+        <p class="task__desc-text">{{task.description}}</p>
       </div>
       {{/if}}
 

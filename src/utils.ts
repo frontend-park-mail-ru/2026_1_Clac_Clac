@@ -13,12 +13,12 @@ export const setInputError = (id: string, message: string | null): void => {
   }
 
   if (message) {
-    input.classList.add('error');
+    input.classList.add('input-group__field--error');
     errorMsg.textContent = message;
-    errorMsg.classList.add('visible');
+    errorMsg.classList.add('input-group__error-msg--visible');
   } else {
-    input.classList.remove('error');
-    errorMsg.classList.remove('visible');
+    input.classList.remove('input-group__field--error');
+    errorMsg.classList.remove('input-group__error-msg--visible');
   }
 };
 
@@ -106,7 +106,7 @@ export const initGlobalListeners = (): void => {
   document.body.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
-    const btn = target.closest('.toggle-password-btn');
+    const btn = target.closest('.input-group__toggle-btn');
     if (!btn) {
       return;
     }

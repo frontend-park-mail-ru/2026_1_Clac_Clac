@@ -1,11 +1,11 @@
-<div class="boards-layout">
+<div class="boards__layout">
   {{> sidebar activeProfile=true}}
 
-  <div class="main-content profile-container">
-    <h1 class="boards-title profile-title">Профиль</h1>
+  <div class="main-content profile__container">
+    <h1 class="boards__title profile__title">Профиль</h1>
 
-    <div class="profile-avatar-section">
-      <div class="profile-avatar-preview">
+    <div class="profile__avatar-section">
+      <div class="profile__avatar-preview">
         {{#if user.avatar_url}}
         <img src="{{user.avatar_url}}" alt="Avatar">
         {{else}}
@@ -15,52 +15,52 @@
         </svg>
         {{/if}}
       </div>
-      <div class="profile-avatar-actions">
-        <label for="avatar-upload" class="profile-action-link cursor-pointer">Изменить фото</label>
+      <div class="profile__avatar-actions">
+        <label for="avatar-upload" class="profile__action-link cursor-pointer">Изменить фото</label>
         <input type="file" id="avatar-upload" class="hidden" accept="image/*">
-        <span id="btn-delete-avatar" class="profile-action-delete cursor-pointer">Удалить фото</span>
+        <span id="btn-delete-avatar" class="profile__action-delete cursor-pointer">Удалить фото</span>
       </div>
     </div>
 
     <form id="profile-form">
       <div class="input-group">
-        <label class="profile-input-label">Имя</label>
-        <input type="text" id="profile-name" class="input-field profile-input-field" value="{{user.display_name}}"
-          maxlength="128">
+        <label class="profile__input-label">Имя</label>
+        <input type="text" id="profile-name" class="input-group__field profile__input-field"
+          value="{{user.display_name}}" maxlength="128">
       </div>
       <div class="input-group">
-        <label class="profile-input-label">О себе</label>
-        <textarea id="profile-desc" class="input-field profile-textarea" maxlength="1000"
+        <label class="profile__input-label">О себе</label>
+        <textarea id="profile-desc" class="input-group__field profile__textarea" maxlength="1000"
           placeholder="Расскажите о себе">{{user.description_user}}</textarea>
       </div>
       <div class="input-group">
-        <div class="input-header">
-          <label class="profile-input-label">Email</label>
+        <div class="input-group__header">
+          <label class="profile__input-label">Email</label>
         </div>
-        <div class="input-wrapper profile-email-wrapper">
-          <input type="text" class="input-field profile-email-input" value="{{user.email}}" readonly>
-          <svg class="profile-email-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666"
+        <div class="input-group__wrapper profile__email-wrapper">
+          <input type="text" class="input-group__field profile__email-input" value="{{user.email}}" readonly>
+          <svg class="profile__email-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666"
             stroke-width="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
         </div>
       </div>
-      <button type="submit" class="btn profile-btn-save profile-btn-disabled" id="btn-save-profile"
+      <button type="submit" class="btn profile__btn-save profile__btn-disabled" id="btn-save-profile"
         disabled>Сохранить</button>
     </form>
   </div>
 </div>
 
-<div id="modal-overlay" class="modal-overlay hidden">
+<div id="modal-overlay" class="modal__overlay hidden">
   <div id="modal-delete-avatar" class="modal hidden">
-    <div class="modal-header">
-      <h2 class="modal-title">Удалить фото профиля?</h2>
-      <button class="close-modal-btn">×</button>
+    <div class="modal__header">
+      <h2 class="modal__title">Удалить фото профиля?</h2>
+      <button class="modal__close-btn">×</button>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-danger" id="confirm-delete-avatar">Удалить</button>
-      <button class="btn btn-cancel close-modal-btn">Отменить</button>
+    <div class="modal__actions">
+      <button class="btn btn--danger" id="confirm-delete-avatar">Удалить</button>
+      <button class="btn btn--cancel modal__close-btn">Отменить</button>
     </div>
   </div>
 </div>

@@ -1,5 +1,5 @@
-import './styles/auth.css';
-import './styles/boards.css';
+import './styles/auth.scss';
+import './styles/boards.scss';
 
 import Handlebars from 'handlebars';
 import { initGlobalListeners } from './utils';

@@ -1,13 +1,13 @@
-<div class="boards-layout">
+<div class="boards__layout">
   {{> sidebar activeBoards=true}}
 
   <div class="main-content">
-    <div class="boards-header-container">
-      <h1 class="boards-title">
+    <div class="boards__header-container">
+      <h1 class="boards__title">
         {{#if (eq boards.length 0)}}Досок{{else}}Доски{{/if}}
-        <span class="boards-count">{{boards.length}}</span>
+        <span class="boards__count">{{boards.length}}</span>
       </h1>
-      <button class="btn btn-primary btn-create" id="btn-create-board">
+      <button class="btn btn--primary btn--create" id="btn-create-board">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -18,8 +18,8 @@
     </div>
 
     {{#if (eq boards.length 0)}}
-    <div class="boards-grid">
-      <div class="board-card-empty-large" id="btn-create-board-empty">
+    <div class="boards__grid">
+      <div class="board-card board-card--empty-large" id="btn-create-board-empty">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="4" x2="12" y2="20"></line>
@@ -28,13 +28,13 @@
       </div>
     </div>
     {{else}}
-    <div class="boards-grid">
+    <div class="boards__grid">
       {{#each boards}}
       <div class="board-card" data-id="{{id}}">
-        <div class="board-card-top">
-          <div class="board-header">
-            <div class="board-title-group">
-              <div class="board-icon-monitor" {{#if
+        <div class="board-card__top">
+          <div class="board-card__header">
+            <div class="board-card__title-group">
+              <div class="board-card__icon-monitor" {{#if
                 background}}style="background-image: url('{{background}}'); background-size: cover; background-position: center;"
                 {{/if}}>
                 {{#unless background}}
@@ -45,12 +45,12 @@
                 </svg>
                 {{/unless}}
               </div>
-              <div class="board-name-wrapper">
-                <h2 class="board-name">{{board_name}}</h2>
-                <p class="board-desc">{{description}}</p>
+              <div class="board-card__name-wrapper">
+                <h2 class="board-card__name">{{board_name}}</h2>
+                <p class="board-card__desc">{{description}}</p>
               </div>
             </div>
-            <button class="icon-btn board-options-btn" data-id="{{id}}" data-name="{{board_name}}">
+            <button class="icon-btn board-card__options-btn" data-id="{{id}}" data-name="{{board_name}}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="5" cy="12" r="2" />
                 <circle cx="12" cy="12" r="2" />
@@ -60,20 +60,20 @@
           </div>
         </div>
 
-        <div class="board-card-bottom">
-          <div class="board-divider"></div>
-          <div class="board-stats">
-            <div class="stat-item">
-              <div class="stat-value">{{backlog}}</div>
-              <div class="stat-label">Задачи<br>в бэклоге</div>
+        <div class="board-card__bottom">
+          <div class="board-card__divider"></div>
+          <div class="board-card__stats">
+            <div class="stat__item">
+              <div class="stat__value">{{backlog}}</div>
+              <div class="stat__label">Задачи<br>в бэклоге</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{hot}}</div>
-              <div class="stat-label">Горящих<br>задач</div>
+            <div class="stat__item">
+              <div class="stat__value">{{hot}}</div>
+              <div class="stat__label">Горящих<br>задач</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{members}}</div>
-              <div class="stat-label">Человек состоит<br>в команде</div>
+            <div class="stat__item">
+              <div class="stat__value">{{members}}</div>
+              <div class="stat__label">Человек состоит<br>в команде</div>
             </div>
           </div>
         </div>
@@ -84,11 +84,11 @@
   </div>
 </div>
 
-<div id="modal-overlay" class="modal-overlay hidden">
+<div id="modal-overlay" class="modal__overlay hidden">
   <div id="modal-create-board" class="modal hidden">
-    <div class="modal-header">
-      <h2 class="modal-title">Создать доску</h2>
-      <button class="close-modal-btn">
+    <div class="modal__header">
+      <h2 class="modal__title">Создать доску</h2>
+      <button class="modal__close-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -96,8 +96,8 @@
         </svg>
       </button>
     </div>
-    <div class="modal-body">
-      <label for="create-board-image" class="modal-image-row">
+    <div class="modal__body">
+      <label for="create-board-image" class="modal__image-row">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -107,20 +107,20 @@
         <span id="create-board-image-name">Изображение доски</span>
         <input type="file" id="create-board-image" class="hidden" accept="image/*" />
       </label>
-      <div class="input-group modal-input-group">
-        <label class="modal-input-label">Название доски</label>
-        <input type="text" id="new-board-name" class="modal-input-field" placeholder="Например, Запуск продукта"
+      <div class="input-group modal__input-group">
+        <label class="modal__input-label">Название доски</label>
+        <input type="text" id="new-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
           autocomplete="off" />
-        <span class="modal-input-error" id="new-board-name-error">Введите имя доски</span>
+        <span class="modal__input-error" id="new-board-name-error">Введите имя доски</span>
       </div>
     </div>
-    <button class="btn btn-primary btn-modal-action" id="btn-confirm-create" disabled>Создать</button>
+    <button class="btn btn--primary modal__action-btn" id="btn-confirm-create" disabled>Создать</button>
   </div>
 
   <div id="modal-edit-board" class="modal hidden">
-    <div class="modal-header">
-      <h2 class="modal-title">Изменить доску</h2>
-      <button class="close-modal-btn">
+    <div class="modal__header">
+      <h2 class="modal__title">Изменить доску</h2>
+      <button class="modal__close-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -128,8 +128,8 @@
         </svg>
       </button>
     </div>
-    <div class="modal-body">
-      <label for="edit-board-image" class="modal-image-row">
+    <div class="modal__body">
+      <label for="edit-board-image" class="modal__image-row">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -139,22 +139,22 @@
         <span id="edit-board-image-name">Изображение доски</span>
         <input type="file" id="edit-board-image" class="hidden" accept="image/*" />
       </label>
-      <div class="input-group modal-input-group">
-        <label class="modal-input-label">Другое название доски</label>
-        <input type="text" id="edit-board-name" class="modal-input-field" placeholder="Например, Запуск продукта"
+      <div class="input-group modal__input-group">
+        <label class="modal__input-label">Другое название доски</label>
+        <input type="text" id="edit-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
           autocomplete="off" />
       </div>
     </div>
     <div style="display: flex; flex-direction: column; gap: 1rem;">
-      <button class="btn btn-primary btn-modal-action" id="btn-confirm-edit" disabled>Изменить</button>
-      <button class="btn btn-danger btn-modal-action" id="btn-open-delete">Удалить</button>
+      <button class="btn btn--primary modal__action-btn" id="btn-confirm-edit" disabled>Изменить</button>
+      <button class="btn btn--danger modal__action-btn" id="btn-open-delete">Удалить</button>
     </div>
   </div>
 
   <div id="modal-delete-board" class="modal hidden">
-    <div class="modal-header">
-      <h2 class="modal-title">Удалить доску</h2>
-      <button class="close-modal-btn">
+    <div class="modal__header">
+      <h2 class="modal__title">Удалить доску</h2>
+      <button class="modal__close-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -162,11 +162,11 @@
         </svg>
       </button>
     </div>
-    <p class="modal-text">Вы уверены, что хотите удалить доску<br>“<span id="delete-board-name"
+    <p class="modal__text">Вы уверены, что хотите удалить доску<br>“<span id="delete-board-name"
         style="font-weight: bold;"></span>”?</p>
-    <div class="modal-actions">
-      <button class="btn btn-danger" id="btn-confirm-delete">Удалить</button>
-      <button class="btn btn-cancel close-modal-btn">Отменить</button>
+    <div class="modal__actions">
+      <button class="btn btn--danger" id="btn-confirm-delete">Удалить</button>
+      <button class="btn btn--cancel modal__close-btn">Отменить</button>
     </div>
   </div>
 </div>
