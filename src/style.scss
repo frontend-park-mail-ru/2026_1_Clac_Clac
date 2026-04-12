@@ -169,6 +169,8 @@ a {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    text-decoration: none;
+    text-align: center;
 
     &:hover {
       background-color: var(--vk-hover);

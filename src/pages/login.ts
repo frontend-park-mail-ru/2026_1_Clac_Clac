@@ -18,7 +18,9 @@ interface ApiError {
 }
 
 export const renderLogin = (appDiv: HTMLElement): void => {
-  appDiv.innerHTML = template({});
+  appDiv.innerHTML = template({
+    vkAuthUrl: config.vkAuthUrl 
+  });
 
   const vkError = localStorage.getItem('vkError');
   if (vkError) {
@@ -84,13 +86,6 @@ export const renderLogin = (appDiv: HTMLElement): void => {
     forgotLink.addEventListener('click', (e: Event) => {
       e.preventDefault();
       navigateTo('/forgot-password');
-    });
-  }
-
-  const btnVk = document.querySelector('.btn--vk');
-  if (btnVk) {
-    btnVk.addEventListener('click', () => {
-      window.location.href = config.vkAuthUrl;
     });
   }
 
