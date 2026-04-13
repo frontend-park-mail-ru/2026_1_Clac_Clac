@@ -347,6 +347,59 @@ a {
   }
 }
 
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  user-select: none;
+  color: #ccc;
+  font-size: 1rem;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .checkmark {
+    height: 20px;
+    width: 20px;
+    background-color: #2a2a2c;
+    border: 1px solid #444;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  &:hover input ~ .checkmark {
+    background-color: #333;
+  }
+
+  input:checked ~ .checkmark {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  input:checked ~ .checkmark:after {
+    display: block;
+  }
+}
+
 .mt-05 {
   margin-top: 0.5rem;
 }

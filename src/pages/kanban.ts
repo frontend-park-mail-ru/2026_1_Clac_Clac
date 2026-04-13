@@ -179,22 +179,11 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         document.body.appendChild(menu);
         activeMenu = menu;
 
-        menu
-          .querySelector("#ctx-edit-list")
-          ?.addEventListener("click", async () => {
-            const newName = prompt("Введите новое имя списка:");
-            if (newName && newName.trim() && sectionId) {
-              await kanbanApi.updateSection(sectionId, {
-                section_link: sectionId,
-                section_name: newName.trim(),
-                is_mandatory: false,
-                max_tasks: 100,
-                color: "white",
-                position: 1,
-              });
-              renderKanban(appDiv);
-            }
-          });
+        menu.querySelector("#ctx-edit-list")?.addEventListener("click", () => {
+          if (sectionId) {
+            navigateTo(`/section?boardId=${boardId}&sectionId=${sectionId}`);
+          }
+        });
 
         menu
           .querySelector("#ctx-delete-list")
