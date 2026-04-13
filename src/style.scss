@@ -186,6 +186,147 @@ a {
   }
 }
 
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #2a2a2c;
+  }
+}
+
+.task__page-container {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1c;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.task__header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #1a1a1c;
+}
+
+.task__header-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.task__close-btn, .task__options-btn, .task__share-btn {
+  color: #ccc;
+  &:hover {
+    color: white;
+  }
+}
+
+.task__content {
+  padding: 0 4rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.task__board-title {
+  color: #888;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.task__title-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  width: 100%;
+  padding: 0.5rem 0;
+  margin-bottom: 1.5rem;
+  outline: none;
+  &:focus {
+    border-bottom: 1px solid #444;
+  }
+}
+
+.task__meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.task__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #888;
+  font-size: 1rem;
+}
+
+.task__meta-label {
+  min-width: 40px;
+}
+
+.task__meta-value-btn {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  &:hover {
+    background-color: #2a2a2c;
+    color: white;
+  }
+}
+
+.task__meta-date-input, .task__meta-time-input {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+}
+
+.task__description-section {
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+}
+
+.task__description-textarea {
+  background: #2a2a2c;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: #ccc;
+  width: 100%;
+  min-height: 200px;
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  &:focus {
+    border-color: #8b5cf6;
+  }
+}
+
 .mt-05 {
   margin-top: 0.5rem;
 }
