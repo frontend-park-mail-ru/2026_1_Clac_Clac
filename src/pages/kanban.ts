@@ -134,6 +134,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                 <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </div>
+            <span style="font-size: 0.85rem; color: #888;">Обязательный список</span>
             <label class="toggle">
               <input type="checkbox" class="section-toggle" data-id="${s.id}" ${s.is_mandatory ? "checked" : ""}>
               <span class="slider"></span>
@@ -204,58 +205,82 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
             const colors = [
               "white",
-              "grey",
-              "red",
-              "orange",
-              "blue",
-              "green",
-              "purple",
-              "pink",
+              "#f87171",
+              "#fb923c",
+              "#60a5fa",
+              "#f43f5e",
+              "#4ade80",
+              "#a5b4fc",
+              "#f9a8d4",
             ];
             const picker = document.createElement("div");
             picker.className = "color-picker-bubble";
             picker.style.cssText = `
             position: absolute;
-            background: #2a2a2c;
-            border: 1px solid #444;
-            padding: 8px;
-            border-radius: 8px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
             z-index: 10001;
           `;
-            picker.innerHTML = colors
-              .map(
-                (c) =>
-                  `<div class="color-dot ${c}" data-color="${c}" style="width:20px;height:20px;border-radius:50%;cursor:pointer;background:${c}"></div>`,
-              )
-              .join("");
+            picker.innerHTML = `
+            <div class="color-picker-bubble__title">Цвета</div>
+            <div class="color-picker-bubble__grid">
+              ${colors
+                .map(
+                  (c) =>
+                    `<div class="color-picker-bubble__dot ${s.color === c ? "active" : ""}" data-color="${c}" style="background:${c}"></div>`,
+                )
+                .join("")}
+            </div>
+            <div class="color-picker-bubble__footer">
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button>
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button>
+            </div>
+          `;
 
             const rect = trigger.getBoundingClientRect();
-            picker.style.top = `${rect.bottom + window.scrollY + 5}px`;
-            picker.style.left = `${rect.left + window.scrollX}px`;
+            picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            picker.style.left = `${rect.left + window.scrollX - 100}px`;
 
             document.body.appendChild(picker);
 
-            const closePicker = () => picker.remove();
-            picker.querySelectorAll(".color-dot").forEach((dot: any) => {
-              dot.addEventListener("click", async () => {
-                const newColor = dot.getAttribute("data-color");
-                if (section && newColor) {
+            let tempColor = s.color;
+
+            picker
+              .querySelectorAll(".color-picker-bubble__dot")
+              .forEach((dot: any) => {
+                dot.addEventListener("click", () => {
+                  picker
+                    .querySelectorAll(".color-picker-bubble__dot")
+                    .forEach((d) => d.classList.remove("active"));
+                  dot.classList.add("active");
+                  tempColor = dot.getAttribute("data-color");
+                });
+              });
+
+            picker
+              .querySelector(".color-picker-bubble__btn--cancel")
+              ?.addEventListener("click", () => picker.remove());
+
+            picker
+              .querySelector(".color-picker-bubble__btn--save")
+              ?.addEventListener("click", async () => {
+                if (section && tempColor) {
                   await kanbanApi.updateSection(id, {
                     ...section,
                     section_link: id,
-                    color: newColor,
+                    color: tempColor,
                   });
-                  closePicker();
+                  picker.remove();
                   renderKanban(appDiv);
                 }
               });
-            });
 
+            const closeOnOutside = (e: MouseEvent) => {
+              if (!picker.contains(e.target as Node)) {
+                picker.remove();
+                document.removeEventListener("mousedown", closeOnOutside);
+              }
+            };
             setTimeout(() => {
-              document.addEventListener("click", closePicker, { once: true });
+              document.addEventListener("mousedown", closeOnOutside);
             }, 0);
           });
         });
