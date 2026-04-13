@@ -2,6 +2,7 @@ import Handlebars from "handlebars";
 import { authApi, boardsApi, kanbanApi, profileApi } from "../api";
 import { navigateTo } from "../router";
 import kanbanTpl from "../templates/kanban.hbs?raw";
+import { Toast } from "../utils/toast";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -541,6 +542,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
             description: "",
             link_executer: selectedAssigneeId ? selectedAssigneeId : undefined,
           });
+          Toast.success("Задача успешно создана");
           closeModals();
           await renderKanban(appDiv);
 
@@ -549,7 +551,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
             modalAssigneeBtn.textContent = "Выбрать...";
           }
         } else {
-          alert("Сначала создайте колонку");
+          Toast.error("Сначала создайте колонку");
         }
       } catch (error) {
         console.error("Ошибка при создании задачи:", error);

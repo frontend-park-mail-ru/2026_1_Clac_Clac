@@ -198,6 +198,15 @@ a {
   margin-bottom: 1rem;
 }
 
-.cursor-pointer {
-  cursor: pointer;
+#toast-container div button:hover {
+  color: #fff !important;
+}
+
+#toast-container div {
+  animation: toast-slide-in 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes toast-slide-in {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
