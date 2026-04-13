@@ -297,6 +297,40 @@ a {
   min-width: 40px;
 }
 
+.color-picker-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s, border-color 0.2s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &.active {
+    border-color: white;
+    transform: scale(1.1);
+  }
+
+  &.white { background-color: #ffffff; }
+  &.grey { background-color: #808080; }
+  &.red { background-color: #ff4d4d; }
+  &.orange { background-color: #ffa64d; }
+  &.blue { background-color: #4da6ff; }
+  &.green { background-color: #4dff4d; }
+  &.purple { background-color: #a64dff; }
+  &.pink { background-color: #ff4dff; }
+}
+
 .task__meta-value-btn {
   background: transparent;
   border: none;

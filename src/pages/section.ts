@@ -72,14 +72,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
                   "#section-name-input",
                 ) as HTMLInputElement
               ).value,
-        color:
-          updates.color !== undefined
-            ? updates.color
-            : (
-                sectionNode.querySelector(
-                  "#section-color-input",
-                ) as HTMLInputElement
-              ).value,
+        color: updates.color !== undefined ? updates.color : selectedColor,
         max_tasks: parseInt(
           updates.max_tasks !== undefined
             ? updates.max_tasks
@@ -130,16 +123,30 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     }
   });
 
+  // Color picker logic
+  const colorDots = sectionNode.querySelectorAll(".color-dot");
+  let selectedColor = sectionData.color || "white";
+
+  colorDots.forEach((dot) => {
+    const dotColor = dot.getAttribute("data-color");
+    if (dotColor === selectedColor) {
+      dot.classList.add("active");
+    }
+
+    dot.addEventListener("click", () => {
+      colorDots.forEach((d) => d.classList.remove("active"));
+      dot.classList.add("active");
+      if (dotColor) {
+        selectedColor = dotColor;
+        updateSection({ color: dotColor });
+      }
+    });
+  });
+
   sectionNode
     .querySelector("#section-max-tasks-input")
     ?.addEventListener("change", (e) => {
       updateSection({ max_tasks: (e.target as HTMLInputElement).value });
-    });
-
-  sectionNode
-    .querySelector("#section-color-input")
-    ?.addEventListener("change", (e) => {
-      updateSection({ color: (e.target as HTMLInputElement).value });
     });
 
   sectionNode
