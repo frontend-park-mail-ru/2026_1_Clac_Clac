@@ -1,23 +1,23 @@
-<div class="auth-page">
-  <div class="auth-form-container">
-    <div class="auth-form-wrapper">
-      <h1 class="auth-title">Войти</h1>
+<div class="auth__page">
+  <div class="auth__form-container">
+    <div class="auth__form-wrapper">
+      <h1 class="auth__title">Войти</h1>
 
       <form id="login-form" novalidate>
         {{> input id="email" label="Email" type="email" placeholder="email@example.com" maxlength="128" }}
         {{> input id="password" label="Пароль" type="password" placeholder="Введите пароль" isPassword=true
         forgotPassword=true maxlength="128" }}
 
-        <button type="submit" class="btn btn-primary mt-05" id="login-submit" disabled>Войти</button>
+        <button type="submit" class="btn btn--primary mt-05" id="login-submit" disabled>Войти</button>
 
-        <p class="auth-footer-text mt-1">
+        <p class="auth__footer-text mt-1">
           Нет аккаунта? <a href="#" id="link-register">Зарегистрироваться</a>
         </p>
 
         <div class="divider">
-          <div class="divider-line"></div>Или<div class="divider-line"></div>
+          <div class="divider__line"></div>Или<div class="divider__line"></div>
         </div>
-        <button type="button" class="btn btn-vk">
+        <a href="{{vkAuthUrl}}" class="btn btn--vk">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 101 100" fill="none">
             <g clip-path="url(#clip0_2_40)">
               <path
@@ -29,9 +29,9 @@
             </g>
           </svg>
           Войти с VK ID
-        </button>
+        </a>
 
-        <div id="global-error" class="global-error-banner hidden mt-1">
+        <div id="global-error" class="global-error__banner hidden mt-1">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -43,10 +43,10 @@
     </div>
   </div>
 
-  <div class="auth-logo-container">
+  <div class="auth__logo-container">
     <div class="auth-logo-content">
-      <img src="/logo.svg" alt="NeXus Logo" class="auth-logo" />
-      <p class="auth-subtitle">Центр управления проектами</p>
+      <img src="/logo.svg" alt="NeXus Logo" class="auth__logo" />
+      <p class="auth__subtitle">Центр управления проектами</p>
     </div>
   </div>
 </div>

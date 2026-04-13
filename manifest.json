@@ -1,0 +1,14 @@
+{
+  "name": "NeXus SPA",
+  "short_name": "NeXus",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/x-icon"
+    }
+  ]
+}

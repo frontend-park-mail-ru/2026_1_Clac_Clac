@@ -1,143 +1,172 @@
-<div class="boards-layout">
-  <div class="sidebar">
-    <div class="sidebar-top">
-      <div class="sidebar-icon active sidebar-icon-primary" title="Доски">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 2h12v4l-4 6 4 6v4H6v-4l4-6-4-6V2z" />
-          <line x1="6" y1="2" x2="18" y2="2" />
-          <line x1="6" y1="22" x2="18" y2="22" />
-        </svg>
-      </div>
-    </div>
-    <div class="sidebar-bottom">
-      <div class="sidebar-icon cursor-pointer" id="profile-btn" title="Профиль">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
-      <div class="sidebar-icon sidebar-icon-logout cursor-pointer" id="logout-btn" title="Выйти из аккаунта">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      </div>
-    </div>
-  </div>
+<div class="boards__layout">
+  {{> sidebar activeBoards=true}}
 
   <div class="main-content">
-    <div class="boards-header-container">
-      <div class="boards-title-group">
-        <h1 class="boards-title">Досок <span class="boards-count">{{boards.length}}</span></h1>
-      </div>
-      <div class="search-container">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <div class="boards__header-container">
+      <h1 class="boards__title">
+        {{#if (eq boards.length 0)}}Досок{{else}}Доски{{/if}}
+        <span class="boards__count">{{boards.length}}</span>
+      </h1>
+      <button class="btn btn--primary btn--create" id="btn-create-board">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <input type="text" class="search-input" placeholder="Поиск доски или задачи">
-      </div>
+        Создать
+      </button>
     </div>
 
-    <div class="boards-grid">
+    {{#if (eq boards.length 0)}}
+    <div class="boards__grid">
+      <div class="board-card board-card--empty-large" id="btn-create-board-empty">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+        </svg>
+      </div>
+    </div>
+    {{else}}
+    <div class="boards__grid">
       {{#each boards}}
-      <div class="board-card">
-        <div class="board-card-top">
-          <div class="board-header">
-            <div class="board-title-group">
-              <div class="board-icon {{iconClass}}">
-                {{{iconHtml}}}
+      <div class="board-card" data-id="{{id}}">
+        <div class="board-card__top">
+          <div class="board-card__header">
+            <div class="board-card__title-group">
+              <div class="board-card__icon-monitor" {{#if
+                background}}style="background-image: url('{{background}}'); background-size: cover; background-position: center;"
+                {{/if}}>
+                {{#unless background}}
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                  <path d="M12 16v4M8 22l4-4 4 4"></path>
+                </svg>
+                {{/unless}}
               </div>
-              <h2 class="board-name" title="{{board_name}}">{{board_name}}</h2>
+              <div class="board-card__name-wrapper">
+                <h2 class="board-card__name">{{board_name}}</h2>
+                <p class="board-card__desc">{{description}}</p>
+              </div>
             </div>
+            <button class="icon-btn board-card__options-btn" data-id="{{id}}" data-name="{{board_name}}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
           </div>
-          <p class="board-desc" title="{{description}}">{{description}}</p>
         </div>
 
-        <div class="board-card-bottom">
-          <div class="board-divider"></div>
-          <div class="board-stats">
-            <div class="stat-item">
-              <div class="stat-value-wrapper">
-                <span class="stat-value">{{backlog}}</span>
-              </div>
-              <div class="stat-label">Задачи<br>в бэклоге</div>
+        <div class="board-card__bottom">
+          <div class="board-card__divider"></div>
+          <div class="board-card__stats">
+            <div class="stat__item">
+              <div class="stat__value">{{backlog}}</div>
+              <div class="stat__label">Задачи<br>в бэклоге</div>
             </div>
-            <div class="stat-item">
-              <div class="stat-value-wrapper">
-                <span class="stat-value">{{hot}}</span>
-                {{#if hot}}<span class="fire">🔥</span>{{/if}}
-              </div>
-              <div class="stat-label">Горящие<br>задачи</div>
+            <div class="stat__item">
+              <div class="stat__value">{{hot}}</div>
+              <div class="stat__label">Горящих<br>задач</div>
             </div>
-            
-            {{#if hasMembers}}
-            <div class="stat-item">
-              <div class="stat-value-wrapper">
-                <span class="stat-value">{{members}}</span>
-                {{#if avatars}}
-                <div class="avatars-inline">
-                  {{#each avatars}}
-                  <img src="{{this}}" alt="avatar" class="avatar-circle">
-                  {{/each}}
-                </div>
-                {{/if}}
-              </div>
-              <div class="stat-label">Человек состоит<br>в команде</div>
+            <div class="stat__item">
+              <div class="stat__value">{{members}}</div>
+              <div class="stat__label">Человек состоит<br>в команде</div>
             </div>
-            {{/if}}
           </div>
         </div>
       </div>
       {{/each}}
     </div>
+    {{/if}}
   </div>
 </div>
 
-{{#if user}}
-<div id="profile-popup" class="profile-popup hidden">
-  <div class="profile-popup-avatar">
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  </div>
-  <div class="profile-popup-info">
-    <div class="profile-name">{{user.display_name}}</div>
-    <div class="profile-email">{{user.email}}</div>
-  </div>
-</div>
-{{/if}}
-
-<div id="modal-overlay" class="modal-overlay hidden">
+<div id="modal-overlay" class="modal__overlay hidden">
   <div id="modal-create-board" class="modal hidden">
-    <h2 class="modal-title">Создать новую доску</h2>
-    <div class="input-group">
-      <label class="input-label" for="new-board-name">Название доски</label>
-      <input type="text" id="new-board-name" class="input-field" placeholder="Например, Новый проект" autocomplete="off" />
+    <div class="modal__header">
+      <h2 class="modal__title">Создать доску</h2>
+      <button class="modal__close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" id="btn-cancel-create">Отмена</button>
-      <button class="btn btn-primary" id="btn-confirm-create" disabled>Создать</button>
+    <div class="modal__body">
+      <label for="create-board-image" class="modal__image-row">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span id="create-board-image-name">Изображение доски</span>
+        <input type="file" id="create-board-image" class="hidden" accept="image/*" />
+      </label>
+      <div class="input-group modal__input-group">
+        <label class="modal__input-label">Название доски</label>
+        <input type="text" id="new-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
+          autocomplete="off" />
+        <span class="modal__input-error" id="new-board-name-error">Введите имя доски</span>
+      </div>
+    </div>
+    <button class="btn btn--primary modal__action-btn" id="btn-confirm-create" disabled>Создать</button>
+  </div>
+
+  <div id="modal-edit-board" class="modal hidden">
+    <div class="modal__header">
+      <h2 class="modal__title">Изменить доску</h2>
+      <button class="modal__close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <label for="edit-board-image" class="modal__image-row">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span id="edit-board-image-name">Изображение доски</span>
+        <input type="file" id="edit-board-image" class="hidden" accept="image/*" />
+      </label>
+      <div class="input-group modal__input-group">
+        <label class="modal__input-label">Другое название доски</label>
+        <input type="text" id="edit-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
+          autocomplete="off" />
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <button class="btn btn--primary modal__action-btn" id="btn-confirm-edit" disabled>Изменить</button>
+      <button class="btn btn--danger modal__action-btn" id="btn-open-delete">Удалить</button>
     </div>
   </div>
 
   <div id="modal-delete-board" class="modal hidden">
-    <h2 class="modal-title">Удалить доску?</h2>
-    <p class="modal-text">Вы уверены, что хотите удалить доску "<span id="delete-board-name" style="color: white; font-weight: bold;"></span>"?<br><br>Это действие нельзя отменить.</p>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" id="btn-cancel-delete">Отмена</button>
-      <button class="btn btn-danger" id="btn-confirm-delete">Удалить</button>
+    <div class="modal__header">
+      <h2 class="modal__title">Удалить доску</h2>
+      <button class="modal__close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
-  </div>
-
-  <div id="modal-logout" class="modal hidden">
-    <h2 class="modal-title">Выход из аккаунта</h2>
-    <p class="modal-text">Вы уверены, что хотите выйти?</p>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" id="btn-cancel-logout">Отмена</button>
-      <button class="btn btn-danger" id="btn-confirm-logout">Выйти</button>
+    <p class="modal__text">Вы уверены, что хотите удалить доску<br>“<span id="delete-board-name"
+        style="font-weight: bold;"></span>”?</p>
+    <div class="modal__actions">
+      <button class="btn btn--danger" id="btn-confirm-delete">Удалить</button>
+      <button class="btn btn--cancel modal__close-btn">Отменить</button>
     </div>
   </div>
 </div>

@@ -1,15 +1,32 @@
-import './styles/auth.css';
-import './styles/boards.css';
+import './styles/auth.scss';
+import './styles/boards.scss';
 
 import Handlebars from 'handlebars';
 import { initGlobalListeners } from './utils';
 import { handleRoute } from './router';
 import inputPartial from '/src/templates/partials/input.hbs?raw';
+import sidebarPartial from '/src/templates/partials/sidebar.hbs?raw';
 
-import { registerSW } from 'virtual:pwa-register';
-registerSW({ immediate: true });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(
+      (registration) => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      },
+      (err) => {
+        console.error('ServiceWorker registration failed: ', err);
+      }
+    );
+  });
+}
 
 Handlebars.registerPartial('input', inputPartial);
+Handlebars.registerPartial('sidebar', sidebarPartial);
+
+Handlebars.registerHelper('eq', function (a, b) {
+  return a === b;
+});
+
 initGlobalListeners();
 
 const urlParams = new URLSearchParams(window.location.search);

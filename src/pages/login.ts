@@ -1,10 +1,13 @@
 import Handlebars from 'handlebars';
 import { apiClient } from '../api';
-import { setInputError, setGlobalError, validateEmail } from '../utils';
+import { setGlobalError, validateEmail } from '../utils';
+import { FormValidator, ValidationSchema } from '../utils/validator';
 import config from '../config';
 
 import loginTpl from '../templates/login.hbs?raw';
 import { navigateTo } from '../router';
+
+import { Toast } from '../utils/toast';
 
 const template = Handlebars.compile(loginTpl);
 
@@ -16,13 +19,21 @@ interface ApiError {
   };
 }
 
-/**
- * Отрисовывает страницу авторизации и инициализирует все связанные с ней обработчики событий.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
- */
 export const renderLogin = (appDiv: HTMLElement): void => {
-  appDiv.innerHTML = template({});
+  appDiv.innerHTML = template({
+    vkAuthUrl: config.vkAuthUrl
+  });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get("code");
+  const message = urlParams.get("message");
+
+  if (code === "502" && message?.includes("oauth_no_email")) {
+
+    Toast.error("Для входа через VK необходимо привязать Email к вашему аккаунту.");
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
   const vkError = localStorage.getItem('vkError');
   if (vkError) {
@@ -54,33 +65,26 @@ export const renderLogin = (appDiv: HTMLElement): void => {
   const emailInput = document.getElementById('email') as HTMLInputElement | null;
   const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
-  /**
-   * Проверяет заполненность обязательных полей (email и пароль) 
-   * и активирует или деактивирует кнопку входа.
-   */
-  const checkForm = (): void => {
-    const emailVal = emailInput?.value.trim() || '';
-    const passwordVal = passwordInput?.value.trim() || '';
-
-    if (submitBtn) {
-      submitBtn.disabled = !(emailVal && passwordVal);
-    }
+  const loginSchema: ValidationSchema = {
+    email: [
+      { required: true, message: 'Введите адрес электронной почты' },
+      {
+        customValidator: (value: string) => validateEmail(value) ? null : 'Неверный формат email',
+        message: 'Неверный формат email'
+      }
+    ],
+    password: [
+      { required: true, message: 'Введите пароль' }
+    ]
   };
 
-  const inputs = form?.querySelectorAll('input');
-  inputs?.forEach((input: HTMLInputElement) => {
-    input.addEventListener('input', () => {
-      checkForm();
-      input.classList.remove('error');
-      const errorMsg = document.getElementById(`${input.id}-error`);
-      if (errorMsg) {
-        errorMsg.classList.remove('visible');
-      }
-      setGlobalError(null);
-    });
+  const validator = new FormValidator(loginSchema, (isValid) => {
+    if (submitBtn) {
+      submitBtn.disabled = !isValid;
+    }
   });
 
-  checkForm();
+  validator.attachLiveValidation();
 
   const linkRegister = document.getElementById('link-register');
   if (linkRegister) {
@@ -98,42 +102,15 @@ export const renderLogin = (appDiv: HTMLElement): void => {
     });
   }
 
-  const btnVk = document.querySelector('.btn-vk');
-  if (btnVk) {
-    btnVk.addEventListener('click', () => {
-      window.location.href = config.vkAuthUrl;
-    });
-  }
-
   form?.addEventListener('submit', async (e: SubmitEvent) => {
     e.preventDefault();
 
-    const email = emailInput?.value.trim() || '';
-    const password = passwordInput?.value.trim() || '';
-
-    let hasError = false;
-    setGlobalError(null);
-
-    if (!email) {
-      setInputError('email', 'Введите адрес электронной почты');
-      hasError = true;
-    } else if (!validateEmail(email)) {
-      setInputError('email', 'Неверный формат email');
-      hasError = true;
-    } else {
-      setInputError('email', null);
-    }
-
-    if (!password) {
-      setInputError('password', 'Введите пароль');
-      hasError = true;
-    } else {
-      setInputError('password', null);
-    }
-
-    if (hasError) {
+    if (!validator.validate()) {
       return;
     }
+
+    const email = emailInput?.value.trim() || '';
+    const password = passwordInput?.value.trim() || '';
 
     try {
       if (submitBtn) submitBtn.disabled = true;
@@ -148,8 +125,8 @@ export const renderLogin = (appDiv: HTMLElement): void => {
 
       if (err.status === 401 || (errMsg && (errMsg.includes('wrong') || errMsg.includes('exist') || errMsg.includes('invalid')))) {
         setGlobalError('Неверный email или пароль');
-        emailInput?.classList.add('error');
-        passwordInput?.classList.add('error');
+        emailInput?.classList.add('input-group__field--error');
+        passwordInput?.classList.add('input-group__field--error');
       } else if (errMsg) {
         setGlobalError(errMsg);
       } else {

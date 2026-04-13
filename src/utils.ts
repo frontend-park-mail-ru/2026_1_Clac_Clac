@@ -1,6 +1,6 @@
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
- * 
+ *
  * @param {string} id - Уникальный идентификатор элемента input.
  * @param {string|null} message - Текст ошибки. Если передано null, ошибка скрывается.
  */
@@ -13,18 +13,18 @@ export const setInputError = (id: string, message: string | null): void => {
   }
 
   if (message) {
-    input.classList.add('error');
+    input.classList.add('input-group__field--error');
     errorMsg.textContent = message;
-    errorMsg.classList.add('visible');
+    errorMsg.classList.add('input-group__error-msg--visible');
   } else {
-    input.classList.remove('error');
-    errorMsg.classList.remove('visible');
+    input.classList.remove('input-group__field--error');
+    errorMsg.classList.remove('input-group__error-msg--visible');
   }
 };
 
 /**
  * Устанавливает или снимает глобальную ошибку формы.
- * 
+ *
  * @param {string|null} message - Текст глобальной ошибки. Если передано null, баннер скрывается.
  */
 export const setGlobalError = (message: string | null): void => {
@@ -46,7 +46,7 @@ export const setGlobalError = (message: string | null): void => {
 
 /**
  * Проверяет адрес электронной почты на соответствие минимальным требованиям.
- * 
+ *
  * @param {string} email - Адрес электронной почты.
  * @returns {boolean} `true`, если email имеет валидный формат, иначе `false`.
  */
@@ -80,7 +80,7 @@ export const validateEmail = (email: string): boolean => {
 
 /**
  * Проверяет введенный пароль на соответствие требованиям.
- * 
+ *
  * @param {string} password - Пароль.
  * @returns {string|null} Строка с описанием ошибки, если пароль невалиден. `null`, если пароль прошел проверку.
  */
@@ -105,16 +105,22 @@ export const validatePassword = (password: string): string | null => {
 export const initGlobalListeners = (): void => {
   document.body.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    const btn = target.closest('.toggle-password-btn');
 
-    if (!btn) return;
+    const btn = target.closest('.input-group__toggle-btn');
+    if (!btn) {
+      return;
+    }
 
     const inputId = btn.getAttribute('data-target');
-    if (!inputId) return;
+    if (!inputId) {
+      return;
+    }
 
     const input = document.getElementById(inputId) as HTMLInputElement | null;
 
-    if (!input) return;
+    if (!input) {
+      return;
+    }
 
     const eyeSlash = btn.querySelector('.icon-eye-slash');
     const eye = btn.querySelector('.icon-eye');

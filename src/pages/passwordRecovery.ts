@@ -16,13 +16,6 @@ interface RecoveryState {
   code: string;
 }
 
-interface ApiError {
-  data?: {
-    message?: string;
-    error?: string;
-  };
-}
-
 let recoveryState: RecoveryState = {
   email: '',
   code: ''
@@ -42,7 +35,7 @@ const stepEmail = (appDiv: HTMLElement): void => {
   const backLink = document.getElementById('back-link-email') as HTMLAnchorElement | null;
 
   if (backLink) {
-    backLink.addEventListener('click', (e: MouseEvent) => {
+    backLink.addEventListener('click', (e) => {
       e.preventDefault();
       navigateTo('/login');
     });
@@ -60,7 +53,6 @@ const stepEmail = (appDiv: HTMLElement): void => {
   if (emailInput && recoveryState.email) {
     emailInput.value = recoveryState.email;
   }
-
   if (emailInput) {
     emailInput.addEventListener('input', checkForm);
   }
@@ -69,19 +61,15 @@ const stepEmail = (appDiv: HTMLElement): void => {
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-
-      if (!emailInput || !submitBtn) return;
-
-      const email = emailInput.value.trim();
-
-      if (!email) {
-        setInputError('email', 'Введите адрес электронной почты');
-        return;
-      } else if (!validateEmail(email)) {
-        setInputError('email', 'Неверный формат email');
+      if (!emailInput || !submitBtn) {
         return;
       }
 
+      const email = emailInput.value.trim();
+      if (!validateEmail(email)) {
+        setInputError('email', 'Неверный формат email');
+        return;
+      }
       setGlobalError(null);
 
       try {
@@ -89,13 +77,13 @@ const stepEmail = (appDiv: HTMLElement): void => {
         await apiClient.post('/forgot-password', { email });
         recoveryState.email = email;
         stepCode(appDiv);
-      } catch (err: unknown) {
-        const error = err as ApiError;
-        const errMsg = error.data?.message || error.data?.error;
-        if (errMsg === 'user does not exists') {
+      } catch (err: any) {
+        if (err.status === 429) {
+          setGlobalError('Слишком много попыток. Подождите немного.');
+        } else if (err.status === 404) {
           setGlobalError('Пользователь не найден');
         } else {
-          setGlobalError(errMsg || 'Не удалось отправить код');
+          setGlobalError(err.data?.message || err.data?.error || 'Не удалось отправить код');
         }
       } finally {
         submitBtn.disabled = false;
@@ -104,11 +92,6 @@ const stepEmail = (appDiv: HTMLElement): void => {
   }
 };
 
-/**
- * Отрисовывает второй шаг восстановления пароля: ввод кода подтверждения.
- * 
- * @param {HTMLElement} appDiv - DOM-контейнер для рендеринга.
- */
 const stepCode = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = renderStepCode({ email: recoveryState.email });
 
@@ -145,58 +128,54 @@ const stepCode = (appDiv: HTMLElement): void => {
         timerSpan.textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
       }
     } else {
-      if (timerInterval) clearInterval(timerInterval);
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
       if (resendLink) {
         resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
-        const action = document.getElementById('resend-action') as HTMLAnchorElement | null;
-        if (action) {
-          action.addEventListener('click', async (e: MouseEvent) => {
-            e.preventDefault();
-            try {
-              await apiClient.post('/forgot-password', { email: recoveryState.email });
-              stepCode(appDiv);
-            } catch {
-              setInputError('code', 'Не удалось отправить код повторно');
-            }
-          });
-        }
+        document.getElementById('resend-action')?.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            await apiClient.post('/forgot-password', { email: recoveryState.email });
+            stepCode(appDiv);
+          } catch (err) {
+            setInputError('code', 'Не удалось отправить код повторно');
+            console.error('Resend code error:', err);
+          }
+        });
       }
     }
   };
 
   timerInterval = setInterval(updateTimer, 1000);
 
-  const backLink = document.getElementById('back-link') as HTMLAnchorElement | null;
-  if (backLink) {
-    backLink.addEventListener('click', (e: MouseEvent) => {
-      e.preventDefault();
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-      stepEmail(appDiv);
-    });
-  }
+  document.getElementById('back-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    stepEmail(appDiv);
+  });
 
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-      if (!codeInput || !submitBtn) return;
-
-      const code = codeInput.value.trim();
-
-      if (!code || code.length < 4) {
-        setInputError('code', 'Введите код из письма');
+      if (!codeInput || !submitBtn) {
         return;
       }
+      const code = codeInput.value.trim();
 
       try {
         submitBtn.disabled = true;
         await apiClient.post('/check-code', { code });
-        if (timerInterval) clearInterval(timerInterval);
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
         recoveryState.code = code;
         stepNewPass(appDiv);
-      } catch {
+      } catch (err) {
         setInputError('code', 'Неверный или недействительный код');
+        console.error('Verify code error:', err);
       } finally {
         submitBtn.disabled = false;
       }
@@ -226,17 +205,15 @@ const stepNewPass = (appDiv: HTMLElement): void => {
     }
   };
 
-  if (form) {
-    form.querySelectorAll<HTMLInputElement>('input').forEach(input => {
-      input.addEventListener('input', checkForm);
-    });
-  }
+  form?.querySelectorAll('input').forEach(input => input.addEventListener('input', checkForm));
   checkForm();
 
   if (form) {
     form.addEventListener('submit', async (e: SubmitEvent) => {
       e.preventDefault();
-      if (!password || !repeatPassword || !submitBtn) return;
+      if (!password || !repeatPassword || !submitBtn) {
+        return;
+      }
 
       let hasError = false;
       setInputError('password', null);
@@ -266,10 +243,8 @@ const stepNewPass = (appDiv: HTMLElement): void => {
           repeated_password: repeatPassword.value
         });
         navigateTo('/login');
-      } catch (err: unknown) {
-        const error = err as ApiError;
-        const errMsg = error.data?.message || error.data?.error;
-        setGlobalError(errMsg || 'Не удалось сохранить новый пароль');
+      } catch (err: any) {
+        setGlobalError(err.data?.message || err.data?.error || 'Не удалось сохранить новый пароль');
       } finally {
         submitBtn.disabled = false;
       }
