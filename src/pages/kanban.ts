@@ -134,11 +134,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                 <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </div>
-            <span style="font-size: 0.85rem; color: #888;">Обязательный список</span>
-            <label class="toggle">
-              <input type="checkbox" class="section-toggle" data-id="${s.id}" ${s.is_mandatory ? "checked" : ""}>
-              <span class="slider"></span>
-            </label>
             <div class="manage-columns__drag">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="8" y1="9" x2="16" y2="9"></line>
@@ -170,25 +165,10 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           });
         });
 
-      manageList.querySelectorAll(".section-toggle").forEach((toggle: any) => {
-        toggle.addEventListener("change", async () => {
-          const id = toggle.getAttribute("data-id");
-          const section = sections.find((s: any) => s.id === id);
-          if (section) {
-            await kanbanApi.updateSection(id, {
-              ...section,
-              section_link: id,
-              is_mandatory: toggle.checked,
-            });
-            renderKanban(appDiv);
-          }
-        });
-      });
-
       manageList.querySelectorAll(".manage-columns__delete").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-id");
-          if (id && confirm("Удалить колонку?")) {
+          if (id && confirm("Удалить секцию?")) {
             await kanbanApi.deleteSection(id);
             renderKanban(appDiv);
           }
@@ -304,19 +284,16 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     document
       .getElementById("btn-add-column-modal")
       ?.addEventListener("click", async () => {
-        const name = prompt("Введите имя новой колонки:");
-        if (name && name.trim()) {
-          await kanbanApi.createSection({
-            board_link: boardId,
-            section_name: name.trim(),
-            max_tasks: 100,
-            is_mandatory: false,
-            color: "white",
-          });
-          renderKanban(appDiv);
-          // Re-render manage list to show new column
-          setTimeout(() => renderManageList(), 500);
-        }
+        await kanbanApi.createSection({
+          board_link: boardId,
+          section_name: "Новая секция",
+          max_tasks: 100,
+          is_mandatory: false,
+          color: "white",
+        });
+        renderKanban(appDiv);
+        // Re-render manage list to show new column
+        setTimeout(() => renderManageList(), 500);
       });
 
     document
@@ -370,8 +347,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const menu = document.createElement("div");
         menu.className = "context-menu";
         menu.innerHTML = `
-          <div class="context-menu__item" id="ctx-add-card">Добавить карточку</div>
-          <div class="context-menu__item" id="ctx-edit-list">Изменить имя списка</div>
+          <div class="context-menu__item" id="ctx-edit-list">Изменить</div>
           <div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить список</div>
         `;
         const rect = btn.getBoundingClientRect();

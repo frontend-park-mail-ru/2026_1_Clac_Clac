@@ -55,10 +55,10 @@
         </div>
 
         <div class="task__meta-item">
-          <label class="custom-checkbox">
+          <span class="task__meta-label" style="min-width: 160px;">Обязательный список</span>
+          <label class="toggle">
             <input type="checkbox" id="section-mandatory-input" {{#if section.is_mandatory}}checked{{/if}}>
-            <span class="checkmark"></span>
-            Обязательный список
+            <span class="slider"></span>
           </label>
         </div>
       </div>
@@ -69,7 +69,7 @@
 <div id="modal-overlay-section" class="modal__overlay hidden">
   <div id="modal-delete-section" class="modal hidden">
     <div class="modal__header">
-      <h2 class="modal__title">Удалить список</h2>
+      <h2 class="modal__title">Удалить секцию</h2>
       <button class="modal__close-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -77,7 +77,7 @@
         </svg>
       </button>
     </div>
-    <p class="modal__text">Вы уверены, что хотите удалить список “<span id="delete-section-name" style="font-weight: bold;"></span>”? Все задачи в нем также будут удалены.</p>
+    <p class="modal__text">Вы уверены, что хотите удалить секцию “<span id="delete-section-name" style="font-weight: bold;"></span>”? Все задачи в ней также будут удалены.</p>
     <div class="modal__actions">
       <button class="btn btn--danger" id="btn-confirm-delete-section">Удалить</button>
       <button class="btn btn--cancel modal__close-btn">Отменить</button>
