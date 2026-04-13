@@ -168,11 +168,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           <div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div>
           <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
           <div class="manage-columns__actions">
-            <div class="manage-columns__delete" data-id="${s.id}">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </div>
             <div class="manage-columns__drag">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="8" y1="9" x2="16" y2="9"></line>
@@ -429,7 +424,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         menu.className = "context-menu";
         menu.innerHTML = `
           <div class="context-menu__item" id="ctx-edit-list">Изменить</div>
-          <div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить список</div>
+          <div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить секцию</div>
         `;
         const rect = btn.getBoundingClientRect();
         menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
