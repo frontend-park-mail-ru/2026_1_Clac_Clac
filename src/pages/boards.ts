@@ -41,7 +41,7 @@ let eventController: AbortController | null = null;
 
 /**
  * Отрисовывает главную страницу со списком досок проекта.
- * 
+ *
  * @param {HTMLElement} appDiv - DOM-контейнер, в который будет встроен HTML-код страницы.
  */
 export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
@@ -60,7 +60,7 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
     eventController = new AbortController();
 
     appDiv.innerHTML = template({ boards: localBoards, user: currentUser });
-    
+
     const reloadBoards = async () => {
       await renderBoards(appDiv);
     };
@@ -73,7 +73,7 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
 /**
  * Асинхронно загружает данные пользователя и список досок с сервера.
  * В случае ошибки 401 автоматически перенаправляет пользователя на страницу входа.
- * 
+ *
  * @returns {Promise<boolean>} Возвращает `true`, если данные успешно загружены, или `false`, если произошла критическая ошибка.
  */
 async function loadData(): Promise<boolean> {
@@ -108,7 +108,7 @@ async function loadData(): Promise<boolean> {
 
 /**
  * Инициализирует и прикрепляет слушатели событий на странице со списком досок.
- * 
+ *
  * @param {HTMLElement} appDiv - DOM-контейнер страницы.
  * @param {Function} reloadBoards - Функция для полного обновления данных и интерфейса.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.

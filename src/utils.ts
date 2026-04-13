@@ -1,6 +1,6 @@
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
- * 
+ *
  * @param {string} id - Уникальный идентификатор элемента input.
  * @param {string|null} message - Текст ошибки. Если передано null, ошибка скрывается.
  */
@@ -24,7 +24,7 @@ export const setInputError = (id: string, message: string | null): void => {
 
 /**
  * Устанавливает или снимает глобальную ошибку формы.
- * 
+ *
  * @param {string|null} message - Текст глобальной ошибки. Если передано null, баннер скрывается.
  */
 export const setGlobalError = (message: string | null): void => {
@@ -46,7 +46,7 @@ export const setGlobalError = (message: string | null): void => {
 
 /**
  * Проверяет адрес электронной почты на соответствие минимальным требованиям.
- * 
+ *
  * @param {string} email - Адрес электронной почты.
  * @returns {boolean} `true`, если email имеет валидный формат, иначе `false`.
  */
@@ -80,7 +80,7 @@ export const validateEmail = (email: string): boolean => {
 
 /**
  * Проверяет введенный пароль на соответствие требованиям.
- * 
+ *
  * @param {string} password - Пароль.
  * @returns {string|null} Строка с описанием ошибки, если пароль невалиден. `null`, если пароль прошел проверку.
  */
