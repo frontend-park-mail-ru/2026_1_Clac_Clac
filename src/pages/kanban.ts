@@ -19,20 +19,13 @@ export let cachedBoardName = "Без названия";
 export let cachedBoardUsers: BoardUser[] = [];
 export let cachedSections: any[] = [];
 
-/**
- * Рендерит Канбан-доску.
- * @param appDiv Контейнер
- * @param forceFetch Если true, принудительно скачивает данные с сервера. По умолчанию false (использует кэш).
- */
 export const renderKanban = async (
   appDiv: HTMLElement,
   forceFetch = false,
 ): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const boardId = urlParams.get("id") || urlParams.get("boardId");
-  if (!boardId || boardId === "null") {
-    return navigateTo("/boards");
-  }
+  if (!boardId || boardId === "null") return navigateTo("/boards");
 
   if (boardId !== cachedBoardId || forceFetch || cachedSections.length === 0) {
     try {
@@ -49,7 +42,6 @@ export const renderKanban = async (
       const userPromises = rawUsers.map(async (u: any) => {
         const link = u.user_link || u.id || u;
         if (profileCache.has(link)) return profileCache.get(link)!;
-
         try {
           const pRes = (await profileApi.getProfileByLink(link)) as any;
           const pData = pRes?.data || pRes;
@@ -82,7 +74,6 @@ export const renderKanban = async (
         "#a5b4fc",
         "#f9a8d4",
       ];
-
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
           sec.id = sec.section_link || sec.id;
@@ -121,28 +112,21 @@ export const renderKanban = async (
           return sec;
         },
       );
-
       cachedSections = await Promise.all(sectionPromises);
       cachedBoardId = boardId;
     } catch (err) {
-      console.error("Fetch error", err);
-      if (!forceFetch && cachedBoardId === boardId) {
-      } else return navigateTo("/boards");
+      if (forceFetch || boardId !== cachedBoardId) return navigateTo("/boards");
     }
   }
 
   const sections = cachedSections;
   const boardName = cachedBoardName;
-  const boardUsers = cachedBoardUsers;
-
   const scrollMap = new Map<string, number>();
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
     if (id) scrollMap.set(id, el.scrollTop);
   });
-
   appDiv.innerHTML = template({ board_name: boardName, sections });
-
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
     if (id && scrollMap.has(id)) el.scrollTop = scrollMap.get(id)!;
@@ -153,7 +137,6 @@ export const renderKanban = async (
   ) as HTMLButtonElement;
   if (btnNewTask && sections.length === 0) {
     btnNewTask.disabled = true;
-    btnNewTask.title = "Создайте хотя бы одну секцию, чтобы добавить задачу";
     btnNewTask.style.opacity = "0.5";
     btnNewTask.style.cursor = "not-allowed";
   }
@@ -177,7 +160,6 @@ export const renderKanban = async (
     );
     modalOverlay.classList.add("hidden");
   };
-
   const openDeleteSectionModal = (
     name: string,
     onConfirm: () => Promise<void>,
@@ -194,18 +176,10 @@ export const renderKanban = async (
   const renderManageList = () => {
     manageList.innerHTML = sections
       .map(
-        (s: any) => `
-      <div class="manage-columns__item" data-id="${s.id}" draggable="true">
-        <div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div>
-        <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
-        <div class="manage-columns__actions">
-          <div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div>
-        </div>
-      </div>
-    `,
+        (s: any) =>
+          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
       )
       .join("");
-
     let draggedItem: HTMLElement | null = null;
     manageList
       .querySelectorAll(".manage-columns__item")
@@ -222,7 +196,6 @@ export const renderKanban = async (
           ).map((i) => i.getAttribute("data-id") as string);
           try {
             await kanbanApi.reorderSections(boardId, { list_links: newOrder });
-            Toast.success("Порядок сохранен");
             cachedSections.sort(
               (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id),
             );
@@ -243,7 +216,6 @@ export const renderKanban = async (
           }
         });
       });
-
     manageList
       .querySelectorAll(".manage-columns__name")
       .forEach((input: any) => {
@@ -253,7 +225,7 @@ export const renderKanban = async (
           const section = sections.find((s: any) => s.id === id);
           if (section && newName && newName !== section.section_name) {
             const oldName = section.section_name;
-            section.section_name = newName; // Optimistic update
+            section.section_name = newName;
             try {
               await kanbanApi.updateSection(id, {
                 ...section,
@@ -262,18 +234,13 @@ export const renderKanban = async (
               });
             } catch (err) {
               section.section_name = oldName;
-              const isBacklog =
-                oldName.toLowerCase().includes("бэклог") ||
-                oldName.toLowerCase().includes("backlog");
-              Toast.error(
-                isBacklog ? "НЕЛЬЗЯ ИЗМЕНЯТЬ БЭКЛОГ" : "Ошибка при сохранении",
-              );
+              if (sections[0]?.id === id) Toast.error("Нельзя изменять бэклог");
+              else Toast.error("Ошибка при сохранении");
               renderManageList();
             }
           }
         });
       });
-
     manageList
       .querySelectorAll(".manage-columns__color-trigger")
       .forEach((trigger: any) => {
@@ -434,7 +401,11 @@ export const renderKanban = async (
         .querySelector("#ctx-delete-list")
         ?.addEventListener("click", async () => {
           const section = sections.find((s: any) => s.id === sectionId);
-          if (sectionId && section)
+          if (sectionId && section) {
+            if (sections[0]?.id === sectionId) {
+              Toast.error("Нельзя удалять бэклог");
+              return;
+            }
             openDeleteSectionModal(section.section_name, async () => {
               try {
                 await kanbanApi.deleteSection(sectionId);
@@ -446,6 +417,7 @@ export const renderKanban = async (
                 Toast.error("Ошибка при удалении секции");
               }
             });
+          }
         });
     });
   });
@@ -533,6 +505,35 @@ export const renderKanban = async (
     });
   });
 
+  const addColumnBtn = document.getElementById("btn-add-column");
+  if (addColumnBtn) {
+    addColumnBtn.addEventListener("click", async () => {
+      await kanbanApi.createSection({
+        board_link: boardId,
+        section_name: "Новая секция",
+        max_tasks: 100,
+        is_mandatory: false,
+        color: "white",
+      });
+      renderKanban(appDiv, true);
+    });
+  }
+
+  document.querySelectorAll(".kanban-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (
+        (e.target as HTMLElement).closest(".kanban-card__options-btn") ||
+        (e.target as HTMLElement).closest(".assignee__select-btn")
+      )
+        return;
+      const taskId = card.getAttribute("data-id");
+      const title = card.getAttribute("data-title") || "";
+      navigateTo(
+        `/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title)}`,
+      );
+    });
+  });
+
   const newTaskInput = document.getElementById(
     "new-task-title",
   ) as HTMLInputElement;
@@ -551,7 +552,6 @@ export const renderKanban = async (
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
     });
   }
-
   if (modalAssigneeBtn) {
     modalAssigneeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -561,7 +561,7 @@ export const renderKanban = async (
       const dropdown = document.createElement("div");
       dropdown.className = "assignee-dropdown";
       dropdown.style.cssText = `position: absolute; top: 100%; left: 0; width: 220px; background: #2a2a2c; border: 1px solid #444; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1000; max-height: 200px; overflow-y: auto; margin-top: 4px;`;
-      boardUsers.forEach((user) => {
+      cachedBoardUsers.forEach((user) => {
         const item = document.createElement("div");
         item.className = "assignee-dropdown-item";
         item.style.cssText = `display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #333;`;
@@ -579,7 +579,6 @@ export const renderKanban = async (
       modalAssigneeBtn.parentElement!.appendChild(dropdown);
     });
   }
-
   btnConfirmCreate.addEventListener("click", async () => {
     const title = newTaskInput.value.trim();
     if (!title) return;
@@ -590,7 +589,6 @@ export const renderKanban = async (
         description: "",
         link_executer: selectedAssigneeId || undefined,
       });
-      Toast.success("Задача создана");
       closeModals();
       renderKanban(appDiv, true);
     } catch (e) {
@@ -600,7 +598,6 @@ export const renderKanban = async (
 
   let draggedTaskId: string | null = null;
   let sourceSectionId: string | null = null;
-
   appDiv.querySelectorAll(".kanban-card").forEach((card) => {
     card.addEventListener("dragstart", (e: any) => {
       draggedTaskId = card.getAttribute("data-id");
@@ -618,7 +615,6 @@ export const renderKanban = async (
       (card as HTMLElement).style.opacity = "1";
     });
   });
-
   appDiv.querySelectorAll(".kanban__column-cards").forEach((dropZone) => {
     dropZone.addEventListener("dragover", (e: any) => {
       e.preventDefault();
@@ -636,7 +632,6 @@ export const renderKanban = async (
           `.kanban-card[data-id="${draggedTaskId}"]`,
         );
         if (cardEl) dropZone.appendChild(cardEl);
-
         const srcSec = cachedSections.find((s) => s.id === sourceSectionId);
         const tgtSec = cachedSections.find((s) => s.id === targetSectionId);
         let movedTask: any = null;
@@ -649,7 +644,6 @@ export const renderKanban = async (
             tgtSec.tasks.push(movedTask);
           }
         }
-
         try {
           await kanbanApi.reorderTask(draggedTaskId, {
             link_card: draggedTaskId,

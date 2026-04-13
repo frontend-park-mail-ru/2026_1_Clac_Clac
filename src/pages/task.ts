@@ -158,15 +158,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
 
       await kanbanApi.updateTask(taskId, payload);
       Toast.success("Карточка сохранена");
-
-      // Update taskData locally to avoid re-saving same data
-      taskData.title = title;
-      taskData.description = description;
-      taskData.dead_line = finalDeadline;
-
-      // Refresh background board
-      await renderKanban(appDiv);
-      appDiv.appendChild(taskOverlayContainer);
+      navigateTo(`/board?id=${boardId}`);
     } catch (err) {
       console.error("Save task error", err);
       Toast.error("Ошибка при сохранении");

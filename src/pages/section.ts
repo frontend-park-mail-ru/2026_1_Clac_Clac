@@ -101,10 +101,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
       await kanbanApi.updateSection(sectionId, payload);
       Toast.success("Секция сохранена");
-
-      // Refresh background board
-      await renderKanban(appDiv);
-      appDiv.appendChild(sectionOverlayContainer);
+      navigateTo(`/board?id=${boardId}`);
     } catch (err) {
       console.error("Update section error", err);
       const isBacklog =
