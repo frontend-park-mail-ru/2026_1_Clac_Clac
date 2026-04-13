@@ -587,7 +587,7 @@ export const renderKanban = async (
         title,
         link_section: sections[0].id,
         description: "",
-        link_executer: selectedAssigneeId || undefined,
+        link_executer: selectedAssigneeId || null,
       });
       closeModals();
       renderKanban(appDiv, true);

@@ -209,7 +209,7 @@ export const kanbanApi = {
     title: string;
     link_section: string;
     description?: string;
-    link_executer?: string;
+    link_executer?: string | null;
     link_author?: string;
     data_dead_line?: string;
   }) => apiClient.post(`/cards`, data),
@@ -218,7 +218,7 @@ export const kanbanApi = {
     data: {
       link_card: string;
       title: string;
-      link_executer?: string;
+      link_executer?: string | null;
       description?: string;
       data_dead_line?: string;
     },

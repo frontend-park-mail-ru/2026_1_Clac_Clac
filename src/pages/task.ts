@@ -68,7 +68,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     return navigateTo(`/board?id=${boardId}`);
   }
 
-  // FIRST: render the board background
   try {
     await renderKanban(appDiv);
   } catch (err) {
@@ -100,7 +99,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     executorName = found ? found.name : "Пользователь";
   }
 
-  // SECOND: append the task side panel
   const taskOverlayContainer = document.createElement("div");
   taskOverlayContainer.id = "task-overlay-container";
   appDiv.appendChild(taskOverlayContainer);
@@ -121,7 +119,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
 
   const taskNode = taskOverlayContainer;
 
-  // Manual Save Logic
   const handleSave = async () => {
     const btnSave = taskNode.querySelector(
       "#btn-save-task",
@@ -152,7 +149,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
         link_card: taskId,
         title: title || "Без названия",
         description: description,
-        link_executer: currentExecuterId,
+        link_executer: currentExecuterId || null,
         data_dead_line: finalDeadline,
       };
 
@@ -215,7 +212,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     execBtn.parentElement!.appendChild(dropdown);
   });
 
-  // Options Menu
   const optionsBtn = taskNode.querySelector("#btn-task-options");
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -279,7 +275,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   const navProfile = document.getElementById("nav-profile");
   navProfile?.addEventListener("click", () => navigateTo("/profile"));
 
-  // Close modals
   taskNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.getElementById("modal-overlay")?.classList.add("hidden");
