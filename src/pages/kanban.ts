@@ -264,16 +264,18 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
             const id = trigger.getAttribute("data-id");
             const section = sections.find((s: any) => s.id === id);
 
-            const palette = [
-              "white",
-              "#f87171",
-              "#fb923c",
-              "#60a5fa",
-              "#f43f5e",
-              "#4ade80",
-              "#a5b4fc",
-              "#f9a8d4",
-            ];
+            const colorMap: Record<string, string> = {
+              white: "#ffffff",
+              grey: "#9ca3af",
+              red: "#f87171",
+              orange: "#fb923c",
+              blue: "#60a5fa",
+              green: "#4ade80",
+              purple: "#a5b4fc",
+              pink: "#f9a8d4",
+            };
+
+            const palette = Object.keys(colorMap);
 
             const picker = document.createElement("div");
             picker.className = "color-picker-bubble";
@@ -281,7 +283,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
             picker.innerHTML = `
             <div class="color-picker-bubble__title">Цвета</div>
             <div class="color-picker-bubble__grid">
-              ${palette.map((c) => `<div class="color-picker-bubble__dot ${section?.color === c ? "active" : ""}" data-color="${c}" style="background:${c}"></div>`).join("")}
+              ${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}"></div>`).join("")}
             </div>
             <div class="color-picker-bubble__footer">
               <button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button>
@@ -305,7 +307,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                     .querySelectorAll(".color-picker-bubble__dot")
                     .forEach((d) => d.classList.remove("active"));
                   dot.classList.add("active");
-                  tempColor = dot.getAttribute("data-color");
+                  tempColor = dot.getAttribute("data-color") || "white";
                 });
               });
 
@@ -323,7 +325,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                     color: tempColor,
                   });
                   section.color = tempColor;
-                  trigger.style.background = tempColor;
+                  trigger.style.background = colorMap[tempColor];
                   picker.remove();
                 }
               });
