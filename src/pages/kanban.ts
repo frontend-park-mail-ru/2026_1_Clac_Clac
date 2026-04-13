@@ -190,7 +190,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         )
         .join("");
 
-      // Drag and Drop Logic
       let draggedItem: HTMLElement | null = null;
 
       manageList.querySelectorAll(".manage-columns__item").forEach((item) => {
@@ -204,7 +203,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           node.style.opacity = "1";
           draggedItem = null;
 
-          // Save new order
           const newOrder = Array.from(
             manageList.querySelectorAll(".manage-columns__item"),
           ).map((i) => i.getAttribute("data-id") as string);
@@ -212,7 +210,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
           try {
             await kanbanApi.reorderSections(boardId, { list_links: newOrder });
             Toast.success("Порядок сохранен");
-            // We don't call renderKanban here to avoid closing the modal
           } catch (e) {
             Toast.error("Ошибка при сохранении порядка");
           }
@@ -232,7 +229,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         });
       });
 
-      // Listeners for manage items
       manageList
         .querySelectorAll(".manage-columns__name")
         .forEach((input: any) => {
@@ -246,7 +242,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
                 section_link: id,
                 section_name: newName,
               });
-              // Update local state to keep UI in sync
               section.section_name = newName;
             }
           });
@@ -366,7 +361,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     document
       .getElementById("btn-close-manage")
       ?.addEventListener("click", () => {
-        renderKanban(appDiv); // Full reload only on close
+        renderKanban(appDiv);
       });
 
     document
@@ -860,8 +855,13 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
               position: 1,
             });
             renderKanban(appDiv);
-          } catch (err) {
+          } catch (err: any) {
             console.error("Ошибка при переносе карточки:", err);
+            if (err.data?.message === "can not skip mandatory section") {
+              Toast.error("НЕЛЬЗЯ ПРОПУСКАТЬ ОБЯЗАТЕЛЬНУЮ СЕКЦИЮ");
+            } else {
+              Toast.error("Ошибка при переносе карточки");
+            }
             renderKanban(appDiv);
           }
         }

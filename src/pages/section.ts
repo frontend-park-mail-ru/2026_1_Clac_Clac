@@ -36,12 +36,14 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     return navigateTo(`/board?id=${boardId}`);
   }
 
+  // FIRST: render the board background
   try {
     await renderKanban(appDiv);
   } catch (err) {
     console.error("Board render error", err);
   }
 
+  // SECOND: append the section side panel
   const sectionOverlayContainer = document.createElement("div");
   sectionOverlayContainer.id = "section-overlay-container";
   appDiv.appendChild(sectionOverlayContainer);
@@ -51,7 +53,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     section: {
       section_link: sectionId,
       section_name: sectionData.section_name || "Без названия",
-      color: sectionData.color || "#666666",
+      color: sectionData.color || "white",
       max_tasks: sectionData.max_tasks || 100,
       is_mandatory: sectionData.is_mandatory || false,
       position: sectionData.position || 1,
@@ -60,40 +62,47 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
   const sectionNode = sectionOverlayContainer;
 
-  const updateSection = async (updates: any) => {
+  // Local state for color to avoid DOM lookups
+  let selectedColor = sectionData.color || "white";
+
+  // Manual Save Logic
+  const handleSave = async () => {
+    const btnSave = sectionNode.querySelector(
+      "#btn-save-section",
+    ) as HTMLButtonElement;
     try {
+      btnSave.disabled = true;
+      btnSave.textContent = "Сохранение...";
+
+      const name = (
+        sectionNode.querySelector("#section-name-input") as HTMLInputElement
+      ).value.trim();
+      const maxTasks = parseInt(
+        (
+          sectionNode.querySelector(
+            "#section-max-tasks-input",
+          ) as HTMLInputElement
+        ).value,
+      );
+      const isMandatory = (
+        sectionNode.querySelector(
+          "#section-mandatory-input",
+        ) as HTMLInputElement
+      ).checked;
+
       const payload = {
         section_link: sectionId,
-        section_name:
-          updates.section_name !== undefined
-            ? updates.section_name
-            : (
-                sectionNode.querySelector(
-                  "#section-name-input",
-                ) as HTMLInputElement
-              ).value,
-        color: updates.color !== undefined ? updates.color : selectedColor,
-        max_tasks: parseInt(
-          updates.max_tasks !== undefined
-            ? updates.max_tasks
-            : (
-                sectionNode.querySelector(
-                  "#section-max-tasks-input",
-                ) as HTMLInputElement
-              ).value,
-        ),
-        is_mandatory:
-          updates.is_mandatory !== undefined
-            ? updates.is_mandatory
-            : (
-                sectionNode.querySelector(
-                  "#section-mandatory-input",
-                ) as HTMLInputElement
-              ).checked,
+        section_name: name || "Без названия",
+        color: selectedColor,
+        max_tasks: isNaN(maxTasks) ? 100 : maxTasks,
+        is_mandatory: isMandatory,
         position: sectionData.position || 1,
       };
 
       await kanbanApi.updateSection(sectionId, payload);
+      Toast.success("Секция сохранена");
+
+      // Refresh background board
       await renderKanban(appDiv);
       appDiv.appendChild(sectionOverlayContainer);
     } catch (err) {
@@ -102,12 +111,19 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
         sectionData.section_name?.toLowerCase().includes("бэклог") ||
         sectionData.section_name?.toLowerCase().includes("backlog");
       if (isBacklog) {
-        Toast.error("Нельзя изменять бэклог");
+        Toast.error("НЕЛЬЗЯ ИЗМЕНЯТЬ БЭКЛОГ");
       } else {
         Toast.error("Ошибка при сохранении");
       }
+    } finally {
+      btnSave.disabled = false;
+      btnSave.textContent = "Сохранить";
     }
   };
+
+  sectionNode
+    .querySelector("#btn-save-section")
+    ?.addEventListener("click", handleSave);
 
   sectionNode
     .querySelector("#btn-back-section")
@@ -121,18 +137,8 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       }
     });
 
-  const nameInput = sectionNode.querySelector(
-    "#section-name-input",
-  ) as HTMLInputElement;
-  nameInput?.addEventListener("blur", () => {
-    if (nameInput.value.trim() !== sectionData.section_name) {
-      updateSection({ section_name: nameInput.value.trim() });
-    }
-  });
-
+  // Color picker logic (only local updates)
   const colorDots = sectionNode.querySelectorAll(".color-dot");
-  let selectedColor = sectionData.color || "white";
-
   colorDots.forEach((dot) => {
     const dotColor = dot.getAttribute("data-color");
     if (dotColor === selectedColor) {
@@ -144,23 +150,11 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       dot.classList.add("active");
       if (dotColor) {
         selectedColor = dotColor;
-        updateSection({ color: dotColor });
       }
     });
   });
 
-  sectionNode
-    .querySelector("#section-max-tasks-input")
-    ?.addEventListener("change", (e) => {
-      updateSection({ max_tasks: (e.target as HTMLInputElement).value });
-    });
-
-  sectionNode
-    .querySelector("#section-mandatory-input")
-    ?.addEventListener("change", (e) => {
-      updateSection({ is_mandatory: (e.target as HTMLInputElement).checked });
-    });
-
+  // Options Menu
   const optionsBtn = sectionNode.querySelector("#btn-section-options");
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -169,7 +163,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
     const menu = document.createElement("div");
     menu.className = "context-menu";
-    menu.innerHTML = `<div class="context-menu__item context-menu__item--danger" id="ctx-delete-section">Удалить список</div>`;
+    menu.innerHTML = `<div class="context-menu__item context-menu__item--danger" id="ctx-delete-section">Удалить секцию</div>`;
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
@@ -180,21 +174,25 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     menu.querySelector("#ctx-delete-section")?.addEventListener("click", () => {
       const modalOverlay = document.getElementById("modal-overlay-section")!;
       const modalDelete = document.getElementById("modal-delete-section")!;
+      const nameInput = sectionNode.querySelector(
+        "#section-name-input",
+      ) as HTMLInputElement;
       document.getElementById("delete-section-name")!.textContent =
         nameInput.value;
 
       modalOverlay.classList.remove("hidden");
       modalDelete.classList.remove("hidden");
 
-      document.getElementById("btn-confirm-delete-section")!.onclick =
-        async () => {
-          try {
-            await kanbanApi.deleteSection(sectionId);
-            navigateTo(`/board?id=${boardId}`);
-          } catch (err) {
-            Toast.error("Ошибка при удалении");
-          }
-        };
+      (
+        document.getElementById("btn-confirm-delete-section") as HTMLElement
+      ).onclick = async () => {
+        try {
+          await kanbanApi.deleteSection(sectionId);
+          navigateTo(`/board?id=${boardId}`);
+        } catch (err) {
+          Toast.error("Ошибка при удалении");
+        }
+      };
       menu.remove();
     });
   });
@@ -204,6 +202,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
   };
   document.addEventListener("click", globalClickHandler);
 
+  // Close modals
   sectionNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.getElementById("modal-overlay-section")?.classList.add("hidden");
