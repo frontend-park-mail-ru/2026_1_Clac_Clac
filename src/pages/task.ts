@@ -3,6 +3,7 @@ import { authApi, boardsApi, kanbanApi, profileApi } from "../api";
 import taskTpl from "../templates/task.hbs?raw";
 import { navigateTo } from "../router";
 import { Toast } from "../utils/toast";
+import { renderKanban } from "./kanban";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -67,6 +68,13 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     return navigateTo(`/board?id=${boardId}`);
   }
 
+  // FIRST: render the board background
+  try {
+    await renderKanban(appDiv);
+  } catch (err) {
+    console.error("Board render error", err);
+  }
+
   const deadline = taskData.dead_line || taskData.data_dead_line;
   let rawDate = "";
   let rawTime = "";
@@ -91,7 +99,12 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     executorName = found ? found.name : "Пользователь";
   }
 
-  appDiv.innerHTML = template({
+  // SECOND: append the task side panel
+  const taskOverlayContainer = document.createElement("div");
+  taskOverlayContainer.id = "task-overlay-container";
+  appDiv.appendChild(taskOverlayContainer);
+
+  taskOverlayContainer.innerHTML = template({
     board_name: boardName,
     task: {
       title: taskData.title || "Без названия",
@@ -105,14 +118,16 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     },
   });
 
+  const taskNode = taskOverlayContainer;
+
   // Event Listeners
   const updateTask = async (updates: any) => {
     try {
       const currentDeadline = (
-        appDiv.querySelector("#task-date-input") as HTMLInputElement
+        taskNode.querySelector("#task-date-input") as HTMLInputElement
       ).value;
       const currentTime = (
-        appDiv.querySelector("#task-time-input") as HTMLInputElement
+        taskNode.querySelector("#task-time-input") as HTMLInputElement
       ).value;
 
       let finalDeadline = taskData.dead_line || taskData.data_dead_line;
@@ -133,13 +148,16 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
         title:
           updates.title !== undefined
             ? updates.title
-            : (appDiv.querySelector("#task-title-input") as HTMLInputElement)
+            : (taskNode.querySelector("#task-title-input") as HTMLInputElement)
                 .value,
         description:
           updates.description !== undefined
             ? updates.description
-            : (appDiv.querySelector("#task-desc-input") as HTMLTextAreaElement)
-                .value,
+            : (
+                taskNode.querySelector(
+                  "#task-desc-input",
+                ) as HTMLTextAreaElement
+              ).value,
         link_executer:
           updates.link_executer !== undefined
             ? updates.link_executer
@@ -154,17 +172,17 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     }
   };
 
-  appDiv
+  taskNode
     .querySelector("#btn-back")
     ?.addEventListener("click", () => navigateTo(`/board?id=${boardId}`));
 
-  appDiv.querySelector("#task-overlay")?.addEventListener("click", (e) => {
+  taskNode.querySelector("#task-overlay")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) {
       navigateTo(`/board?id=${boardId}`);
     }
   });
 
-  const titleInput = appDiv.querySelector(
+  const titleInput = taskNode.querySelector(
     "#task-title-input",
   ) as HTMLInputElement;
   titleInput?.addEventListener("blur", () => {
@@ -173,7 +191,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     }
   });
 
-  const descInput = appDiv.querySelector(
+  const descInput = taskNode.querySelector(
     "#task-desc-input",
   ) as HTMLTextAreaElement;
   descInput?.addEventListener("blur", () => {
@@ -182,20 +200,24 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     }
   });
 
-  appDiv.querySelector("#task-date-input")?.addEventListener("change", (e) => {
-    updateTask({ raw_date: (e.target as HTMLInputElement).value });
-  });
+  taskNode
+    .querySelector("#task-date-input")
+    ?.addEventListener("change", (e) => {
+      updateTask({ raw_date: (e.target as HTMLInputElement).value });
+    });
 
-  appDiv.querySelector("#task-time-input")?.addEventListener("change", (e) => {
-    updateTask({ raw_time: (e.target as HTMLInputElement).value });
-  });
+  taskNode
+    .querySelector("#task-time-input")
+    ?.addEventListener("change", (e) => {
+      updateTask({ raw_time: (e.target as HTMLInputElement).value });
+    });
 
-  const execBtn = appDiv.querySelector(
+  const execBtn = taskNode.querySelector(
     "#task-executor-btn",
   ) as HTMLButtonElement;
   execBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
-    document
+    taskNode
       .querySelectorAll(".assignee__dropdown")
       .forEach((dd) => dd.remove());
 
@@ -224,7 +246,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   });
 
   // Options Menu
-  const optionsBtn = appDiv.querySelector("#btn-task-options");
+  const optionsBtn = taskNode.querySelector("#btn-task-options");
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     const existingMenu = document.querySelector(".context-menu");
@@ -262,10 +284,11 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     });
   });
 
-  document.addEventListener("click", () => {
+  const globalClickHandler = () => {
     document.querySelector(".context-menu")?.remove();
     document.querySelector(".assignee__dropdown")?.remove();
-  });
+  };
+  document.addEventListener("click", globalClickHandler);
 
   const btnLogout = document.getElementById("logout-btn");
   btnLogout?.addEventListener("click", async () => {
@@ -284,7 +307,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   navProfile?.addEventListener("click", () => navigateTo("/profile"));
 
   // Close modals
-  appDiv.querySelectorAll(".modal__close-btn").forEach((btn) =>
+  taskNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.getElementById("modal-overlay")?.classList.add("hidden");
       document.getElementById("modal-delete-task")?.classList.add("hidden");

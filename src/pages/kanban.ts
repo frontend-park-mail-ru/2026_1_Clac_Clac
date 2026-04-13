@@ -15,7 +15,7 @@ interface BoardUser {
 
 export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
-  const boardId = urlParams.get("id");
+  const boardId = urlParams.get("id") || urlParams.get("boardId");
   if (!boardId || boardId === "null") {
     return navigateTo("/boards");
   }
