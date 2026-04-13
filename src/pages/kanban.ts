@@ -117,6 +117,183 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
     appDiv.innerHTML = template({ board_name: boardName, sections });
 
+    const modalOverlay = document.getElementById("modal-overlay")!;
+    const modalManage = document.getElementById("modal-manage-columns")!;
+    const manageList = document.getElementById("manage-columns-list")!;
+
+    const renderManageList = () => {
+      manageList.innerHTML = sections
+        .map(
+          (s: any) => `
+        <div class="manage-columns__item" data-id="${s.id}">
+          <div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div>
+          <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
+          <div class="manage-columns__actions">
+            <div class="manage-columns__delete" data-id="${s.id}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" class="section-toggle" data-id="${s.id}" ${s.is_mandatory ? "checked" : ""}>
+              <span class="slider"></span>
+            </label>
+            <div class="manage-columns__drag">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="9" x2="16" y2="9"></line>
+                <line x1="8" y1="15" x2="16" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
+
+      // Listeners for manage items
+      manageList
+        .querySelectorAll(".manage-columns__name")
+        .forEach((input: any) => {
+          input.addEventListener("blur", async () => {
+            const id = input.getAttribute("data-id");
+            const newName = input.value.trim();
+            const section = sections.find((s: any) => s.id === id);
+            if (section && newName && newName !== section.section_name) {
+              await kanbanApi.updateSection(id, {
+                ...section,
+                section_link: id,
+                section_name: newName,
+              });
+              renderKanban(appDiv);
+            }
+          });
+        });
+
+      manageList.querySelectorAll(".section-toggle").forEach((toggle: any) => {
+        toggle.addEventListener("change", async () => {
+          const id = toggle.getAttribute("data-id");
+          const section = sections.find((s: any) => s.id === id);
+          if (section) {
+            await kanbanApi.updateSection(id, {
+              ...section,
+              section_link: id,
+              is_mandatory: toggle.checked,
+            });
+            renderKanban(appDiv);
+          }
+        });
+      });
+
+      manageList.querySelectorAll(".manage-columns__delete").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-id");
+          if (id && confirm("Удалить колонку?")) {
+            await kanbanApi.deleteSection(id);
+            renderKanban(appDiv);
+          }
+        });
+      });
+
+      manageList
+        .querySelectorAll(".manage-columns__color-trigger")
+        .forEach((trigger: any) => {
+          trigger.addEventListener("click", (e: MouseEvent) => {
+            e.stopPropagation();
+            const id = trigger.getAttribute("data-id");
+            const section = sections.find((s: any) => s.id === id);
+
+            const colors = [
+              "white",
+              "grey",
+              "red",
+              "orange",
+              "blue",
+              "green",
+              "purple",
+              "pink",
+            ];
+            const picker = document.createElement("div");
+            picker.className = "color-picker-bubble";
+            picker.style.cssText = `
+            position: absolute;
+            background: #2a2a2c;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            z-index: 10001;
+          `;
+            picker.innerHTML = colors
+              .map(
+                (c) =>
+                  `<div class="color-dot ${c}" data-color="${c}" style="width:20px;height:20px;border-radius:50%;cursor:pointer;background:${c}"></div>`,
+              )
+              .join("");
+
+            const rect = trigger.getBoundingClientRect();
+            picker.style.top = `${rect.bottom + window.scrollY + 5}px`;
+            picker.style.left = `${rect.left + window.scrollX}px`;
+
+            document.body.appendChild(picker);
+
+            const closePicker = () => picker.remove();
+            picker.querySelectorAll(".color-dot").forEach((dot: any) => {
+              dot.addEventListener("click", async () => {
+                const newColor = dot.getAttribute("data-color");
+                if (section && newColor) {
+                  await kanbanApi.updateSection(id, {
+                    ...section,
+                    section_link: id,
+                    color: newColor,
+                  });
+                  closePicker();
+                  renderKanban(appDiv);
+                }
+              });
+            });
+
+            setTimeout(() => {
+              document.addEventListener("click", closePicker, { once: true });
+            }, 0);
+          });
+        });
+    };
+
+    document
+      .getElementById("btn-manage-columns")
+      ?.addEventListener("click", () => {
+        renderManageList();
+        modalOverlay.classList.remove("hidden");
+        modalManage.classList.remove("hidden");
+      });
+
+    document
+      .getElementById("btn-close-manage")
+      ?.addEventListener("click", () => {
+        modalOverlay.classList.add("hidden");
+        modalManage.classList.add("hidden");
+      });
+
+    document
+      .getElementById("btn-add-column-modal")
+      ?.addEventListener("click", async () => {
+        const name = prompt("Введите имя новой колонки:");
+        if (name && name.trim()) {
+          await kanbanApi.createSection({
+            board_link: boardId,
+            section_name: name.trim(),
+            max_tasks: 100,
+            is_mandatory: false,
+            color: "white",
+          });
+          renderKanban(appDiv);
+          // Re-render manage list to show new column
+          setTimeout(() => renderManageList(), 500);
+        }
+      });
+
     document
       .getElementById("nav-boards")
       ?.addEventListener("click", () => navigateTo("/boards"));
@@ -135,7 +312,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         navigateTo("/login");
       });
 
-    const modalOverlay = document.getElementById("modal-overlay")!;
     const modalDeleteCard = document.getElementById("modal-delete-card")!;
 
     const closeModals = () => {
