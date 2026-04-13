@@ -158,6 +158,12 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     .querySelector("#btn-back")
     ?.addEventListener("click", () => navigateTo(`/board?id=${boardId}`));
 
+  appDiv.querySelector("#task-overlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) {
+      navigateTo(`/board?id=${boardId}`);
+    }
+  });
+
   const titleInput = appDiv.querySelector(
     "#task-title-input",
   ) as HTMLInputElement;

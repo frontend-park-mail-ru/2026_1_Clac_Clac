@@ -202,13 +202,34 @@ a {
   }
 }
 
+/* Task Side Panel */
 .task__page-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
   padding: 0 !important;
+}
+
+.task__panel {
+  width: 500px;
+  height: 100%;
+  background-color: #1a1a1c;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  background-color: #1a1a1c;
-  height: 100vh;
-  overflow: hidden;
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 .task__header-bar {
@@ -216,7 +237,6 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  background-color: #1a1a1c;
 }
 
 .task__header-right {
@@ -232,14 +252,14 @@ a {
 }
 
 .task__content {
-  padding: 0 4rem;
+  padding: 0 2rem; /* Чуть меньше паддинг для узкого меню */
   flex: 1;
   overflow-y: auto;
 }
 
 .task__board-title {
   color: #888;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
 
@@ -247,7 +267,7 @@ a {
   background: transparent;
   border: none;
   color: white;
-  font-size: 2.5rem;
+  font-size: 2rem; /* Чуть меньше для узкого меню */
   font-weight: bold;
   width: 100%;
   padding: 0.5rem 0;
@@ -270,7 +290,7 @@ a {
   align-items: center;
   gap: 1rem;
   color: #888;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .task__meta-label {
@@ -284,7 +304,7 @@ a {
   cursor: pointer;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   &:hover {
     background-color: #2a2a2c;
     color: white;
@@ -295,7 +315,7 @@ a {
   background: transparent;
   border: none;
   color: #ccc;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-family: inherit;
   outline: none;
   cursor: pointer;
@@ -316,9 +336,9 @@ a {
   border-radius: 12px;
   color: #ccc;
   width: 100%;
-  min-height: 200px;
+  min-height: 180px;
   padding: 1.5rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.6;
   resize: vertical;
   outline: none;
