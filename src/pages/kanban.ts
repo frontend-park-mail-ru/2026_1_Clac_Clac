@@ -225,7 +225,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
               ${colors
                 .map(
                   (c) =>
-                    `<div class="color-picker-bubble__dot ${s.color === c ? "active" : ""}" data-color="${c}" style="background:${c}"></div>`,
+                    `<div class="color-picker-bubble__dot ${section?.color === c ? "active" : ""}" data-color="${c}" style="background:${c}"></div>`,
                 )
                 .join("")}
             </div>
@@ -241,7 +241,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
             document.body.appendChild(picker);
 
-            let tempColor = s.color;
+            let tempColor = section?.color || "white";
 
             picker
               .querySelectorAll(".color-picker-bubble__dot")
