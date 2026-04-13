@@ -1,7 +1,7 @@
-import Handlebars from 'handlebars';
-import { authApi, boardsApi } from '../api';
-import boardsTpl from '../templates/boards.hbs?raw';
-import { navigateTo } from '../router';
+import Handlebars from "handlebars";
+import { authApi, boardsApi } from "../api";
+import boardsTpl from "../templates/boards.hbs?raw";
+import { navigateTo } from "../router";
 
 const template = Handlebars.compile(boardsTpl);
 
@@ -78,7 +78,7 @@ export const renderBoards = async (appDiv: HTMLElement): Promise<void> => {
  */
 async function loadData(): Promise<boolean> {
   try {
-    const res = await boardsApi.getBoards() as any;
+    const res = (await boardsApi.getBoards()) as any;
     let rawBoards: Partial<RawBoard>[] = [];
     if (res && res.data) {
       rawBoards = Array.isArray(res.data) ? res.data : [res.data];
@@ -86,20 +86,21 @@ async function loadData(): Promise<boolean> {
       rawBoards = res;
     }
 
-    localBoards = rawBoards.map(board => ({
-      id: board.link || board.id || '',
-      board_name: board.name || board.board_name || board.title || 'Без названия',
-      description: board.description || 'Без описания',
-      background: board.background || '',
+    localBoards = rawBoards.map((board) => ({
+      id: board.link || board.id || "",
+      board_name:
+        board.name || board.board_name || board.title || "Без названия",
+      description: board.description || "Без описания",
+      background: board.background || "",
       backlog: board.backlog || 0,
       hot: board.hot || 0,
-      members: board.members || 0
+      members: board.members || 0,
     }));
     return true;
   } catch (err: any) {
     if (err.status === 401) {
-      localStorage.removeItem('isAuth');
-      navigateTo('/login');
+      localStorage.removeItem("isAuth");
+      navigateTo("/login");
       return false;
     }
     return true;
@@ -113,58 +114,80 @@ async function loadData(): Promise<boolean> {
  * @param {Function} reloadBoards - Функция для полного обновления данных и интерфейса.
  * @param {AbortSignal} abortSignal - Сигнал от AbortController для своевременной отписки от глобальных событий.
  */
-const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<void>, abortSignal: AbortSignal): void => {
-  const modalOverlay = appDiv.querySelector<HTMLElement>('#modal-overlay');
-  const modalCreate = appDiv.querySelector<HTMLElement>('#modal-create-board');
-  const modalEdit = appDiv.querySelector<HTMLElement>('#modal-edit-board');
-  const modalDelete = appDiv.querySelector<HTMLElement>('#modal-delete-board');
+const attachEventListeners = (
+  appDiv: HTMLElement,
+  reloadBoards: () => Promise<void>,
+  abortSignal: AbortSignal,
+): void => {
+  const modalOverlay = appDiv.querySelector<HTMLElement>("#modal-overlay");
+  const modalCreate = appDiv.querySelector<HTMLElement>("#modal-create-board");
+  const modalEdit = appDiv.querySelector<HTMLElement>("#modal-edit-board");
+  const modalDelete = appDiv.querySelector<HTMLElement>("#modal-delete-board");
 
   let currentBoardId: string | null = null;
   let currentBoardName: string | null = null;
 
-  document.getElementById('nav-profile')?.addEventListener('click', () => navigateTo('/profile'), { signal: abortSignal });
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try {
-      await authApi.logout();
-    } catch (err) {
-      console.error('Logout error', err);
-    }
-    localStorage.removeItem('isAuth');
-    navigateTo('/login');
-  }, { signal: abortSignal });
+  document
+    .getElementById("nav-profile")
+    ?.addEventListener("click", () => navigateTo("/profile"), {
+      signal: abortSignal,
+    });
+  document.getElementById("logout-btn")?.addEventListener(
+    "click",
+    async () => {
+      try {
+        await authApi.logout();
+      } catch (err) {
+        console.error("Logout error", err);
+      }
+      localStorage.removeItem("isAuth");
+      navigateTo("/login");
+    },
+    { signal: abortSignal },
+  );
 
-  const closeModals = (): void => {[modalOverlay, modalCreate, modalEdit, modalDelete].forEach(m => {
+  const closeModals = (): void => {
+    [modalOverlay, modalCreate, modalEdit, modalDelete].forEach((m) => {
       if (m) {
-        m.classList.add('hidden');
+        m.classList.add("hidden");
       }
     });
   };
 
-  appDiv.querySelectorAll('.modal__close-btn').forEach(btn => btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeModals();
-  }));
+  appDiv.querySelectorAll(".modal__close-btn").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeModals();
+    }),
+  );
 
   if (modalOverlay) {
-    modalOverlay.addEventListener('click', (e: MouseEvent) => {
+    modalOverlay.addEventListener("click", (e: MouseEvent) => {
       if (e.target === modalOverlay) {
         closeModals();
       }
     });
   }
 
-  const createImgInput = appDiv.querySelector<HTMLInputElement>('#create-board-image');
-  const createImgName = appDiv.querySelector<HTMLElement>('#create-board-image-name');
-  createImgInput?.addEventListener('change', (e) => {
+  const createImgInput = appDiv.querySelector<HTMLInputElement>(
+    "#create-board-image",
+  );
+  const createImgName = appDiv.querySelector<HTMLElement>(
+    "#create-board-image-name",
+  );
+  createImgInput?.addEventListener("change", (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file && createImgName) {
       createImgName.textContent = file.name;
     }
   });
 
-  const editImgInput = appDiv.querySelector<HTMLInputElement>('#edit-board-image');
-  const editImgName = appDiv.querySelector<HTMLElement>('#edit-board-image-name');
-  editImgInput?.addEventListener('change', (e) => {
+  const editImgInput =
+    appDiv.querySelector<HTMLInputElement>("#edit-board-image");
+  const editImgName = appDiv.querySelector<HTMLElement>(
+    "#edit-board-image-name",
+  );
+  editImgInput?.addEventListener("change", (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file && editImgName) {
       editImgName.textContent = file.name;
@@ -172,24 +195,29 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
   });
 
   const openCreateModal = () => {
-    modalOverlay?.classList.remove('hidden');
-    modalCreate?.classList.remove('hidden');
-    const inputNewBoard = appDiv.querySelector<HTMLInputElement>('#new-board-name');
-    const errorNewBoard = appDiv.querySelector<HTMLElement>('#new-board-name-error');
-    const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-create');
+    modalOverlay?.classList.remove("hidden");
+    modalCreate?.classList.remove("hidden");
+    const inputNewBoard =
+      appDiv.querySelector<HTMLInputElement>("#new-board-name");
+    const errorNewBoard = appDiv.querySelector<HTMLElement>(
+      "#new-board-name-error",
+    );
+    const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>(
+      "#btn-confirm-create",
+    );
 
     if (inputNewBoard) {
-      inputNewBoard.value = '';
-      inputNewBoard.classList.remove('modal__input-field--error');
+      inputNewBoard.value = "";
+      inputNewBoard.classList.remove("modal__input-field--error");
     }
     if (errorNewBoard) {
-      errorNewBoard.classList.remove('modal__input-error--visible');
+      errorNewBoard.classList.remove("modal__input-error--visible");
     }
     if (createImgInput) {
-      createImgInput.value = '';
+      createImgInput.value = "";
     }
     if (createImgName) {
-      createImgName.textContent = 'Изображение доски';
+      createImgName.textContent = "Изображение доски";
     }
 
     if (btnConfirmCreate) {
@@ -197,94 +225,111 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
     }
   };
 
-  appDiv.querySelector('#btn-create-board')?.addEventListener('click', openCreateModal);
-  appDiv.querySelector('#btn-create-board-empty')?.addEventListener('click', openCreateModal);
+  appDiv
+    .querySelector("#btn-create-board")
+    ?.addEventListener("click", openCreateModal);
+  appDiv
+    .querySelector("#btn-create-board-empty")
+    ?.addEventListener("click", openCreateModal);
 
-  const inputNewBoard = appDiv.querySelector<HTMLInputElement>('#new-board-name');
-  const errorNewBoard = appDiv.querySelector<HTMLElement>('#new-board-name-error');
-  const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-create');
+  const inputNewBoard =
+    appDiv.querySelector<HTMLInputElement>("#new-board-name");
+  const errorNewBoard = appDiv.querySelector<HTMLElement>(
+    "#new-board-name-error",
+  );
+  const btnConfirmCreate = appDiv.querySelector<HTMLButtonElement>(
+    "#btn-confirm-create",
+  );
 
-  inputNewBoard?.addEventListener('input', () => {
+  inputNewBoard?.addEventListener("input", () => {
     const val = inputNewBoard.value.trim();
     if (val) {
       if (errorNewBoard) {
-        errorNewBoard.classList.remove('modal__input-error--visible');
+        errorNewBoard.classList.remove("modal__input-error--visible");
       }
       if (btnConfirmCreate) {
         btnConfirmCreate.disabled = false;
       }
-      inputNewBoard.classList.remove('modal__input-field--error');
+      inputNewBoard.classList.remove("modal__input-field--error");
     } else {
       if (errorNewBoard) {
-        errorNewBoard.classList.add('modal__input-error--visible');
+        errorNewBoard.classList.add("modal__input-error--visible");
       }
       if (btnConfirmCreate) {
         btnConfirmCreate.disabled = true;
       }
-      inputNewBoard.classList.add('modal__input-field--error');
+      inputNewBoard.classList.add("modal__input-field--error");
     }
   });
 
-  btnConfirmCreate?.addEventListener('click', async () => {
+  btnConfirmCreate?.addEventListener("click", async () => {
     const boardName = inputNewBoard?.value.trim();
     if (!boardName) {
       return;
     }
     try {
       btnConfirmCreate.disabled = true;
-      const res = await boardsApi.createBoard({ name: boardName, description: 'Создаём аналог Trello' }) as any;
+      const res = (await boardsApi.createBoard({
+        name: boardName,
+        description: "Создаём аналог Trello",
+      })) as any;
       const newBoardId = res.data?.link;
 
       const file = createImgInput?.files?.[0];
       if (file && newBoardId) {
         const fd = new FormData();
-        fd.append('background', file);
+        fd.append("background", file);
         await boardsApi.updateBoardBackground(newBoardId, fd);
       }
 
       closeModals();
       await reloadBoards();
     } catch (err) {
-      console.error('Create error', err);
+      console.error("Create error", err);
     } finally {
       btnConfirmCreate.disabled = false;
     }
   });
 
-  const editBoardNameInput = appDiv.querySelector<HTMLInputElement>('#edit-board-name');
-  const btnConfirmEdit = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-edit');
-  const btnOpenDelete = appDiv.querySelector<HTMLButtonElement>('#btn-open-delete');
-  const btnConfirmDelete = appDiv.querySelector<HTMLButtonElement>('#btn-confirm-delete');
+  const editBoardNameInput =
+    appDiv.querySelector<HTMLInputElement>("#edit-board-name");
+  const btnConfirmEdit =
+    appDiv.querySelector<HTMLButtonElement>("#btn-confirm-edit");
+  const btnOpenDelete =
+    appDiv.querySelector<HTMLButtonElement>("#btn-open-delete");
+  const btnConfirmDelete = appDiv.querySelector<HTMLButtonElement>(
+    "#btn-confirm-delete",
+  );
 
-  appDiv.querySelectorAll('.board-card__options-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  appDiv.querySelectorAll(".board-card__options-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const id = (e.currentTarget as HTMLElement).getAttribute('data-id')!;
-      const name = (e.currentTarget as HTMLElement).getAttribute('data-name')!;
+      const id = (e.currentTarget as HTMLElement).getAttribute("data-id")!;
+      const name = (e.currentTarget as HTMLElement).getAttribute("data-name")!;
       currentBoardId = id;
       currentBoardName = name;
 
       if (editBoardNameInput) {
         editBoardNameInput.value = name;
-        editBoardNameInput.placeholder = 'Например, Запуск продукта';
+        editBoardNameInput.placeholder = "Например, Запуск продукта";
       }
       if (editImgInput) {
-        editImgInput.value = '';
+        editImgInput.value = "";
       }
       if (editImgName) {
-        editImgName.textContent = 'Изображение доски';
+        editImgName.textContent = "Изображение доски";
       }
 
       if (btnConfirmEdit) {
         btnConfirmEdit.disabled = false;
       }
 
-      modalOverlay?.classList.remove('hidden');
-      modalEdit?.classList.remove('hidden');
+      modalOverlay?.classList.remove("hidden");
+      modalEdit?.classList.remove("hidden");
     });
   });
 
-  editBoardNameInput?.addEventListener('input', () => {
+  editBoardNameInput?.addEventListener("input", () => {
     const val = editBoardNameInput.value.trim();
     if (val) {
       if (btnConfirmEdit) {
@@ -297,7 +342,7 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
     }
   });
 
-  btnConfirmEdit?.addEventListener('click', async () => {
+  btnConfirmEdit?.addEventListener("click", async () => {
     const name = editBoardNameInput?.value.trim();
     if (!currentBoardId) {
       return;
@@ -305,13 +350,16 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
     try {
       btnConfirmEdit.disabled = true;
       if (name) {
-        await boardsApi.updateBoard(currentBoardId, { name: name, description: 'Создаём аналог Trello' });
+        await boardsApi.updateBoard(currentBoardId, {
+          name: name,
+          description: "Создаём аналог Trello",
+        });
       }
 
       const file = editImgInput?.files?.[0];
       if (file) {
         const fd = new FormData();
-        fd.append('background', file);
+        fd.append("background", file);
         await boardsApi.updateBoardBackground(currentBoardId, fd);
       }
       closeModals();
@@ -321,16 +369,16 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
     }
   });
 
-  btnOpenDelete?.addEventListener('click', () => {
-    modalEdit?.classList.add('hidden');
-    modalDelete?.classList.remove('hidden');
-    const deleteBoardName = appDiv.querySelector('#delete-board-name');
+  btnOpenDelete?.addEventListener("click", () => {
+    modalEdit?.classList.add("hidden");
+    modalDelete?.classList.remove("hidden");
+    const deleteBoardName = appDiv.querySelector("#delete-board-name");
     if (deleteBoardName && currentBoardName) {
       deleteBoardName.textContent = currentBoardName;
     }
   });
 
-  btnConfirmDelete?.addEventListener('click', async () => {
+  btnConfirmDelete?.addEventListener("click", async () => {
     if (!currentBoardId) {
       return;
     }
@@ -342,19 +390,21 @@ const attachEventListeners = (appDiv: HTMLElement, reloadBoards: () => Promise<v
       currentBoardId = null;
       currentBoardName = null;
     } catch (err) {
-      console.error('Delete board error', err);
+      console.error("Delete board error", err);
     } finally {
       btnConfirmDelete.disabled = false;
     }
   });
 
-  appDiv.querySelectorAll('.board-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.board-card__options-btn')) {
+  appDiv.querySelectorAll(".board-card[data-id]").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest(".board-card__options-btn")) {
         return;
       }
-      const id = card.getAttribute('data-id');
-      navigateTo(`/board?id=${id}`);
+      const id = card.getAttribute("data-id");
+      if (id) {
+        navigateTo(`/board?id=${id}`);
+      }
     });
   });
 };
