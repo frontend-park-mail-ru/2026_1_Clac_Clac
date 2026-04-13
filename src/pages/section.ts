@@ -98,7 +98,14 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       appDiv.appendChild(sectionOverlayContainer);
     } catch (err) {
       console.error("Update section error", err);
-      Toast.error("Ошибка при сохранении");
+      const isBacklog =
+        sectionData.section_name?.toLowerCase().includes("бэклог") ||
+        sectionData.section_name?.toLowerCase().includes("backlog");
+      if (isBacklog) {
+        Toast.error("Нельзя изменять бэклог");
+      } else {
+        Toast.error("Ошибка при сохранении");
+      }
     }
   };
 
@@ -123,7 +130,6 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     }
   });
 
-  // Color picker logic
   const colorDots = sectionNode.querySelectorAll(".color-dot");
   let selectedColor = sectionData.color || "white";
 
