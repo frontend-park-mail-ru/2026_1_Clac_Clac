@@ -24,7 +24,7 @@
       <div class="task__board-title">{{board_name}}</div>
 
       <div class="task__title-container">
-        <input type="text" class="task__title-input" id="section-name-input" value="{{section.section_name}}" placeholder="Название списка" maxlength="50">
+        <input type="text" class="task__title-input" id="section-name-input" value="{{section.section_name}}" placeholder="Название секции" maxlength="50">
       </div>
 
       <div class="task__meta-list">
@@ -55,7 +55,7 @@
         </div>
 
         <div class="task__meta-item">
-          <span class="task__meta-label" style="min-width: 160px;">Обязательный список</span>
+          <span class="task__meta-label" style="min-width: 160px;">Обязательная секция</span>
           <label class="toggle">
             <input type="checkbox" id="section-mandatory-input" {{#if section.is_mandatory}}checked{{/if}}>
             <span class="slider"></span>
