@@ -7,6 +7,8 @@ import config from '../config';
 import loginTpl from '../templates/login.hbs?raw';
 import { navigateTo } from '../router';
 
+import { Toast } from '../utils/toast';
+
 const template = Handlebars.compile(loginTpl);
 
 interface ApiError {
@@ -19,8 +21,19 @@ interface ApiError {
 
 export const renderLogin = (appDiv: HTMLElement): void => {
   appDiv.innerHTML = template({
-    vkAuthUrl: config.vkAuthUrl 
+    vkAuthUrl: config.vkAuthUrl
   });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get("code");
+  const message = urlParams.get("message");
+
+  if (code === "502" && message?.includes("oauth_no_email")) {
+
+    Toast.error("Для входа через VK необходимо привязать Email к вашему аккаунту.");
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
   const vkError = localStorage.getItem('vkError');
   if (vkError) {
