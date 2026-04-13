@@ -249,6 +249,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
         async () => {
           try {
             await kanbanApi.deleteTask(taskId);
+            clearKanbanCache();
             navigateTo(`/board?id=${boardId}`);
           } catch (err) {
             Toast.error("Ошибка при удалении");
