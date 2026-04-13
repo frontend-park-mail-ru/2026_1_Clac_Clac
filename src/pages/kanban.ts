@@ -655,7 +655,6 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     const btnConfirmCreate = document.getElementById(
       "btn-confirm-create-task",
     )!;
-    const btnNewTask = document.getElementById("btn-new-task");
     const modalAssigneeBtn = document.getElementById("assignee-select-btn");
 
     let selectedAssigneeId: string | null = null;
