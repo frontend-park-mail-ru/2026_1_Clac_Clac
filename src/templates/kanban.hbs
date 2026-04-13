@@ -161,6 +161,18 @@
     <button class="manage-columns__footer-btn" id="btn-close-manage">Готово</button>
   </div>
 
+  <div id="modal-delete-section" class="modal hidden">
+    <div class="modal__header">
+      <h2 class="modal__title">Удалить секцию</h2>
+      <button class="modal__close-btn">×</button>
+    </div>
+    <p class="modal__text">Вы уверены, что хотите удалить секцию “<span id="delete-section-modal-name" style="font-weight: bold;"></span>”? Все задачи в ней также будут удалены.</p>
+    <div class="modal__actions">
+      <button class="btn btn--danger" id="btn-confirm-delete-section-modal">Удалить</button>
+      <button class="btn btn--cancel modal__close-btn">Отменить</button>
+    </div>
+  </div>
+
   <div id="modal-delete-card" class="modal hidden">
     <div class="modal__header">
       <h2 class="modal__title">Удалить карточку</h2>

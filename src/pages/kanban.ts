@@ -131,12 +131,33 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
     const manageList = document.getElementById("manage-columns-list")!;
     const modalCreateTask = document.getElementById("modal-create-task")!;
     const modalDeleteCard = document.getElementById("modal-delete-card")!;
+    const modalDeleteSection = document.getElementById("modal-delete-section")!;
+    const deleteSectionModalName = document.getElementById(
+      "delete-section-modal-name",
+    )!;
+    const btnConfirmDeleteSectionModal = document.getElementById(
+      "btn-confirm-delete-section-modal",
+    )!;
 
     const closeModals = () => {
       modalOverlay.classList.add("hidden");
       modalManage.classList.add("hidden");
       modalCreateTask.classList.add("hidden");
       modalDeleteCard.classList.add("hidden");
+      modalDeleteSection.classList.add("hidden");
+    };
+
+    const openDeleteSectionModal = (
+      name: string,
+      onConfirm: () => Promise<void>,
+    ) => {
+      deleteSectionModalName.textContent = name;
+      modalOverlay.classList.remove("hidden");
+      modalDeleteSection.classList.remove("hidden");
+      btnConfirmDeleteSectionModal.onclick = async () => {
+        await onConfirm();
+        closeModals();
+      };
     };
 
     const renderManageList = () => {
@@ -229,10 +250,13 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
       manageList.querySelectorAll(".manage-columns__delete").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-id");
-          if (id && confirm("Удалить секцию?")) {
-            await kanbanApi.deleteSection(id);
-            sections = sections.filter((s: any) => s.id !== id);
-            renderManageList();
+          const section = sections.find((s: any) => s.id === id);
+          if (id && section) {
+            openDeleteSectionModal(section.section_name, async () => {
+              await kanbanApi.deleteSection(id);
+              sections = sections.filter((s: any) => s.id !== id);
+              renderManageList();
+            });
           }
         });
       });
@@ -422,9 +446,12 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         menu
           .querySelector("#ctx-delete-list")
           ?.addEventListener("click", async () => {
-            if (sectionId && confirm("Удалить список?")) {
-              await kanbanApi.deleteSection(sectionId);
-              renderKanban(appDiv);
+            const section = sections.find((s: any) => s.id === sectionId);
+            if (sectionId && section) {
+              openDeleteSectionModal(section.section_name, async () => {
+                await kanbanApi.deleteSection(sectionId);
+                renderKanban(appDiv);
+              });
             }
           });
       });
@@ -441,7 +468,7 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         const menu = document.createElement("div");
         menu.className = "context-menu";
         menu.innerHTML = `
-          <div class="context-menu__item" id="ctx-edit-card">Изменить имя</div>
+          <div class="context-menu__item" id="ctx-edit-card">Открыть</div>
           <div class="context-menu__item context-menu__item--danger" id="ctx-delete-card">Удалить карточку</div>
         `;
         const rect = btn.getBoundingClientRect();
@@ -450,19 +477,13 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
         document.body.appendChild(menu);
         activeMenu = menu;
 
-        menu
-          .querySelector("#ctx-edit-card")
-          ?.addEventListener("click", async () => {
-            const newName = prompt("Введите новое имя карточки:", title || "");
-            if (newName && newName.trim() && taskId) {
-              await kanbanApi.updateTask(taskId, {
-                link_card: taskId,
-                title: newName.trim(),
-                description: "",
-              });
-              renderKanban(appDiv);
-            }
-          });
+        menu.querySelector("#ctx-edit-card")?.addEventListener("click", () => {
+          if (taskId) {
+            navigateTo(
+              `/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title || "")}`,
+            );
+          }
+        });
 
         menu
           .querySelector("#ctx-delete-card")
