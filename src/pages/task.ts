@@ -93,9 +93,10 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   }
 
   let executorName = "Не назначен";
-  const executerId = taskData.link_executer || taskData.executer_link;
-  if (executerId) {
-    const found = usersList.find((u) => u.id === executerId);
+  let currentExecuterId =
+    taskData.link_executer || taskData.executer_link || "";
+  if (currentExecuterId) {
+    const found = usersList.find((u) => u.id === currentExecuterId);
     executorName = found ? found.name : "Пользователь";
   }
 
@@ -114,63 +115,70 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
       raw_date: rawDate,
       raw_time: rawTime,
       executor: executorName,
-      executor_id: executerId,
+      executor_id: currentExecuterId,
     },
   });
 
   const taskNode = taskOverlayContainer;
 
-  // Event Listeners
-  const updateTask = async (updates: any) => {
+  // Manual Save Logic
+  const handleSave = async () => {
+    const btnSave = taskNode.querySelector(
+      "#btn-save-task",
+    ) as HTMLButtonElement;
     try {
-      const currentDeadline = (
+      btnSave.disabled = true;
+      btnSave.textContent = "Сохранение...";
+
+      const title = (
+        taskNode.querySelector("#task-title-input") as HTMLInputElement
+      ).value.trim();
+      const description = (
+        taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement
+      ).value.trim();
+      const dateVal = (
         taskNode.querySelector("#task-date-input") as HTMLInputElement
       ).value;
-      const currentTime = (
+      const timeVal = (
         taskNode.querySelector("#task-time-input") as HTMLInputElement
       ).value;
 
       let finalDeadline = taskData.dead_line || taskData.data_dead_line;
-      if (updates.raw_date !== undefined || updates.raw_time !== undefined) {
-        const d =
-          updates.raw_date !== undefined ? updates.raw_date : currentDeadline;
-        const t =
-          updates.raw_time !== undefined ? updates.raw_time : currentTime;
-        if (d && t) {
-          finalDeadline = `${d}T${t}:00Z`;
-        } else if (d) {
-          finalDeadline = `${d}T00:00:00Z`;
-        }
+      if (dateVal) {
+        finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
       }
 
       const payload = {
         link_card: taskId,
-        title:
-          updates.title !== undefined
-            ? updates.title
-            : (taskNode.querySelector("#task-title-input") as HTMLInputElement)
-                .value,
-        description:
-          updates.description !== undefined
-            ? updates.description
-            : (
-                taskNode.querySelector(
-                  "#task-desc-input",
-                ) as HTMLTextAreaElement
-              ).value,
-        link_executer:
-          updates.link_executer !== undefined
-            ? updates.link_executer
-            : executerId,
+        title: title || "Без названия",
+        description: description,
+        link_executer: currentExecuterId,
         data_dead_line: finalDeadline,
       };
 
       await kanbanApi.updateTask(taskId, payload);
+      Toast.success("Карточка сохранена");
+
+      // Update taskData locally to avoid re-saving same data
+      taskData.title = title;
+      taskData.description = description;
+      taskData.dead_line = finalDeadline;
+
+      // Refresh background board
+      await renderKanban(appDiv);
+      appDiv.appendChild(taskOverlayContainer);
     } catch (err) {
-      console.error("Update task error", err);
+      console.error("Save task error", err);
       Toast.error("Ошибка при сохранении");
+    } finally {
+      btnSave.disabled = false;
+      btnSave.textContent = "Сохранить";
     }
   };
+
+  taskNode
+    .querySelector("#btn-save-task")
+    ?.addEventListener("click", handleSave);
 
   taskNode
     .querySelector("#btn-back")
@@ -181,36 +189,6 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
       navigateTo(`/board?id=${boardId}`);
     }
   });
-
-  const titleInput = taskNode.querySelector(
-    "#task-title-input",
-  ) as HTMLInputElement;
-  titleInput?.addEventListener("blur", () => {
-    if (titleInput.value.trim() !== taskData.title) {
-      updateTask({ title: titleInput.value.trim() });
-    }
-  });
-
-  const descInput = taskNode.querySelector(
-    "#task-desc-input",
-  ) as HTMLTextAreaElement;
-  descInput?.addEventListener("blur", () => {
-    if (descInput.value.trim() !== taskData.description) {
-      updateTask({ description: descInput.value.trim() });
-    }
-  });
-
-  taskNode
-    .querySelector("#task-date-input")
-    ?.addEventListener("change", (e) => {
-      updateTask({ raw_date: (e.target as HTMLInputElement).value });
-    });
-
-  taskNode
-    .querySelector("#task-time-input")
-    ?.addEventListener("change", (e) => {
-      updateTask({ raw_time: (e.target as HTMLInputElement).value });
-    });
 
   const execBtn = taskNode.querySelector(
     "#task-executor-btn",
@@ -234,9 +212,9 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
           <span class="assignee__email">${user.email}</span>
         </div>
       `;
-      item.addEventListener("click", async () => {
+      item.addEventListener("click", () => {
         execBtn.textContent = user.name;
-        await updateTask({ link_executer: user.id });
+        currentExecuterId = user.id;
         dropdown.remove();
       });
       dropdown.appendChild(item);
@@ -265,6 +243,9 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     menu.querySelector("#ctx-delete-task")?.addEventListener("click", () => {
       const modalOverlay = document.getElementById("modal-overlay")!;
       const modalDelete = document.getElementById("modal-delete-task")!;
+      const titleInput = taskNode.querySelector(
+        "#task-title-input",
+      ) as HTMLInputElement;
       document.getElementById("delete-task-name")!.textContent =
         titleInput.value;
 

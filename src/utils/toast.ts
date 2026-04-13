@@ -59,7 +59,6 @@ export class Toast {
 
     this.container!.appendChild(toast);
 
-    // Trigger animation
     requestAnimationFrame(() => {
       toast.style.transform = "translateX(0)";
       toast.style.opacity = "1";

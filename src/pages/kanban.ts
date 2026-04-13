@@ -126,6 +126,16 @@ export const renderKanban = async (appDiv: HTMLElement): Promise<void> => {
 
     appDiv.innerHTML = template({ board_name: boardName, sections });
 
+    const btnNewTask = document.getElementById(
+      "btn-new-task",
+    ) as HTMLButtonElement;
+    if (btnNewTask && sections.length === 0) {
+      btnNewTask.disabled = true;
+      btnNewTask.title = "Создайте хотя бы одну секцию, чтобы добавить задачу";
+      btnNewTask.style.opacity = "0.5";
+      btnNewTask.style.cursor = "not-allowed";
+    }
+
     const modalOverlay = document.getElementById("modal-overlay")!;
     const modalManage = document.getElementById("modal-manage-columns")!;
     const manageList = document.getElementById("manage-columns-list")!;
