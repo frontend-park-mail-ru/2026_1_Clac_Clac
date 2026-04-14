@@ -3,7 +3,7 @@ import { authApi, boardsApi, kanbanApi, profileApi } from "../api";
 import taskTpl from "../templates/task.hbs?raw";
 import { navigateTo } from "../router";
 import { Toast } from "../utils/toast";
-import { renderKanban } from "./kanban";
+import { renderKanban, clearKanbanCache } from "./kanban";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -93,7 +93,11 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
 
   let executorName = "Не назначен";
   let currentExecuterId =
-    taskData.link_executer || taskData.executer_link || "";
+    taskData.link_executer ||
+    taskData.executer_link ||
+    taskData.link_executor ||
+    taskData.executor_link ||
+    "";
   if (currentExecuterId) {
     const found = usersList.find((u) => u.id === currentExecuterId);
     executorName = found ? found.name : "Пользователь";
@@ -154,6 +158,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
       };
 
       await kanbanApi.updateTask(taskId, payload);
+      clearKanbanCache();
       Toast.success("Карточка сохранена");
       navigateTo(`/board?id=${boardId}`);
     } catch (err) {
@@ -244,6 +249,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
         async () => {
           try {
             await kanbanApi.deleteTask(taskId);
+            clearKanbanCache();
             navigateTo(`/board?id=${boardId}`);
           } catch (err) {
             Toast.error("Ошибка при удалении");

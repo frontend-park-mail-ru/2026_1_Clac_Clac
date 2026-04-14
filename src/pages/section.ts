@@ -3,7 +3,7 @@ import { boardsApi, kanbanApi } from "../api";
 import sectionTpl from "../templates/section.hbs?raw";
 import { navigateTo } from "../router";
 import { Toast } from "../utils/toast";
-import { renderKanban } from "./kanban";
+import { renderKanban, clearKanbanCache } from "./kanban";
 
 const template = Handlebars.compile(sectionTpl);
 
@@ -36,14 +36,12 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     return navigateTo(`/board?id=${boardId}`);
   }
 
-  // FIRST: render the board background
   try {
     await renderKanban(appDiv);
   } catch (err) {
     console.error("Board render error", err);
   }
 
-  // SECOND: append the section side panel
   const sectionOverlayContainer = document.createElement("div");
   sectionOverlayContainer.id = "section-overlay-container";
   appDiv.appendChild(sectionOverlayContainer);
@@ -62,10 +60,8 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
   const sectionNode = sectionOverlayContainer;
 
-  // Local state for color to avoid DOM lookups
   let selectedColor = sectionData.color || "white";
 
-  // Manual Save Logic
   const handleSave = async () => {
     const btnSave = sectionNode.querySelector(
       "#btn-save-section",
@@ -100,6 +96,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       };
 
       await kanbanApi.updateSection(sectionId, payload);
+      clearKanbanCache();
       Toast.success("Секция сохранена");
       navigateTo(`/board?id=${boardId}`);
     } catch (err) {
@@ -108,7 +105,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
         sectionData.section_name?.toLowerCase().includes("бэклог") ||
         sectionData.section_name?.toLowerCase().includes("backlog");
       if (isBacklog) {
-        Toast.error("НЕЛЬЗЯ ИЗМЕНЯТЬ БЭКЛОГ");
+        Toast.error("Нельзя изменять бэклог");
       } else {
         Toast.error("Ошибка при сохранении");
       }
@@ -134,24 +131,22 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       }
     });
 
-  // Color picker logic (only local updates)
-  const colorDots = sectionNode.querySelectorAll(".color-dot");
-  colorDots.forEach((dot) => {
-    const dotColor = dot.getAttribute("data-color");
-    if (dotColor === selectedColor) {
-      dot.classList.add("active");
+  const colorSquares = sectionNode.querySelectorAll(".color-square");
+  colorSquares.forEach((square) => {
+    const squareColor = square.getAttribute("data-color");
+    if (squareColor === selectedColor) {
+      square.classList.add("active");
     }
 
-    dot.addEventListener("click", () => {
-      colorDots.forEach((d) => d.classList.remove("active"));
-      dot.classList.add("active");
-      if (dotColor) {
-        selectedColor = dotColor;
+    square.addEventListener("click", () => {
+      colorSquares.forEach((s) => s.classList.remove("active"));
+      square.classList.add("active");
+      if (squareColor) {
+        selectedColor = squareColor;
       }
     });
   });
 
-  // Options Menu
   const optionsBtn = sectionNode.querySelector("#btn-section-options");
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -199,7 +194,6 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
   };
   document.addEventListener("click", globalClickHandler);
 
-  // Close modals
   sectionNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.getElementById("modal-overlay-section")?.classList.add("hidden");

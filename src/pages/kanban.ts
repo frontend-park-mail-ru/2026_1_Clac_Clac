@@ -6,6 +6,17 @@ import { Toast } from "../utils/toast";
 
 const template = Handlebars.compile(kanbanTpl);
 
+const colorMap: Record<string, string> = {
+  white: "var(--color-picker-white)",
+  grey: "var(--color-picker-grey)",
+  red: "var(--color-picker-red)",
+  orange: "var(--color-picker-orange)",
+  blue: "var(--color-picker-blue)",
+  green: "var(--color-picker-green)",
+  purple: "var(--color-picker-purple)",
+  pink: "var(--color-picker-pink)",
+};
+
 interface BoardUser {
   id: string;
   name: string;
@@ -18,6 +29,11 @@ export let cachedBoardId: string | null = null;
 export let cachedBoardName = "Без названия";
 export let cachedBoardUsers: BoardUser[] = [];
 export let cachedSections: any[] = [];
+
+export const clearKanbanCache = () => {
+  cachedBoardId = null;
+  cachedSections = [];
+};
 
 export const renderKanban = async (
   appDiv: HTMLElement,
@@ -66,18 +82,19 @@ export const renderKanban = async (
 
       const colors = [
         "white",
-        "#f87171",
-        "#fb923c",
-        "#60a5fa",
-        "#f43f5e",
-        "#4ade80",
-        "#a5b4fc",
-        "#f9a8d4",
+        "grey",
+        "red",
+        "orange",
+        "blue",
+        "green",
+        "purple",
+        "pink",
       ];
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
           sec.id = sec.section_link || sec.id;
           sec.color = sec.color || colors[i % colors.length];
+          sec.renderColor = colorMap[sec.color] || sec.color;
           try {
             const tasksRes = (await kanbanApi.getTasks(sec.id)) as any;
             let tasksList =
@@ -275,37 +292,59 @@ export const renderKanban = async (
           e.stopPropagation();
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
-          const colorMap: Record<string, string> = {
-            white: "#ffffff",
-            grey: "#9ca3af",
-            red: "#f87171",
-            orange: "#fb923c",
-            blue: "#60a5fa",
-            green: "#4ade80",
-            purple: "#a5b4fc",
-            pink: "#f9a8d4",
-          };
-          const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
           picker.style.cssText = `position: absolute; z-index: 10001;`;
-          picker.innerHTML = `<div class="color-picker-bubble__title">Цвета</div><div class="color-picker-bubble__grid">${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}"></div>`).join("")}</div><div class="color-picker-bubble__footer"><button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button><button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button></div>`;
+
+          const colors = [
+            "white",
+            "grey",
+            "red",
+            "orange",
+            "blue",
+            "green",
+            "purple",
+            "pink",
+          ];
+          const pickerHtml = `
+            <div class="color-picker-bubble__title">Цвета</div>
+            <div class="color-picker-list">
+              ${colors
+                .map(
+                  (color) => `
+                <button type="button"
+                  class="color-square ${color} ${section?.color === color ? "active" : ""}"
+                  data-color="${color}"
+                  title="${color}">
+                </button>
+              `,
+                )
+                .join("")}
+            </div>
+            <div class="color-picker-bubble__footer">
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button>
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button>
+            </div>
+          `;
+
+          picker.innerHTML = pickerHtml;
+
           const rect = trigger.getBoundingClientRect();
           picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
           picker.style.left = `${rect.left + window.scrollX - 100}px`;
           document.body.appendChild(picker);
           let tempColor = section?.color || "white";
-          picker
-            .querySelectorAll(".color-picker-bubble__dot")
-            .forEach((dot: any) => {
-              dot.addEventListener("click", () => {
-                picker
-                  .querySelectorAll(".color-picker-bubble__dot")
-                  .forEach((d) => d.classList.remove("active"));
-                dot.classList.add("active");
-                tempColor = dot.getAttribute("data-color") || "white";
-              });
+
+          picker.querySelectorAll(".color-square").forEach((square: any) => {
+            square.addEventListener("click", () => {
+              picker
+                .querySelectorAll(".color-square")
+                .forEach((s: any) => s.classList.remove("active"));
+              square.classList.add("active");
+              tempColor = square.getAttribute("data-color") || "white";
             });
+          });
+
           picker
             .querySelector(".color-picker-bubble__btn--cancel")
             ?.addEventListener("click", () => picker.remove());
@@ -330,6 +369,7 @@ export const renderKanban = async (
                     section_link: id,
                     color: tempColor,
                   });
+                  renderManageList();
                 } catch (e) {
                   section.color = oldColor;
                   trigger.style.background = colorMap[oldColor];
@@ -338,13 +378,14 @@ export const renderKanban = async (
                     if (dot) dot.style.background = colorMap[oldColor];
                   }
                   Toast.error("Ошибка сохранения цвета");
+                  renderManageList();
                 }
               }
             });
           const closeOnOutside = (ev: MouseEvent) => {
             if (!picker.contains(ev.target as Node)) {
               picker.remove();
-              document.removeEventListener("mousedown", closeOnOutside);
+              document.removeEventListener("click", closeOnOutside);
             }
           };
           setTimeout(
@@ -695,6 +736,7 @@ export const renderKanban = async (
         description: "",
         link_executer: selectedAssigneeId || null,
       });
+      clearKanbanCache();
       closeModals();
       renderKanban(appDiv, true);
     } catch (e) {
