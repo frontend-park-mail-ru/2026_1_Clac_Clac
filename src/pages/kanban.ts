@@ -84,8 +84,7 @@ export const renderKanban = async (
               tasksRes?.data?.cards ||
               tasksRes?.cards ||
               tasksRes?.data ||
-              tasksRes ||
-              [];
+              tasksRes || [];
             sec.tasks = tasksList.map((t: any) => {
               const exUser = cachedBoardUsers.find(
                 (u) => u.id === (t.link_executer || t.executer_link),
@@ -97,9 +96,9 @@ export const renderKanban = async (
                 due_date: dl ? new Date(dl).toLocaleDateString() : null,
                 time: dl
                   ? new Date(dl).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
                   : null,
                 executor: exUser
                   ? exUser.name
@@ -177,9 +176,32 @@ export const renderKanban = async (
     manageList.innerHTML = sections
       .map(
         (s: any) =>
-          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
+          `<div class="manage-columns__item" data-id="${s.id}" draggable="true">
+            <div class="manage-columns__left">
+              <div class="manage-columns__dot" style="background: ${s.color};"></div>
+              <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
+            </div>
+            <div class="manage-columns__actions">
+              <button class="icon-btn manage-columns__delete" data-id="${s.id}" data-name="${s.section_name}" title="Удалить">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+              <div class="manage-columns__color-trigger" style="background: ${s.color};" data-id="${s.id}"></div>
+              <div class="manage-columns__drag">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="6" y1="9" x2="18" y2="9"></line>
+                  <line x1="6" y1="15" x2="18" y2="15"></line>
+                </svg>
+              </div>
+            </div>
+          </div>`,
       )
       .join("");
+
     let draggedItem: HTMLElement | null = null;
     manageList
       .querySelectorAll(".manage-columns__item")
@@ -216,6 +238,7 @@ export const renderKanban = async (
           }
         });
       });
+
     manageList
       .querySelectorAll(".manage-columns__name")
       .forEach((input: any) => {
@@ -241,6 +264,7 @@ export const renderKanban = async (
           }
         });
       });
+
     manageList
       .querySelectorAll(".manage-columns__color-trigger")
       .forEach((trigger: any) => {
@@ -289,6 +313,13 @@ export const renderKanban = async (
                 const oldColor = section.color;
                 section.color = tempColor;
                 trigger.style.background = colorMap[tempColor];
+
+                const item = trigger.closest(".manage-columns__item");
+                if (item) {
+                  const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
+                  if (dot) dot.style.background = colorMap[tempColor];
+                }
+
                 picker.remove();
                 try {
                   await kanbanApi.updateSection(id, {
@@ -299,6 +330,10 @@ export const renderKanban = async (
                 } catch (e) {
                   section.color = oldColor;
                   trigger.style.background = colorMap[oldColor];
+                  if (item) {
+                    const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
+                    if (dot) dot.style.background = colorMap[oldColor];
+                  }
                   Toast.error("Ошибка сохранения цвета");
                 }
               }
@@ -313,6 +348,35 @@ export const renderKanban = async (
             () => document.addEventListener("mousedown", closeOnOutside),
             0,
           );
+        });
+      });
+
+    manageList
+      .querySelectorAll(".manage-columns__delete")
+      .forEach((btn: any) => {
+        btn.addEventListener("click", (e: MouseEvent) => {
+          e.stopPropagation();
+          const id = btn.getAttribute("data-id");
+          const name = btn.getAttribute("data-name");
+          const section = sections.find((s: any) => s.id === id);
+          if (id && section) {
+            if (sections[0]?.id === id) {
+              Toast.error("Нельзя удалять бэклог");
+              return;
+            }
+            modalManage.classList.add("hidden");
+            openDeleteSectionModal(name || "", async () => {
+              try {
+                await kanbanApi.deleteSection(id);
+                cachedSections = cachedSections.filter(
+                  (s) => s.id !== id,
+                );
+                renderKanban(appDiv);
+              } catch (e) {
+                Toast.error("Ошибка при удалении колонки");
+              }
+            });
+          }
         });
       });
   };
@@ -334,7 +398,7 @@ export const renderKanban = async (
       try {
         const res = (await kanbanApi.createSection({
           board_link: boardId,
-          section_name: "Новая секция",
+          section_name: "Новая колонка",
           max_tasks: 100,
           is_mandatory: false,
           color: "white",
@@ -345,7 +409,7 @@ export const renderKanban = async (
         cachedSections.push(newSec);
         renderManageList();
       } catch (e) {
-        Toast.error("Ошибка при создании секции");
+        Toast.error("Ошибка при создании колонки");
       }
     });
 
@@ -358,7 +422,7 @@ export const renderKanban = async (
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     try {
       await authApi.logout();
-    } catch (err) {}
+    } catch (err) { }
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   });
@@ -387,7 +451,7 @@ export const renderKanban = async (
       );
       const menu = document.createElement("div");
       menu.className = "context-menu";
-      menu.innerHTML = `<div class="context-menu__item" id="ctx-edit-list">Изменить</div><div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить секцию</div>`;
+      menu.innerHTML = `<div class="context-menu__item" id="ctx-edit-list">Изменить</div><div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить колонку</div>`;
       const rect = btn.getBoundingClientRect();
       menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
       menu.style.left = `${rect.left + window.scrollX - 150}px`;
@@ -414,7 +478,7 @@ export const renderKanban = async (
                 );
                 renderKanban(appDiv);
               } catch (e) {
-                Toast.error("Ошибка при удалении секции");
+                Toast.error("Ошибка при удалении колонки");
               }
             });
           }
@@ -510,7 +574,7 @@ export const renderKanban = async (
     addColumnBtn.addEventListener("click", async () => {
       await kanbanApi.createSection({
         board_link: boardId,
-        section_name: "Новая секция",
+        section_name: "Новая колонка",
         max_tasks: 100,
         is_mandatory: false,
         color: "white",
