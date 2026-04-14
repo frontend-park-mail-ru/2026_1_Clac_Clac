@@ -102,6 +102,13 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
         modalPhoto.classList.remove("hidden");
       });
 
+    document
+      .getElementById("btn-modal-delete-avatar")
+      ?.addEventListener("click", () => {
+        modalPhoto.classList.add("hidden");
+        modalDelete.classList.remove("hidden");
+      });
+
     const modalColorSquares = modalPhoto.querySelectorAll(".color-square");
     modalColorSquares.forEach((square) => {
       square.addEventListener("click", () => {
