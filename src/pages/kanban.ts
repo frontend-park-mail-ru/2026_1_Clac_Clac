@@ -70,6 +70,7 @@ export const renderKanban = async (
       if (!Array.isArray(fetchedSections)) fetchedSections = [];
 
       const colors = [
+        "white",
         "#515151",
         "#ff607c",
         "#ffb55d",
@@ -179,6 +180,7 @@ export const renderKanban = async (
 
   const renderManageList = () => {
     const colorMap: Record<string, string> = {
+      white: "white",
       grey: "var(--color-picker-grey)",
       red: "var(--color-picker-red)",
       orange: "var(--color-picker-orange)",

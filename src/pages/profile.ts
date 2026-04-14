@@ -98,7 +98,8 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       .getElementById("btn-change-photo")
       ?.addEventListener("click", (e) => {
         e.stopPropagation();
-        modalPhoto.style.display = "block";
+        modalOverlay.classList.remove("hidden");
+        modalPhoto.classList.remove("hidden");
       });
 
     const modalColorSquares = modalPhoto.querySelectorAll(".color-square");
@@ -127,14 +128,16 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
             console.error("Avatar upload error", err);
           }
         } else {
-          modalPhoto.style.display = "none";
+          modalOverlay.classList.add("hidden");
+          modalPhoto.classList.add("hidden");
         }
       });
 
     document
       .getElementById("btn-cancel-photo")
       ?.addEventListener("click", () => {
-        modalPhoto.style.display = "none";
+        modalOverlay.classList.add("hidden");
+        modalPhoto.classList.add("hidden");
         selectedFile = null;
         selectedColor = null;
       });
@@ -150,7 +153,7 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       btn.addEventListener("click", () => {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
-        modalPhoto.style.display = "none";
+        modalPhoto.classList.add("hidden");
       });
     });
 
@@ -158,16 +161,18 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       if (e.target === modalOverlay) {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
+        modalPhoto.classList.add("hidden");
       }
     });
 
     document.addEventListener("click", (e) => {
       if (
-        modalPhoto.style.display === "block" &&
+        !modalPhoto.classList.contains("hidden") &&
         !modalPhoto.contains(e.target as Node) &&
         e.target !== document.getElementById("btn-change-photo")
       ) {
-        modalPhoto.style.display = "none";
+        modalOverlay.classList.add("hidden");
+        modalPhoto.classList.add("hidden");
       }
     });
 

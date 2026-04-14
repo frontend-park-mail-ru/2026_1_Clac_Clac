@@ -36,14 +36,12 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     return navigateTo(`/board?id=${boardId}`);
   }
 
-  // FIRST: render the board background
   try {
     await renderKanban(appDiv);
   } catch (err) {
     console.error("Board render error", err);
   }
 
-  // SECOND: append the section side panel
   const sectionOverlayContainer = document.createElement("div");
   sectionOverlayContainer.id = "section-overlay-container";
   appDiv.appendChild(sectionOverlayContainer);
@@ -62,10 +60,8 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
   const sectionNode = sectionOverlayContainer;
 
-  // Local state for color to avoid DOM lookups
   let selectedColor = sectionData.color || "white";
 
-  // Manual Save Logic
   const handleSave = async () => {
     const btnSave = sectionNode.querySelector(
       "#btn-save-section",
@@ -109,7 +105,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
         sectionData.section_name?.toLowerCase().includes("бэклог") ||
         sectionData.section_name?.toLowerCase().includes("backlog");
       if (isBacklog) {
-        Toast.error("НЕЛЬЗЯ ИЗМЕНЯТЬ БЭКЛОГ");
+        Toast.error("Нельзя изменять бэклог");
       } else {
         Toast.error("Ошибка при сохранении");
       }
@@ -135,7 +131,6 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       }
     });
 
-  // Color picker logic (only local updates)
   const colorSquares = sectionNode.querySelectorAll(".color-square");
   colorSquares.forEach((square) => {
     const squareColor = square.getAttribute("data-color");
@@ -152,7 +147,6 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     });
   });
 
-  // Options Menu
   const optionsBtn = sectionNode.querySelector("#btn-section-options");
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
