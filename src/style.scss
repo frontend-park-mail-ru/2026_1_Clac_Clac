@@ -299,8 +299,18 @@ a {
         gap: 1rem;
     }
 
+    &__dot {
+        font-size: 1.5rem;
+        line-height: 1;
+        margin-right: -0.25rem;
+        user-select: none;
+    }
+
     &__color-trigger {
+        width: 24px;
+        height: 24px;
         border-radius: 6px !important;
+        cursor: pointer;
         transition: transform 0.2s;
         &:hover {
             transform: scale(1.1);
@@ -311,9 +321,9 @@ a {
         flex: 1;
         background: transparent;
         border: none;
-        color: white;
         font-size: 1rem;
         outline: none;
+        font-weight: 500;
         &::placeholder {
             color: #666;
         }
@@ -322,27 +332,21 @@ a {
     &__actions {
         display: flex;
         align-items: center;
-        gap: 1rem;
-    }
-
-    &__delete {
-        color: #ff4d4d;
-        cursor: pointer;
-        &:hover {
-            opacity: 0.8;
-        }
+        gap: 0.75rem;
     }
 
     &__drag {
         color: #666;
         cursor: grab;
+        display: flex;
+        align-items: center;
     }
 
     &__add-btn {
         width: 100%;
         background: transparent;
-        border: 1px solid #333;
-        color: #ccc;
+        border: 2px solid var(--primary);
+        color: white;
         padding: 1rem;
         border-radius: 12px;
         margin-bottom: 1rem;
@@ -351,8 +355,9 @@ a {
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+        font-weight: 500;
         &:hover {
-            background: #2a2a2c;
+            background: rgba(139, 92, 246, 0.1);
         }
     }
 
@@ -387,26 +392,6 @@ a {
         font-size: 1rem;
         color: white;
         margin-bottom: 0.5rem;
-    }
-
-    &__grid {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    &__dot {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-        cursor: pointer;
-        border: 2px solid transparent;
-        &.active {
-            border-color: white;
-        }
-        &:hover {
-            transform: scale(1.1);
-        }
     }
 
     &__footer {

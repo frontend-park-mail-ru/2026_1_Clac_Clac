@@ -194,7 +194,19 @@ export const renderKanban = async (
     manageList.innerHTML = sections
       .map(
         (s: any) =>
-          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${colorMap[s.color] || s.color}; width: 24px; height: 24px; border-radius: 6px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
+          `<div class="manage-columns__item" data-id="${s.id}" draggable="true">
+            <span class="manage-columns__dot" style="color: ${colorMap[s.color] || s.color};">●</span>
+            <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" style="color: ${colorMap[s.color] || s.color};" placeholder="Имя колонки">
+            <div class="manage-columns__actions">
+              <div class="manage-columns__color-trigger" style="background: ${colorMap[s.color] || s.color};" data-id="${s.id}"></div>
+              <div class="manage-columns__drag">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="9" x2="16" y2="9"></line>
+                  <line x1="8" y1="15" x2="16" y2="15"></line>
+                </svg>
+              </div>
+            </div>
+          </div>`,
       )
       .join("");
     let draggedItem: HTMLElement | null = null;
@@ -265,32 +277,59 @@ export const renderKanban = async (
           e.stopPropagation();
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
-          const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
           picker.style.cssText = `position: absolute; z-index: 10001;`;
-          picker.innerHTML = `<div class="color-picker-bubble__title">Цвета</div><div class="color-picker-bubble__grid">${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}; cursor: pointer; border-radius: 6px; width: 24px; height: 24px; border: 2px solid transparent;"></div>`).join("")}</div><div class="color-picker-bubble__footer"><button class="color-picker-bubble__btn color-picker-bubble__btn--cancel" style="cursor: pointer;">Отмена</button><button class="color-picker-bubble__btn color-picker-bubble__btn--save" style="cursor: pointer;">Сохранить</button></div>`;
+
+          const colors = [
+            "white",
+            "grey",
+            "red",
+            "orange",
+            "blue",
+            "green",
+            "purple",
+            "pink",
+          ];
+          const pickerHtml = `
+            <div class="color-picker-bubble__title">Цвета</div>
+            <div class="color-picker-list">
+              ${colors
+                .map(
+                  (color) => `
+                <button type="button"
+                  class="color-square ${color} ${section?.color === color ? "active" : ""}"
+                  data-color="${color}"
+                  title="${color}">
+                </button>
+              `,
+                )
+                .join("")}
+            </div>
+            <div class="color-picker-bubble__footer">
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button>
+              <button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button>
+            </div>
+          `;
+
+          picker.innerHTML = pickerHtml;
 
           const rect = trigger.getBoundingClientRect();
           picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
           picker.style.left = `${rect.left + window.scrollX - 100}px`;
           document.body.appendChild(picker);
           let tempColor = section?.color || "white";
-          picker
-            .querySelectorAll(".color-picker-bubble__dot")
-            .forEach((dot: any) => {
-              dot.addEventListener("click", () => {
-                picker
-                  .querySelectorAll(".color-picker-bubble__dot")
-                  .forEach((d: any) => {
-                    d.classList.remove("active");
-                    d.style.borderColor = "transparent";
-                  });
-                dot.classList.add("active");
-                dot.style.borderColor = "white";
-                tempColor = dot.getAttribute("data-color") || "white";
-              });
+
+          picker.querySelectorAll(".color-square").forEach((square: any) => {
+            square.addEventListener("click", () => {
+              picker
+                .querySelectorAll(".color-square")
+                .forEach((s: any) => s.classList.remove("active"));
+              square.classList.add("active");
+              tempColor = square.getAttribute("data-color") || "white";
             });
+          });
+
           picker
             .querySelector(".color-picker-bubble__btn--cancel")
             ?.addEventListener("click", () => picker.remove());
@@ -308,23 +347,22 @@ export const renderKanban = async (
                     section_link: id,
                     color: tempColor,
                   });
+                  renderManageList();
                 } catch (e) {
                   section.color = oldColor;
                   trigger.style.background = colorMap[oldColor];
                   Toast.error("Ошибка сохранения цвета");
+                  renderManageList();
                 }
               }
             });
           const closeOnOutside = (ev: MouseEvent) => {
             if (!picker.contains(ev.target as Node)) {
               picker.remove();
-              document.removeEventListener("mousedown", closeOnOutside);
+              document.removeEventListener("click", closeOnOutside);
             }
           };
-          setTimeout(
-            () => document.addEventListener("mousedown", closeOnOutside),
-            0,
-          );
+          document.addEventListener("click", closeOnOutside);
         });
       });
   };
