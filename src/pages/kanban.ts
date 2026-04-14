@@ -6,17 +6,6 @@ import { Toast } from "../utils/toast";
 
 const template = Handlebars.compile(kanbanTpl);
 
-const colorMap: Record<string, string> = {
-  white: "var(--color-picker-white)",
-  grey: "var(--color-picker-grey)",
-  red: "var(--color-picker-red)",
-  orange: "var(--color-picker-orange)",
-  blue: "var(--color-picker-blue)",
-  green: "var(--color-picker-green)",
-  purple: "var(--color-picker-purple)",
-  pink: "var(--color-picker-pink)",
-};
-
 interface BoardUser {
   id: string;
   name: string;
@@ -32,7 +21,20 @@ export let cachedSections: any[] = [];
 
 export const clearKanbanCache = () => {
   cachedBoardId = null;
+  cachedBoardName = "Без названия";
+  cachedBoardUsers = [];
   cachedSections = [];
+};
+
+const colorMap: Record<string, string> = {
+  white: "#ffffff",
+  grey: "#9ca3af",
+  red: "#f87171",
+  orange: "#fb923c",
+  blue: "#60a5fa",
+  green: "#4ade80",
+  purple: "#a5b4fc",
+  pink: "#f9a8d4",
 };
 
 export const renderKanban = async (
@@ -80,21 +82,13 @@ export const renderKanban = async (
         res.data?.sections || res.sections || res.data || res || [];
       if (!Array.isArray(fetchedSections)) fetchedSections = [];
 
-      const colors = [
-        "white",
-        "grey",
-        "red",
-        "orange",
-        "blue",
-        "green",
-        "purple",
-        "pink",
-      ];
+      const colors = Object.keys(colorMap);
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
           sec.id = sec.section_link || sec.id;
           sec.color = sec.color || colors[i % colors.length];
-          sec.renderColor = colorMap[sec.color] || sec.color;
+          sec.colorHex = colorMap[sec.color] || sec.color;
+
           try {
             const tasksRes = (await kanbanApi.getTasks(sec.id)) as any;
             let tasksList =
@@ -107,16 +101,25 @@ export const renderKanban = async (
                 (u) => u.id === (t.link_executer || t.executer_link),
               );
               const dl = t.dead_line || t.data_dead_line;
+
+              let formattedDate = null;
+              let formattedTime = null;
+
+              if (dl) {
+                const dlDate = new Date(dl);
+                const dayMonth = dlDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                formattedDate = `${dayMonth}, ${dlDate.getFullYear()}`;
+                formattedTime = dlDate.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+              }
+
               return {
                 id: t.card_link || t.link_card || t.id,
                 title: t.title || "Без названия",
-                due_date: dl ? new Date(dl).toLocaleDateString() : null,
-                time: dl
-                  ? new Date(dl).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                  : null,
+                due_date: formattedDate,
+                time: formattedTime,
                 executor: exUser
                   ? exUser.name
                   : t.executer_name || t.name_executer || null,
@@ -198,7 +201,7 @@ export const renderKanban = async (
         (s: any) =>
           `<div class="manage-columns__item" data-id="${s.id}" draggable="true">
             <div class="manage-columns__left">
-              <div class="manage-columns__dot" style="background: ${s.color};"></div>
+              <div class="manage-columns__dot" style="background: ${s.colorHex};"></div>
               <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
             </div>
             <div class="manage-columns__actions">
@@ -210,7 +213,7 @@ export const renderKanban = async (
                   <line x1="14" y1="11" x2="14" y2="17"></line>
                 </svg>
               </button>
-              <div class="manage-columns__color-trigger" style="background: ${s.color};" data-id="${s.id}"></div>
+              <div class="manage-columns__color-trigger" style="background: ${s.colorHex};" data-id="${s.id}"></div>
               <div class="manage-columns__drag">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="6" y1="9" x2="18" y2="9"></line>
@@ -292,74 +295,56 @@ export const renderKanban = async (
           e.stopPropagation();
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
+
+          const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
           picker.style.cssText = `position: absolute; z-index: 10001;`;
-
-          const colors = [
-            "white",
-            "grey",
-            "red",
-            "orange",
-            "blue",
-            "green",
-            "purple",
-            "pink",
-          ];
-          const pickerHtml = `
-            <div class="color-picker-bubble__title">Цвета</div>
-            <div class="color-picker-list">
-              ${colors
-                .map(
-                  (color) => `
-                <button type="button"
-                  class="color-square ${color} ${section?.color === color ? "active" : ""}"
-                  data-color="${color}"
-                  title="${color}">
-                </button>
-              `,
-                )
-                .join("")}
-            </div>
-            <div class="color-picker-bubble__footer">
-              <button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button>
-              <button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button>
-            </div>
-          `;
-
-          picker.innerHTML = pickerHtml;
-
+          picker.innerHTML = `<div class="color-picker-bubble__title">Цвета</div><div class="color-picker-bubble__grid">${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}"></div>`).join("")}</div><div class="color-picker-bubble__footer"><button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button><button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button></div>`;
           const rect = trigger.getBoundingClientRect();
           picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
           picker.style.left = `${rect.left + window.scrollX - 100}px`;
           document.body.appendChild(picker);
           let tempColor = section?.color || "white";
 
-          picker.querySelectorAll(".color-square").forEach((square: any) => {
-            square.addEventListener("click", () => {
-              picker
-                .querySelectorAll(".color-square")
-                .forEach((s: any) => s.classList.remove("active"));
-              square.classList.add("active");
-              tempColor = square.getAttribute("data-color") || "white";
+          picker
+            .querySelectorAll(".color-picker-bubble__dot")
+            .forEach((dot: any) => {
+              dot.addEventListener("click", () => {
+                picker
+                  .querySelectorAll(".color-picker-bubble__dot")
+                  .forEach((d) => d.classList.remove("active"));
+                dot.classList.add("active");
+                tempColor = dot.getAttribute("data-color") || "white";
+              });
             });
-          });
 
           picker
             .querySelector(".color-picker-bubble__btn--cancel")
             ?.addEventListener("click", () => picker.remove());
+
           picker
             .querySelector(".color-picker-bubble__btn--save")
             ?.addEventListener("click", async () => {
               if (section && tempColor) {
                 const oldColor = section.color;
+                const oldColorHex = section.colorHex;
+
                 section.color = tempColor;
+                section.colorHex = colorMap[tempColor];
                 trigger.style.background = colorMap[tempColor];
 
                 const item = trigger.closest(".manage-columns__item");
                 if (item) {
                   const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
                   if (dot) dot.style.background = colorMap[tempColor];
+                }
+
+                const boardColumnTitle = document.querySelector(`.kanban__column[data-id="${id}"] .kanban__column-title`) as HTMLElement;
+                if (boardColumnTitle) {
+                  boardColumnTitle.style.color = colorMap[tempColor];
+                  const boardDot = boardColumnTitle.querySelector(".kanban__col-dot") as HTMLElement;
+                  if (boardDot) boardDot.style.background = colorMap[tempColor];
                 }
 
                 picker.remove();
@@ -369,23 +354,28 @@ export const renderKanban = async (
                     section_link: id,
                     color: tempColor,
                   });
-                  renderManageList();
                 } catch (e) {
                   section.color = oldColor;
-                  trigger.style.background = colorMap[oldColor];
+                  section.colorHex = oldColorHex;
+                  trigger.style.background = oldColorHex;
                   if (item) {
                     const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
-                    if (dot) dot.style.background = colorMap[oldColor];
+                    if (dot) dot.style.background = oldColorHex;
+                  }
+                  if (boardColumnTitle) {
+                    boardColumnTitle.style.color = oldColorHex;
+                    const boardDot = boardColumnTitle.querySelector(".kanban__col-dot") as HTMLElement;
+                    if (boardDot) boardDot.style.background = oldColorHex;
                   }
                   Toast.error("Ошибка сохранения цвета");
-                  renderManageList();
                 }
               }
             });
+
           const closeOnOutside = (ev: MouseEvent) => {
             if (!picker.contains(ev.target as Node)) {
               picker.remove();
-              document.removeEventListener("click", closeOnOutside);
+              document.removeEventListener("mousedown", closeOnOutside);
             }
           };
           setTimeout(
@@ -497,6 +487,8 @@ export const renderKanban = async (
       const newSec = res.data || res;
       newSec.id = newSec.section_link || newSec.id;
       newSec.tasks = [];
+      newSec.color = selectedColColor;
+      newSec.colorHex = colorMap[selectedColColor] || selectedColColor;
       cachedSections.push(newSec);
 
       closeModals();
@@ -517,7 +509,7 @@ export const renderKanban = async (
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     try {
       await authApi.logout();
-    } catch (err) { }
+    } catch { }
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   });
@@ -736,7 +728,6 @@ export const renderKanban = async (
         description: "",
         link_executer: selectedAssigneeId || null,
       });
-      clearKanbanCache();
       closeModals();
       renderKanban(appDiv, true);
     } catch (e) {

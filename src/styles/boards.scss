@@ -413,7 +413,6 @@
   }
 }
 
-/* --- Канбан --- */
 .kanban {
   &__content {
     display: flex;
@@ -551,13 +550,14 @@
   &__column-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #aaa;
+    gap: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 600;
   }
 
   &__col-dot {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     display: inline-block;
   }
@@ -710,9 +710,9 @@
 
 .kanban-card {
   background-color: #222224;
-  border: 2px solid #2a2a2c;
-  border-radius: 12px;
-  padding: 1.2rem;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 1.25rem;
   cursor: pointer;
   position: relative;
   transition: border-color 0.2s, transform 0.1s;
@@ -721,7 +721,7 @@
   flex-direction: column;
 
   &:hover {
-    border-color: #444;
+    border-color: #555;
     z-index: 10;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -735,34 +735,30 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #2a2a2c;
+    border-bottom: 1px solid #3b3b3d;
     padding-bottom: 0.8rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
   }
 
   &__assignee {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #777;
     display: flex;
     align-items: center;
     line-height: 1;
     gap: 0.4rem;
-
-    span {
-      color: #ccc;
-      font-weight: 500;
-    }
+    font-weight: 500;
   }
 
   &__assignee-text {
-    color: #ccc;
+    color: white;
   }
 
   &__options-btn {
     opacity: 0;
     background: transparent;
     border: none;
-    color: #666;
+    color: #888;
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -781,7 +777,7 @@
     font-size: 1.15rem;
     color: white;
     font-weight: bold;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
     line-height: 1.4;
     word-wrap: break-word;
   }
@@ -789,21 +785,19 @@
   &__meta {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    color: #777;
-    font-size: 0.85rem;
+    gap: 0.7rem;
   }
 
   &__meta-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+  }
 
-    svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-    }
+  &__meta-text {
+    color: #888;
+    font-size: 0.85rem;
+    font-weight: 500;
   }
 }
 

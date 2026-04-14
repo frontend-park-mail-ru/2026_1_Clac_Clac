@@ -50,8 +50,8 @@
         {{#each sections}}
         <div class="kanban__column" data-id="{{id}}">
           <div class="kanban__column-header">
-            <div class="kanban__column-title">
-              <span class="kanban__col-dot" style="background: {{renderColor}};"></span>
+            <div class="kanban__column-title" style="color: {{colorHex}};">
+              <span class="kanban__col-dot" style="background: {{colorHex}};"></span>
               {{section_name}}
             </div>
             <button class="icon-btn kanban__btn-col-options" data-id="{{id}}">
@@ -81,20 +81,22 @@
               {{#if due_date}}
               <div class="kanban-card__meta">
                 <span class="kanban-card__meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg> {{due_date}}
+                  </svg>
+                  <span class="kanban-card__meta-text">{{due_date}}</span>
                 </span>
                 <span class="kanban-card__meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg> {{time}}
+                  </svg>
+                  <span class="kanban-card__meta-text">До {{time}}</span>
                 </span>
               </div>
               {{/if}}
@@ -113,7 +115,6 @@
               Добавить карточку
             </button>
           </div>
-
         </div>
         {{/each}}
 
@@ -216,7 +217,8 @@
     </div>
     <div class="modal__body create-column-form">
       <div class="create-column-form__input-wrap">
-        <input type="text" id="create-col-name" class="kanban__modal-input" placeholder="Новая колонка" maxlength="50" style="margin-bottom: 0;">
+        <input type="text" id="create-col-name" class="kanban__modal-input" placeholder="Новая колонка" maxlength="50"
+          style="margin-bottom: 0;">
       </div>
 
       <label class="create-column-form__label">Цвета</label>
@@ -241,7 +243,8 @@
 
       <div class="create-column-form__input-wrap" style="margin-bottom: 2rem;">
         <label class="create-column-form__label">Максимальное число задач</label>
-        <input type="number" id="create-col-max" class="create-column-form__max-input" placeholder="00" min="0" max="999">
+        <input type="number" id="create-col-max" class="create-column-form__max-input" placeholder="00" min="0"
+          max="999">
       </div>
     </div>
     <button class="btn btn--primary" id="btn-confirm-create-column" style="width: 100%;" disabled>Создать</button>
