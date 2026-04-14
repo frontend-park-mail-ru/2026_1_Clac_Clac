@@ -96,12 +96,11 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
 
     document
       .getElementById("btn-change-photo")
-      ?.addEventListener("click", () => {
-        modalOverlay.classList.remove("hidden");
-        modalPhoto.classList.remove("hidden");
+      ?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        modalPhoto.style.display = "block";
       });
 
-    // Color picker logic in modal
     const modalColorSquares = modalPhoto.querySelectorAll(".color-square");
     modalColorSquares.forEach((square) => {
       square.addEventListener("click", () => {
@@ -109,19 +108,8 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
         square.classList.add("active");
         selectedColor = square.getAttribute("data-color");
 
-        // If no file selected, update SVG background color
         if (!selectedFile) {
-          const svg = modalAvatarPreview.querySelector("svg");
-          if (svg) {
-            modalAvatarPreview.style.backgroundColor =
-              getComputedStyle(square).backgroundColor;
-          } else {
-            // If there's an image but we want to go back to color?
-            // The UI doesn't explicitly show "remove photo" inside this modal,
-            // but we can at least show the color behind the SVG.
-            modalAvatarPreview.style.backgroundColor =
-              getComputedStyle(square).backgroundColor;
-          }
+          modalAvatarPreview.style.backgroundColor = selectedColor || "black";
         }
       });
     });
@@ -138,23 +126,15 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
           } catch (err) {
             console.error("Avatar upload error", err);
           }
-        } else if (selectedColor) {
-          // Here we would save the color if the API supported it.
-          // For now we just close the modal.
-          modalOverlay.classList.add("hidden");
-          modalPhoto.classList.add("hidden");
         } else {
-          modalOverlay.classList.add("hidden");
-          modalPhoto.classList.add("hidden");
+          modalPhoto.style.display = "none";
         }
       });
 
     document
       .getElementById("btn-cancel-photo")
       ?.addEventListener("click", () => {
-        modalOverlay.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
-        // Reset state
+        modalPhoto.style.display = "none";
         selectedFile = null;
         selectedColor = null;
       });
@@ -170,7 +150,7 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       btn.addEventListener("click", () => {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
+        modalPhoto.style.display = "none";
       });
     });
 
@@ -178,7 +158,16 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       if (e.target === modalOverlay) {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (
+        modalPhoto.style.display === "block" &&
+        !modalPhoto.contains(e.target as Node) &&
+        e.target !== document.getElementById("btn-change-photo")
+      ) {
+        modalPhoto.style.display = "none";
       }
     });
 

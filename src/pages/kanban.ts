@@ -70,14 +70,13 @@ export const renderKanban = async (
       if (!Array.isArray(fetchedSections)) fetchedSections = [];
 
       const colors = [
-        "white",
-        "#f87171",
-        "#fb923c",
-        "#60a5fa",
-        "#f43f5e",
-        "#4ade80",
-        "#a5b4fc",
-        "#f9a8d4",
+        "#515151",
+        "#ff607c",
+        "#ffb55d",
+        "#35aaff",
+        "#66caa0",
+        "#aabbf5",
+        "#ffc2ee",
       ];
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
@@ -180,14 +179,13 @@ export const renderKanban = async (
 
   const renderManageList = () => {
     const colorMap: Record<string, string> = {
-      white: "#2a2a2c",
-      grey: "#f06a77",
-      red: "#f6b352",
-      orange: "#52a2f6",
-      blue: "#df706a",
-      green: "#78cfa0",
-      purple: "#a8b8f0",
-      pink: "#f0c3e1",
+      grey: "var(--color-picker-grey)",
+      red: "var(--color-picker-red)",
+      orange: "var(--color-picker-orange)",
+      blue: "var(--color-picker-blue)",
+      green: "var(--color-picker-green)",
+      purple: "var(--color-picker-purple)",
+      pink: "var(--color-picker-pink)",
     };
     manageList.innerHTML = sections
       .map(
