@@ -179,10 +179,20 @@ export const renderKanban = async (
   };
 
   const renderManageList = () => {
+    const colorMap: Record<string, string> = {
+      white: "#2a2a2c",
+      grey: "#f06a77",
+      red: "#f6b352",
+      orange: "#52a2f6",
+      blue: "#df706a",
+      green: "#78cfa0",
+      purple: "#a8b8f0",
+      pink: "#f0c3e1",
+    };
     manageList.innerHTML = sections
       .map(
         (s: any) =>
-          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
+          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${colorMap[s.color] || s.color}; width: 24px; height: 24px; border-radius: 6px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
       )
       .join("");
     let draggedItem: HTMLElement | null = null;
@@ -253,16 +263,6 @@ export const renderKanban = async (
           e.stopPropagation();
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
-          const colorMap: Record<string, string> = {
-            white: "#2a2a2c",
-            grey: "#f06a77",
-            red: "#f6b352",
-            orange: "#52a2f6",
-            blue: "#df706a",
-            green: "#78cfa0",
-            purple: "#a8b8f0",
-            pink: "#f0c3e1",
-          };
           const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
