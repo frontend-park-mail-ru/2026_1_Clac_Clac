@@ -254,20 +254,21 @@ export const renderKanban = async (
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
           const colorMap: Record<string, string> = {
-            white: "#ffffff",
-            grey: "#9ca3af",
-            red: "#f87171",
-            orange: "#fb923c",
-            blue: "#60a5fa",
-            green: "#4ade80",
-            purple: "#a5b4fc",
-            pink: "#f9a8d4",
+            white: "#2a2a2c",
+            grey: "#f06a77",
+            red: "#f6b352",
+            orange: "#52a2f6",
+            blue: "#df706a",
+            green: "#78cfa0",
+            purple: "#a8b8f0",
+            pink: "#f0c3e1",
           };
           const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
           picker.style.cssText = `position: absolute; z-index: 10001;`;
-          picker.innerHTML = `<div class="color-picker-bubble__title">Цвета</div><div class="color-picker-bubble__grid">${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}"></div>`).join("")}</div><div class="color-picker-bubble__footer"><button class="color-picker-bubble__btn color-picker-bubble__btn--cancel">Отмена</button><button class="color-picker-bubble__btn color-picker-bubble__btn--save">Сохранить</button></div>`;
+          picker.innerHTML = `<div class="color-picker-bubble__title">Цвета</div><div class="color-picker-bubble__grid">${palette.map((name) => `<div class="color-picker-bubble__dot ${section?.color === name ? "active" : ""}" data-color="${name}" style="background:${colorMap[name]}; cursor: pointer; border-radius: 6px; width: 24px; height: 24px; border: 2px solid transparent;"></div>`).join("")}</div><div class="color-picker-bubble__footer"><button class="color-picker-bubble__btn color-picker-bubble__btn--cancel" style="cursor: pointer;">Отмена</button><button class="color-picker-bubble__btn color-picker-bubble__btn--save" style="cursor: pointer;">Сохранить</button></div>`;
+
           const rect = trigger.getBoundingClientRect();
           picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
           picker.style.left = `${rect.left + window.scrollX - 100}px`;
@@ -279,8 +280,12 @@ export const renderKanban = async (
               dot.addEventListener("click", () => {
                 picker
                   .querySelectorAll(".color-picker-bubble__dot")
-                  .forEach((d) => d.classList.remove("active"));
+                  .forEach((d: any) => {
+                    d.classList.remove("active");
+                    d.style.borderColor = "transparent";
+                  });
                 dot.classList.add("active");
+                dot.style.borderColor = "white";
                 tempColor = dot.getAttribute("data-color") || "white";
               });
             });

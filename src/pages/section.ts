@@ -136,18 +136,18 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     });
 
   // Color picker logic (only local updates)
-  const colorDots = sectionNode.querySelectorAll(".color-dot");
-  colorDots.forEach((dot) => {
-    const dotColor = dot.getAttribute("data-color");
-    if (dotColor === selectedColor) {
-      dot.classList.add("active");
+  const colorSquares = sectionNode.querySelectorAll(".color-square");
+  colorSquares.forEach((square) => {
+    const squareColor = square.getAttribute("data-color");
+    if (squareColor === selectedColor) {
+      square.classList.add("active");
     }
 
-    dot.addEventListener("click", () => {
-      colorDots.forEach((d) => d.classList.remove("active"));
-      dot.classList.add("active");
-      if (dotColor) {
-        selectedColor = dotColor;
+    square.addEventListener("click", () => {
+      colorSquares.forEach((s) => s.classList.remove("active"));
+      square.classList.add("active");
+      if (squareColor) {
+        selectedColor = squareColor;
       }
     });
   });
@@ -200,7 +200,6 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
   };
   document.addEventListener("click", globalClickHandler);
 
-  // Close modals
   sectionNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.getElementById("modal-overlay-section")?.classList.add("hidden");
