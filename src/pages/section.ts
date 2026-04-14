@@ -3,7 +3,7 @@ import { boardsApi, kanbanApi } from "../api";
 import sectionTpl from "../templates/section.hbs?raw";
 import { navigateTo } from "../router";
 import { Toast } from "../utils/toast";
-import { renderKanban } from "./kanban";
+import { renderKanban, clearKanbanCache } from "./kanban";
 
 const template = Handlebars.compile(sectionTpl);
 
@@ -100,6 +100,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
       };
 
       await kanbanApi.updateSection(sectionId, payload);
+      clearKanbanCache();
       Toast.success("Секция сохранена");
       navigateTo(`/board?id=${boardId}`);
     } catch (err) {

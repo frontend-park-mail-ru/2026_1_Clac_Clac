@@ -19,6 +19,11 @@ export let cachedBoardName = "Без названия";
 export let cachedBoardUsers: BoardUser[] = [];
 export let cachedSections: any[] = [];
 
+export const clearKanbanCache = () => {
+  cachedBoardId = null;
+  cachedSections = [];
+};
+
 export const renderKanban = async (
   appDiv: HTMLElement,
   forceFetch = false,
@@ -589,6 +594,7 @@ export const renderKanban = async (
         description: "",
         link_executer: selectedAssigneeId || null,
       });
+      clearKanbanCache();
       closeModals();
       renderKanban(appDiv, true);
     } catch (e) {
