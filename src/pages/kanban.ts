@@ -6,6 +6,17 @@ import { Toast } from "../utils/toast";
 
 const template = Handlebars.compile(kanbanTpl);
 
+const colorMap: Record<string, string> = {
+  white: "var(--color-picker-white)",
+  grey: "var(--color-picker-grey)",
+  red: "var(--color-picker-red)",
+  orange: "var(--color-picker-orange)",
+  blue: "var(--color-picker-blue)",
+  green: "var(--color-picker-green)",
+  purple: "var(--color-picker-purple)",
+  pink: "var(--color-picker-pink)",
+};
+
 interface BoardUser {
   id: string;
   name: string;
@@ -71,18 +82,19 @@ export const renderKanban = async (
 
       const colors = [
         "white",
-        "#515151",
-        "#ff607c",
-        "#ffb55d",
-        "#35aaff",
-        "#66caa0",
-        "#aabbf5",
-        "#ffc2ee",
+        "grey",
+        "red",
+        "orange",
+        "blue",
+        "green",
+        "purple",
+        "pink",
       ];
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
           sec.id = sec.section_link || sec.id;
           sec.color = sec.color || colors[i % colors.length];
+          sec.renderColor = colorMap[sec.color] || sec.color;
           try {
             const tasksRes = (await kanbanApi.getTasks(sec.id)) as any;
             let tasksList =
@@ -179,16 +191,6 @@ export const renderKanban = async (
   };
 
   const renderManageList = () => {
-    const colorMap: Record<string, string> = {
-      white: "white",
-      grey: "var(--color-picker-grey)",
-      red: "var(--color-picker-red)",
-      orange: "var(--color-picker-orange)",
-      blue: "var(--color-picker-blue)",
-      green: "var(--color-picker-green)",
-      purple: "var(--color-picker-purple)",
-      pink: "var(--color-picker-pink)",
-    };
     manageList.innerHTML = sections
       .map(
         (s: any) =>
