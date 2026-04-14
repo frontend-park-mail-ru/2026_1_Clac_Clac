@@ -716,3 +716,68 @@ a {
   from { transform: translateX(120%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+.create-column-form {
+  &__label {
+    font-size: 0.95rem;
+    color: white;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  
+  &__colors {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  &__color-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s, border-color 0.2s;
+    
+    &.active {
+      border-color: white;
+      transform: scale(1.15);
+    }
+  }
+  
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  &__label-inline {
+    color: white;
+    font-size: 0.95rem;
+  }
+  
+  &__max-input {
+    width: 80px;
+    background: #1a1a1c;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    
+    &::placeholder {
+      color: #555;
+    }
+    
+    &:focus {
+      border-color: #444;
+    }
+  }
+  
+  &__input-wrap {
+    margin-bottom: 1.5rem;
+  }
+}

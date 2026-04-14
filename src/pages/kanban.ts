@@ -146,6 +146,8 @@ export const renderKanban = async (
   const modalCreateTask = document.getElementById("modal-create-task")!;
   const modalDeleteCard = document.getElementById("modal-delete-card")!;
   const modalDeleteSection = document.getElementById("modal-delete-section")!;
+  const modalCreateColumn = document.getElementById("modal-create-column")!;
+
   const deleteSectionModalName = document.getElementById(
     "delete-section-modal-name",
   )!;
@@ -154,11 +156,12 @@ export const renderKanban = async (
   )!;
 
   const closeModals = () => {
-    [modalManage, modalCreateTask, modalDeleteCard, modalDeleteSection].forEach(
-      (m) => m.classList.add("hidden"),
+    [modalManage, modalCreateTask, modalDeleteCard, modalDeleteSection, modalCreateColumn].forEach(
+      (m) => m?.classList.add("hidden"),
     );
     modalOverlay.classList.add("hidden");
   };
+
   const openDeleteSectionModal = (
     name: string,
     onConfirm: () => Promise<void>,
@@ -389,29 +392,80 @@ export const renderKanban = async (
       modalOverlay.classList.remove("hidden");
       modalManage.classList.remove("hidden");
     });
+
   document.getElementById("btn-close-manage")?.addEventListener("click", () => {
     renderKanban(appDiv);
   });
-  document
-    .getElementById("btn-add-column-modal")
-    ?.addEventListener("click", async () => {
-      try {
-        const res = (await kanbanApi.createSection({
-          board_link: boardId,
-          section_name: "Новая колонка",
-          max_tasks: 100,
-          is_mandatory: false,
-          color: "white",
-        })) as any;
-        const newSec = res.data || res;
-        newSec.id = newSec.section_link || newSec.id;
-        newSec.tasks = [];
-        cachedSections.push(newSec);
-        renderManageList();
-      } catch (e) {
-        Toast.error("Ошибка при создании колонки");
-      }
+
+  const createColNameInput = document.getElementById("create-col-name") as HTMLInputElement;
+  const createColMandatory = document.getElementById("create-col-mandatory") as HTMLInputElement;
+  const createColMax = document.getElementById("create-col-max") as HTMLInputElement;
+  const btnConfirmCreateColumn = document.getElementById("btn-confirm-create-column") as HTMLButtonElement;
+  let selectedColColor = "white";
+
+  const openCreateColumnModal = () => {
+    closeModals();
+    modalOverlay.classList.remove("hidden");
+    modalCreateColumn.classList.remove("hidden");
+
+    if (createColNameInput) createColNameInput.value = "";
+    if (createColMandatory) createColMandatory.checked = false;
+    if (createColMax) createColMax.value = "";
+    if (btnConfirmCreateColumn) btnConfirmCreateColumn.disabled = true;
+
+    selectedColColor = "white";
+    document.querySelectorAll(".create-column-form__color-btn").forEach(btn => {
+      btn.classList.remove("active");
+      if (btn.getAttribute("data-color") === "white") btn.classList.add("active");
     });
+    setTimeout(() => {
+      if (createColNameInput) createColNameInput.focus();
+    }, 100);
+  };
+
+  document.getElementById("btn-add-column-modal")?.addEventListener("click", openCreateColumnModal);
+  document.getElementById("btn-add-column")?.addEventListener("click", openCreateColumnModal);
+
+  createColNameInput?.addEventListener("input", () => {
+    btnConfirmCreateColumn.disabled = !createColNameInput.value.trim();
+  });
+
+  document.querySelectorAll(".create-column-form__color-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".create-column-form__color-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedColColor = btn.getAttribute("data-color") || "white";
+    });
+  });
+
+  btnConfirmCreateColumn?.addEventListener("click", async () => {
+    const name = createColNameInput.value.trim();
+    if (!name) return;
+    const maxTasks = parseInt(createColMax.value);
+
+    try {
+      btnConfirmCreateColumn.disabled = true;
+      const res = (await kanbanApi.createSection({
+        board_link: boardId,
+        section_name: name,
+        max_tasks: isNaN(maxTasks) || maxTasks <= 0 ? 100 : maxTasks,
+        is_mandatory: createColMandatory.checked,
+        color: selectedColColor,
+      })) as any;
+
+      const newSec = res.data || res;
+      newSec.id = newSec.section_link || newSec.id;
+      newSec.tasks = [];
+      cachedSections.push(newSec);
+
+      closeModals();
+      renderKanban(appDiv);
+    } catch (e) {
+      Toast.error("Ошибка при создании колонки");
+      btnConfirmCreateColumn.disabled = false;
+    }
+  });
+
 
   document
     .getElementById("nav-boards")
@@ -426,9 +480,11 @@ export const renderKanban = async (
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   });
+
   document
     .querySelectorAll(".modal__close-btn")
     .forEach((btn) => btn.addEventListener("click", closeModals));
+
   modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) closeModals();
   });
@@ -568,20 +624,6 @@ export const renderKanban = async (
       });
     });
   });
-
-  const addColumnBtn = document.getElementById("btn-add-column");
-  if (addColumnBtn) {
-    addColumnBtn.addEventListener("click", async () => {
-      await kanbanApi.createSection({
-        board_link: boardId,
-        section_name: "Новая колонка",
-        max_tasks: 100,
-        is_mandatory: false,
-        color: "white",
-      });
-      renderKanban(appDiv, true);
-    });
-  }
 
   document.querySelectorAll(".kanban-card").forEach((card) => {
     card.addEventListener("click", (e) => {
