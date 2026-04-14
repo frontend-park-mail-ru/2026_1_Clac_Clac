@@ -107,10 +107,12 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       square.addEventListener("click", () => {
         modalColorSquares.forEach((s) => s.classList.remove("active"));
         square.classList.add("active");
-        selectedColor = square.getAttribute("data-color");
+
+        const computedStyle = window.getComputedStyle(square);
+        selectedColor = computedStyle.backgroundColor;
 
         if (!selectedFile) {
-          modalAvatarPreview.style.backgroundColor = selectedColor || "black";
+          modalAvatarPreview.style.backgroundColor = selectedColor;
         }
       });
     });

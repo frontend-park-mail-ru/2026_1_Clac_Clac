@@ -13,6 +13,7 @@
     --border-hover: #3b3b3d;
     --border-error: #ff5c5c;
 
+    --color-picker-white: #ffffff;
     --color-picker-grey: #515151;
     --color-picker-red: #ff607c;
     --color-picker-orange: #ffb55d;
@@ -579,20 +580,19 @@ a {
     }
 
     &.white {
-        background-color: #2a2a2c;
-        border: 1px solid #444;
+        background-color: var(--color-picker-white);
     }
     &.grey {
-        background-color: var(--color-picker-red);
+        background-color: var(--color-picker-grey);
     }
     &.red {
-        background-color: var(--color-picker-orange);
+        background-color: var(--color-picker-red);
     }
     &.orange {
-        background-color: var(--color-picker-blue);
+        background-color: var(--color-picker-orange);
     }
     &.blue {
-        background-color: #df706a;
+        background-color: var(--color-picker-blue);
     }
     &.green {
         background-color: var(--color-picker-green);
