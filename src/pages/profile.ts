@@ -74,82 +74,23 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
     const avatarUpload = document.getElementById(
       "avatar-upload",
     ) as HTMLInputElement;
-    const modalAvatarPreview = document.getElementById("modal-avatar-preview")!;
-    let selectedFile: File | null = null;
-    let selectedColor: string | null = null;
 
-    avatarUpload?.addEventListener("change", (e) => {
+    avatarUpload?.addEventListener("change", async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          modalAvatarPreview.innerHTML = `<img src="${event.target?.result}" alt="Preview">`;
-        };
-        reader.readAsDataURL(file);
+        const fd = new FormData();
+        fd.append("avatar", file);
+        try {
+          await profileApi.updateAvatar(fd);
+          renderProfile(appDiv);
+        } catch (err) {
+          console.error("Avatar upload error", err);
+        }
       }
     });
 
     const modalOverlay = document.getElementById("modal-overlay")!;
     const modalDelete = document.getElementById("modal-delete-avatar")!;
-    const modalPhoto = document.getElementById("modal-photo")!;
-
-    document
-      .getElementById("btn-change-photo")
-      ?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        modalOverlay.classList.remove("hidden");
-        modalPhoto.classList.remove("hidden");
-      });
-
-    document
-      .getElementById("btn-modal-delete-avatar")
-      ?.addEventListener("click", () => {
-        modalPhoto.classList.add("hidden");
-        modalDelete.classList.remove("hidden");
-      });
-
-    const modalColorSquares = modalPhoto.querySelectorAll(".color-square");
-    modalColorSquares.forEach((square) => {
-      square.addEventListener("click", () => {
-        modalColorSquares.forEach((s) => s.classList.remove("active"));
-        square.classList.add("active");
-
-        const computedStyle = window.getComputedStyle(square);
-        selectedColor = computedStyle.backgroundColor;
-
-        if (!selectedFile) {
-          modalAvatarPreview.style.backgroundColor = selectedColor;
-        }
-      });
-    });
-
-    document
-      .getElementById("btn-save-photo")
-      ?.addEventListener("click", async () => {
-        if (selectedFile) {
-          const fd = new FormData();
-          fd.append("avatar", selectedFile);
-          try {
-            await profileApi.updateAvatar(fd);
-            renderProfile(appDiv);
-          } catch (err) {
-            console.error("Avatar upload error", err);
-          }
-        } else {
-          modalOverlay.classList.add("hidden");
-          modalPhoto.classList.add("hidden");
-        }
-      });
-
-    document
-      .getElementById("btn-cancel-photo")
-      ?.addEventListener("click", () => {
-        modalOverlay.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
-        selectedFile = null;
-        selectedColor = null;
-      });
 
     document
       .getElementById("btn-delete-avatar")
@@ -162,7 +103,6 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       btn.addEventListener("click", () => {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
       });
     });
 
@@ -170,18 +110,6 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
       if (e.target === modalOverlay) {
         modalOverlay.classList.add("hidden");
         modalDelete.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
-      }
-    });
-
-    document.addEventListener("click", (e) => {
-      if (
-        !modalPhoto.classList.contains("hidden") &&
-        !modalPhoto.contains(e.target as Node) &&
-        e.target !== document.getElementById("btn-change-photo")
-      ) {
-        modalOverlay.classList.add("hidden");
-        modalPhoto.classList.add("hidden");
       }
     });
 
