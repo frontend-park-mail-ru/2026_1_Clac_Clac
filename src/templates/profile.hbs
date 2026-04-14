@@ -65,24 +65,23 @@
 
   <div id="modal-photo" class="modal hidden profile-modal">
     <div class="profile-modal__content">
-      <div class="profile-modal__left">
-        <div class="profile-modal__avatar-preview" id="modal-avatar-preview">
-          {{#if user.avatar_url}}
-          <img src="{{user.avatar_url}}" alt="Avatar">
-          {{else}}
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          {{/if}}
-        </div>
+      <div class="profile-modal__header" id="modal-avatar-preview">
+        {{#if user.avatar_url}}
+        <img src="{{user.avatar_url}}" alt="Avatar">
+        {{else}}
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        {{/if}}
       </div>
-      <div class="profile-modal__right">
+      <div class="profile-modal__body">
         <div class="profile-modal__colors-title">Цвета</div>
         {{> colorPicker}}
         <div class="profile-modal__upload-box">
-          <label for="avatar-upload" class="profile-modal__upload-link">Загрузить фото</label>
+          <label for="avatar-upload" class="profile-modal__action-btn profile-modal__action-btn--upload">Загрузить фото</label>
           <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+          <button type="button" class="profile-modal__action-btn profile-modal__action-btn--delete" id="btn-modal-delete-avatar">Удалить фото</button>
         </div>
       </div>
     </div>
@@ -90,5 +89,4 @@
       <button class="profile-modal__btn profile-modal__btn--cancel" id="btn-cancel-photo">Отмена</button>
       <button class="profile-modal__btn profile-modal__btn--save" id="btn-save-photo">Сохранить</button>
     </div>
-  </div>
-</div>
+  </div></div>
