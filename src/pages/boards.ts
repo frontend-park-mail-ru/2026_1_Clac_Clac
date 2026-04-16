@@ -127,6 +127,17 @@ const attachEventListeners = (
   let currentBoardId: string | null = null;
   let currentBoardName: string | null = null;
 
+  const checkEditChanges = () => {
+    const editBoardNameInputEl = appDiv.querySelector<HTMLInputElement>("#edit-board-name");
+    const btnConfirmEditEl = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-edit");
+    const editImgInputEl = appDiv.querySelector<HTMLInputElement>("#edit-board-image");
+    if (!btnConfirmEditEl) return;
+    const nameChanged = editBoardNameInputEl?.value.trim() !== currentBoardName;
+    const imageSelected = !!editImgInputEl?.files?.length;
+    const nameEmpty = !editBoardNameInputEl?.value.trim();
+    btnConfirmEditEl.disabled = nameEmpty || (!nameChanged && !imageSelected);
+  };
+
   document
     .getElementById("nav-profile")
     ?.addEventListener("click", () => navigateTo("/profile"), {
@@ -192,6 +203,7 @@ const attachEventListeners = (
     if (file && editImgName) {
       editImgName.textContent = file.name;
     }
+    checkEditChanges();
   });
 
   const openCreateModal = () => {
@@ -321,7 +333,7 @@ const attachEventListeners = (
       }
 
       if (btnConfirmEdit) {
-        btnConfirmEdit.disabled = false;
+        btnConfirmEdit.disabled = true;
       }
 
       modalOverlay?.classList.remove("hidden");
@@ -329,18 +341,7 @@ const attachEventListeners = (
     });
   });
 
-  editBoardNameInput?.addEventListener("input", () => {
-    const val = editBoardNameInput.value.trim();
-    if (val) {
-      if (btnConfirmEdit) {
-        btnConfirmEdit.disabled = false;
-      }
-    } else {
-      if (btnConfirmEdit) {
-        btnConfirmEdit.disabled = true;
-      }
-    }
-  });
+  editBoardNameInput?.addEventListener("input", checkEditChanges);
 
   btnConfirmEdit?.addEventListener("click", async () => {
     const name = editBoardNameInput?.value.trim();
