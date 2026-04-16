@@ -996,6 +996,17 @@
             color: var(--text-error);
             text-decoration: underline;
         }
+
+        &--disabled {
+            color: #555;
+            cursor: not-allowed;
+            pointer-events: none;
+
+            &:hover {
+                color: #555;
+                text-decoration: none;
+            }
+        }
     }
     &__input-label {
         color: #ccc;

@@ -92,12 +92,14 @@ export const renderProfile = async (appDiv: HTMLElement): Promise<void> => {
     const modalOverlay = document.getElementById("modal-overlay")!;
     const modalDelete = document.getElementById("modal-delete-avatar")!;
 
-    document
-      .getElementById("btn-delete-avatar")
-      ?.addEventListener("click", () => {
-        modalOverlay.classList.remove("hidden");
-        modalDelete.classList.remove("hidden");
-      });
+    if (user.avatar_url) {
+      document
+        .getElementById("btn-delete-avatar")
+        ?.addEventListener("click", () => {
+          modalOverlay.classList.remove("hidden");
+          modalDelete.classList.remove("hidden");
+        });
+    }
 
     document.querySelectorAll(".modal__close-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
