@@ -164,22 +164,23 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
     document.body.appendChild(menu);
 
     menu.querySelector("#ctx-delete-section")?.addEventListener("click", () => {
-      const modalOverlay = document.getElementById("modal-overlay-section")!;
-      const modalDelete = document.getElementById("modal-delete-section")!;
+      const modalOverlay = sectionNode.querySelector("#modal-overlay-section") as HTMLElement;
+      const modalDelete = sectionNode.querySelector("#modal-delete-section") as HTMLElement;
       const nameInput = sectionNode.querySelector(
         "#section-name-input",
       ) as HTMLInputElement;
-      document.getElementById("delete-section-name")!.textContent =
+      (sectionNode.querySelector("#delete-section-name") as HTMLElement).textContent =
         nameInput.value;
 
       modalOverlay.classList.remove("hidden");
       modalDelete.classList.remove("hidden");
 
       (
-        document.getElementById("btn-confirm-delete-section") as HTMLElement
+        sectionNode.querySelector("#btn-confirm-delete-section") as HTMLElement
       ).onclick = async () => {
         try {
           await kanbanApi.deleteSection(sectionId);
+          clearKanbanCache();
           navigateTo(`/board?id=${boardId}`);
         } catch (err) {
           Toast.error("Ошибка при удалении");
@@ -196,8 +197,8 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
 
   sectionNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
-      document.getElementById("modal-overlay-section")?.classList.add("hidden");
-      document.getElementById("modal-delete-section")?.classList.add("hidden");
+      sectionNode.querySelector("#modal-overlay-section")?.classList.add("hidden");
+      sectionNode.querySelector("#modal-delete-section")?.classList.add("hidden");
     }),
   );
 };
