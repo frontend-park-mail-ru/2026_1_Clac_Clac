@@ -389,7 +389,7 @@ a {
 
   &__footer-btn {
     width: 100%;
-    background: #555;
+    background: var(--primary);
     color: white;
     padding: 1rem;
     border-radius: 12px;
@@ -397,7 +397,7 @@ a {
     font-size: 1.1rem;
     cursor: pointer;
     transition: background 0.2s;
-    &:hover { background: #666; }
+    &:hover { background: var(--primary-hover); }
   }
 }
 
