@@ -565,7 +565,7 @@ export const renderKanban = async (
                 cachedSections = cachedSections.filter(
                   (s) => s.id !== sectionId,
                 );
-                renderKanban(appDiv);
+                renderKanban(appDiv, true);
               } catch (e) {
                 Toast.error("Ошибка при удалении колонки");
               }
