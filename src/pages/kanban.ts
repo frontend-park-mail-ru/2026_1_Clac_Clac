@@ -95,7 +95,8 @@ export const renderKanban = async (
               tasksRes?.data?.cards ||
               tasksRes?.cards ||
               tasksRes?.data ||
-              tasksRes || [];
+              tasksRes ||
+              [];
             sec.tasks = tasksList.map((t: any) => {
               const exUser = cachedBoardUsers.find(
                 (u) => u.id === (t.link_executer || t.executer_link),
@@ -107,7 +108,10 @@ export const renderKanban = async (
 
               if (dl) {
                 const dlDate = new Date(dl);
-                const dayMonth = dlDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                const dayMonth = dlDate.toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                });
                 formattedDate = `${dayMonth}, ${dlDate.getFullYear()}`;
                 formattedTime = dlDate.toLocaleTimeString([], {
                   hour: "2-digit",
@@ -176,9 +180,13 @@ export const renderKanban = async (
   )!;
 
   const closeModals = () => {
-    [modalManage, modalCreateTask, modalDeleteCard, modalDeleteSection, modalCreateColumn].forEach(
-      (m) => m?.classList.add("hidden"),
-    );
+    [
+      modalManage,
+      modalCreateTask,
+      modalDeleteCard,
+      modalDeleteSection,
+      modalCreateColumn,
+    ].forEach((m) => m?.classList.add("hidden"));
     modalOverlay.classList.add("hidden");
   };
 
@@ -336,14 +344,20 @@ export const renderKanban = async (
 
                 const item = trigger.closest(".manage-columns__item");
                 if (item) {
-                  const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
+                  const dot = item.querySelector(
+                    ".manage-columns__dot",
+                  ) as HTMLElement;
                   if (dot) dot.style.background = colorMap[tempColor];
                 }
 
-                const boardColumnTitle = document.querySelector(`.kanban__column[data-id="${id}"] .kanban__column-title`) as HTMLElement;
+                const boardColumnTitle = document.querySelector(
+                  `.kanban__column[data-id="${id}"] .kanban__column-title`,
+                ) as HTMLElement;
                 if (boardColumnTitle) {
                   boardColumnTitle.style.color = colorMap[tempColor];
-                  const boardDot = boardColumnTitle.querySelector(".kanban__col-dot") as HTMLElement;
+                  const boardDot = boardColumnTitle.querySelector(
+                    ".kanban__col-dot",
+                  ) as HTMLElement;
                   if (boardDot) boardDot.style.background = colorMap[tempColor];
                 }
 
@@ -359,12 +373,16 @@ export const renderKanban = async (
                   section.colorHex = oldColorHex;
                   trigger.style.background = oldColorHex;
                   if (item) {
-                    const dot = item.querySelector(".manage-columns__dot") as HTMLElement;
+                    const dot = item.querySelector(
+                      ".manage-columns__dot",
+                    ) as HTMLElement;
                     if (dot) dot.style.background = oldColorHex;
                   }
                   if (boardColumnTitle) {
                     boardColumnTitle.style.color = oldColorHex;
-                    const boardDot = boardColumnTitle.querySelector(".kanban__col-dot") as HTMLElement;
+                    const boardDot = boardColumnTitle.querySelector(
+                      ".kanban__col-dot",
+                    ) as HTMLElement;
                     if (boardDot) boardDot.style.background = oldColorHex;
                   }
                   Toast.error("Ошибка сохранения цвета");
@@ -402,9 +420,7 @@ export const renderKanban = async (
             openDeleteSectionModal(name || "", async () => {
               try {
                 await kanbanApi.deleteSection(id);
-                cachedSections = cachedSections.filter(
-                  (s) => s.id !== id,
-                );
+                cachedSections = cachedSections.filter((s) => s.id !== id);
                 renderKanban(appDiv, true);
               } catch (e) {
                 Toast.error("Ошибка при удалении колонки");
@@ -428,10 +444,18 @@ export const renderKanban = async (
     renderKanban(appDiv);
   });
 
-  const createColNameInput = document.getElementById("create-col-name") as HTMLInputElement;
-  const createColMandatory = document.getElementById("create-col-mandatory") as HTMLInputElement;
-  const createColMax = document.getElementById("create-col-max") as HTMLInputElement;
-  const btnConfirmCreateColumn = document.getElementById("btn-confirm-create-column") as HTMLButtonElement;
+  const createColNameInput = document.getElementById(
+    "create-col-name",
+  ) as HTMLInputElement;
+  const createColMandatory = document.getElementById(
+    "create-col-mandatory",
+  ) as HTMLInputElement;
+  const createColMax = document.getElementById(
+    "create-col-max",
+  ) as HTMLInputElement;
+  const btnConfirmCreateColumn = document.getElementById(
+    "btn-confirm-create-column",
+  ) as HTMLButtonElement;
   let selectedColColor = "white";
 
   const openCreateColumnModal = () => {
@@ -445,17 +469,24 @@ export const renderKanban = async (
     if (btnConfirmCreateColumn) btnConfirmCreateColumn.disabled = true;
 
     selectedColColor = "white";
-    document.querySelectorAll(".create-column-form__color-btn").forEach(btn => {
-      btn.classList.remove("active");
-      if (btn.getAttribute("data-color") === "white") btn.classList.add("active");
-    });
+    document
+      .querySelectorAll(".create-column-form__color-btn")
+      .forEach((btn) => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-color") === "white")
+          btn.classList.add("active");
+      });
     setTimeout(() => {
       if (createColNameInput) createColNameInput.focus();
     }, 100);
   };
 
-  document.getElementById("btn-add-column-modal")?.addEventListener("click", openCreateColumnModal);
-  document.getElementById("btn-add-column")?.addEventListener("click", openCreateColumnModal);
+  document
+    .getElementById("btn-add-column-modal")
+    ?.addEventListener("click", openCreateColumnModal);
+  document
+    .getElementById("btn-add-column")
+    ?.addEventListener("click", openCreateColumnModal);
 
   createColNameInput?.addEventListener("input", () => {
     btnConfirmCreateColumn.disabled = !createColNameInput.value.trim();
@@ -463,7 +494,9 @@ export const renderKanban = async (
 
   document.querySelectorAll(".create-column-form__color-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".create-column-form__color-btn").forEach(b => b.classList.remove("active"));
+      document
+        .querySelectorAll(".create-column-form__color-btn")
+        .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedColColor = btn.getAttribute("data-color") || "white";
     });
@@ -499,7 +532,6 @@ export const renderKanban = async (
     }
   });
 
-
   document
     .getElementById("nav-boards")
     ?.addEventListener("click", () => navigateTo("/boards"));
@@ -509,7 +541,7 @@ export const renderKanban = async (
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     try {
       await authApi.logout();
-    } catch { }
+    } catch {}
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   });
@@ -791,7 +823,7 @@ export const renderKanban = async (
           });
         } catch (err: any) {
           if (err.data?.message === "can not skip mandatory section")
-            Toast.error("НЕЛЬЗЯ ПРОПУСКАТЬ ОБЯЗАТЕЛЬНУЮ СЕКЦИЮ");
+            Toast.error("Нельзя пропускать обязательную секцию");
           else Toast.error("Ошибка при переносе");
           if (srcSec && tgtSec && movedTask) {
             const idx = tgtSec.tasks.findIndex(
