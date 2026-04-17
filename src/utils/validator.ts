@@ -29,7 +29,9 @@ export class FormValidator {
 
     for (const [fieldId, rules] of Object.entries(this.schema)) {
       const field = this.getField(fieldId);
-      if (!field) continue;
+      if (!field) {
+        continue;
+      }
 
       const error = this.checkFieldRules(field.value.trim(), rules);
       this.onError(fieldId, error);
@@ -58,7 +60,9 @@ export class FormValidator {
   public attachLiveValidation(): void {
     for (const [fieldId, rules] of Object.entries(this.schema)) {
       const field = this.getField(fieldId);
-      if (!field) continue;
+      if (!field) {
+        continue;
+      }
 
       field.addEventListener('input', (e) => {
         const target = e.target as HTMLInputElement | HTMLTextAreaElement;
@@ -77,7 +81,9 @@ export class FormValidator {
   private isFormValidPassively(): boolean {
     for (const [fieldId, rules] of Object.entries(this.schema)) {
       const field = this.getField(fieldId);
-      if (!field) continue;
+      if (!field) {
+        continue;
+      }
 
       if (this.checkFieldRules(field.value.trim(), rules) !== null) {
         return false;

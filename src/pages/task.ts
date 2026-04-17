@@ -221,7 +221,9 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     const existingMenu = document.querySelector(".context-menu");
-    if (existingMenu) existingMenu.remove();
+    if (existingMenu) {
+      existingMenu.remove();
+    }
 
     const menu = document.createElement("div");
     menu.className = "context-menu";
@@ -234,18 +236,18 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     document.body.appendChild(menu);
 
     menu.querySelector("#ctx-delete-task")?.addEventListener("click", () => {
-      const modalOverlay = document.getElementById("modal-overlay")!;
-      const modalDelete = document.getElementById("modal-delete-task")!;
+      const modalOverlay = taskNode.querySelector("#modal-overlay") as HTMLElement;
+      const modalDelete = taskNode.querySelector("#modal-delete-task") as HTMLElement;
       const titleInput = taskNode.querySelector(
         "#task-title-input",
       ) as HTMLInputElement;
-      document.getElementById("delete-task-name")!.textContent =
+      (taskNode.querySelector("#delete-task-name") as HTMLElement).textContent =
         titleInput.value;
 
       modalOverlay.classList.remove("hidden");
       modalDelete.classList.remove("hidden");
 
-      document.getElementById("btn-confirm-delete-task")!.onclick =
+      (taskNode.querySelector("#btn-confirm-delete-task") as HTMLElement).onclick =
         async () => {
           try {
             await kanbanApi.deleteTask(taskId);
@@ -283,8 +285,8 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
 
   taskNode.querySelectorAll(".modal__close-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
-      document.getElementById("modal-overlay")?.classList.add("hidden");
-      document.getElementById("modal-delete-task")?.classList.add("hidden");
+      taskNode.querySelector("#modal-overlay")?.classList.add("hidden");
+      taskNode.querySelector("#modal-delete-task")?.classList.add("hidden");
     }),
   );
 };

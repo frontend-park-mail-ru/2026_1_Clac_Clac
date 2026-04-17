@@ -21,7 +21,20 @@ export let cachedSections: any[] = [];
 
 export const clearKanbanCache = () => {
   cachedBoardId = null;
+  cachedBoardName = "Без названия";
+  cachedBoardUsers = [];
   cachedSections = [];
+};
+
+const colorMap: Record<string, string> = {
+  white: "#ffffff",
+  grey: "#9ca3af",
+  red: "#f87171",
+  orange: "#fb923c",
+  blue: "#60a5fa",
+  green: "#4ade80",
+  purple: "#a5b4fc",
+  pink: "#f9a8d4",
 };
 
 export const renderKanban = async (
@@ -30,12 +43,16 @@ export const renderKanban = async (
 ): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const boardId = urlParams.get("id") || urlParams.get("boardId");
-  if (!boardId || boardId === "null") return navigateTo("/boards");
+  if (!boardId || boardId === "null") {
+    return navigateTo("/boards");
+  }
 
   if (boardId !== cachedBoardId || forceFetch || cachedSections.length === 0) {
     try {
       const boardRes = (await boardsApi.getBoard(boardId)) as any;
-      if (boardRes?.data?.name) cachedBoardName = boardRes.data.name;
+      if (boardRes?.data?.name) {
+        cachedBoardName = boardRes.data.name;
+      }
 
       const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
       const rawUsers = Array.isArray(usersRes?.data)
@@ -46,7 +63,9 @@ export const renderKanban = async (
 
       const userPromises = rawUsers.map(async (u: any) => {
         const link = u.user_link || u.id || u;
-        if (profileCache.has(link)) return profileCache.get(link)!;
+        if (profileCache.has(link)) {
+          return profileCache.get(link)!;
+        }
         try {
           const pRes = (await profileApi.getProfileByLink(link)) as any;
           const pData = pRes?.data || pRes;
@@ -67,22 +86,17 @@ export const renderKanban = async (
       const res = (await kanbanApi.getSections(boardId)) as any;
       let fetchedSections =
         res.data?.sections || res.sections || res.data || res || [];
-      if (!Array.isArray(fetchedSections)) fetchedSections = [];
+      if (!Array.isArray(fetchedSections)) {
+        fetchedSections = [];
+      }
 
-      const colors = [
-        "white",
-        "#f87171",
-        "#fb923c",
-        "#60a5fa",
-        "#f43f5e",
-        "#4ade80",
-        "#a5b4fc",
-        "#f9a8d4",
-      ];
+      const colors = Object.keys(colorMap);
       const sectionPromises = fetchedSections.map(
         async (sec: any, i: number) => {
           sec.id = sec.section_link || sec.id;
           sec.color = sec.color || colors[i % colors.length];
+          sec.colorHex = colorMap[sec.color] || sec.color;
+
           try {
             const tasksRes = (await kanbanApi.getTasks(sec.id)) as any;
             let tasksList =
@@ -96,16 +110,28 @@ export const renderKanban = async (
                 (u) => u.id === (t.link_executer || t.executer_link),
               );
               const dl = t.dead_line || t.data_dead_line;
+
+              let formattedDate = null;
+              let formattedTime = null;
+
+              if (dl) {
+                const dlDate = new Date(dl);
+                const dayMonth = dlDate.toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                });
+                formattedDate = `${dayMonth}, ${dlDate.getFullYear()}`;
+                formattedTime = dlDate.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+              }
+
               return {
                 id: t.card_link || t.link_card || t.id,
                 title: t.title || "Без названия",
-                due_date: dl ? new Date(dl).toLocaleDateString() : null,
-                time: dl
-                  ? new Date(dl).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : null,
+                due_date: formattedDate,
+                time: formattedTime,
                 executor: exUser
                   ? exUser.name
                   : t.executer_name || t.name_executer || null,
@@ -120,7 +146,9 @@ export const renderKanban = async (
       cachedSections = await Promise.all(sectionPromises);
       cachedBoardId = boardId;
     } catch (err) {
-      if (forceFetch || boardId !== cachedBoardId) return navigateTo("/boards");
+      if (forceFetch || boardId !== cachedBoardId) {
+        return navigateTo("/boards");
+      }
     }
   }
 
@@ -129,12 +157,16 @@ export const renderKanban = async (
   const scrollMap = new Map<string, number>();
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
-    if (id) scrollMap.set(id, el.scrollTop);
+    if (id) {
+      scrollMap.set(id, el.scrollTop);
+    }
   });
   appDiv.innerHTML = template({ board_name: boardName, sections });
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
-    if (id && scrollMap.has(id)) el.scrollTop = scrollMap.get(id)!;
+    if (id && scrollMap.has(id)) {
+      el.scrollTop = scrollMap.get(id)!;
+    }
   });
 
   const btnNewTask = document.getElementById(
@@ -152,6 +184,8 @@ export const renderKanban = async (
   const modalCreateTask = document.getElementById("modal-create-task")!;
   const modalDeleteCard = document.getElementById("modal-delete-card")!;
   const modalDeleteSection = document.getElementById("modal-delete-section")!;
+  const modalCreateColumn = document.getElementById("modal-create-column")!;
+
   const deleteSectionModalName = document.getElementById(
     "delete-section-modal-name",
   )!;
@@ -160,11 +194,16 @@ export const renderKanban = async (
   )!;
 
   const closeModals = () => {
-    [modalManage, modalCreateTask, modalDeleteCard, modalDeleteSection].forEach(
-      (m) => m.classList.add("hidden"),
-    );
+    [
+      modalManage,
+      modalCreateTask,
+      modalDeleteCard,
+      modalDeleteSection,
+      modalCreateColumn,
+    ].forEach((m) => m?.classList.add("hidden"));
     modalOverlay.classList.add("hidden");
   };
+
   const openDeleteSectionModal = (
     name: string,
     onConfirm: () => Promise<void>,
@@ -182,9 +221,32 @@ export const renderKanban = async (
     manageList.innerHTML = sections
       .map(
         (s: any) =>
-          `<div class="manage-columns__item" data-id="${s.id}" draggable="true"><div class="manage-columns__color-trigger" style="background: ${s.color}; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;" data-id="${s.id}"></div><input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки"><div class="manage-columns__actions"><div class="manage-columns__drag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="15" x2="16" y2="15"></line></svg></div></div></div>`,
+          `<div class="manage-columns__item" data-id="${s.id}" draggable="true">
+            <div class="manage-columns__left">
+              <div class="manage-columns__dot" style="background: ${s.colorHex};"></div>
+              <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
+            </div>
+            <div class="manage-columns__actions">
+              <button class="icon-btn manage-columns__delete" data-id="${s.id}" data-name="${s.section_name}" title="Удалить">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+              <div class="manage-columns__color-trigger" style="background: ${s.colorHex};" data-id="${s.id}"></div>
+              <div class="manage-columns__drag">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="6" y1="9" x2="18" y2="9"></line>
+                  <line x1="6" y1="15" x2="18" y2="15"></line>
+                </svg>
+              </div>
+            </div>
+          </div>`,
       )
       .join("");
+
     let draggedItem: HTMLElement | null = null;
     manageList
       .querySelectorAll(".manage-columns__item")
@@ -221,6 +283,7 @@ export const renderKanban = async (
           }
         });
       });
+
     manageList
       .querySelectorAll(".manage-columns__name")
       .forEach((input: any) => {
@@ -239,13 +302,16 @@ export const renderKanban = async (
               });
             } catch (err) {
               section.section_name = oldName;
-              if (sections[0]?.id === id) Toast.error("Нельзя изменять бэклог");
+              if (sections[0]?.id === id) {
+                Toast.error("Нельзя изменять бэклог");
+              }
               else Toast.error("Ошибка при сохранении");
               renderManageList();
             }
           }
         });
       });
+
     manageList
       .querySelectorAll(".manage-columns__color-trigger")
       .forEach((trigger: any) => {
@@ -253,16 +319,7 @@ export const renderKanban = async (
           e.stopPropagation();
           const id = trigger.getAttribute("data-id");
           const section = sections.find((s: any) => s.id === id);
-          const colorMap: Record<string, string> = {
-            white: "#ffffff",
-            grey: "#9ca3af",
-            red: "#f87171",
-            orange: "#fb923c",
-            blue: "#60a5fa",
-            green: "#4ade80",
-            purple: "#a5b4fc",
-            pink: "#f9a8d4",
-          };
+
           const palette = Object.keys(colorMap);
           const picker = document.createElement("div");
           picker.className = "color-picker-bubble";
@@ -273,6 +330,7 @@ export const renderKanban = async (
           picker.style.left = `${rect.left + window.scrollX - 100}px`;
           document.body.appendChild(picker);
           let tempColor = section?.color || "white";
+
           picker
             .querySelectorAll(".color-picker-bubble__dot")
             .forEach((dot: any) => {
@@ -284,16 +342,45 @@ export const renderKanban = async (
                 tempColor = dot.getAttribute("data-color") || "white";
               });
             });
+
           picker
             .querySelector(".color-picker-bubble__btn--cancel")
             ?.addEventListener("click", () => picker.remove());
+
           picker
             .querySelector(".color-picker-bubble__btn--save")
             ?.addEventListener("click", async () => {
               if (section && tempColor) {
                 const oldColor = section.color;
+                const oldColorHex = section.colorHex;
+
                 section.color = tempColor;
+                section.colorHex = colorMap[tempColor];
                 trigger.style.background = colorMap[tempColor];
+
+                const item = trigger.closest(".manage-columns__item");
+                if (item) {
+                  const dot = item.querySelector(
+                    ".manage-columns__dot",
+                  ) as HTMLElement;
+                  if (dot) {
+                    dot.style.background = colorMap[tempColor];
+                  }
+                }
+
+                const boardColumnTitle = document.querySelector(
+                  `.kanban__column[data-id="${id}"] .kanban__column-title`,
+                ) as HTMLElement;
+                if (boardColumnTitle) {
+                  boardColumnTitle.style.color = colorMap[tempColor];
+                  const boardDot = boardColumnTitle.querySelector(
+                    ".kanban__col-dot",
+                  ) as HTMLElement;
+                  if (boardDot) {
+                    boardDot.style.background = colorMap[tempColor];
+                  }
+                }
+
                 picker.remove();
                 try {
                   await kanbanApi.updateSection(id, {
@@ -303,11 +390,30 @@ export const renderKanban = async (
                   });
                 } catch (e) {
                   section.color = oldColor;
-                  trigger.style.background = colorMap[oldColor];
+                  section.colorHex = oldColorHex;
+                  trigger.style.background = oldColorHex;
+                  if (item) {
+                    const dot = item.querySelector(
+                      ".manage-columns__dot",
+                    ) as HTMLElement;
+                    if (dot) {
+                      dot.style.background = oldColorHex;
+                    }
+                  }
+                  if (boardColumnTitle) {
+                    boardColumnTitle.style.color = oldColorHex;
+                    const boardDot = boardColumnTitle.querySelector(
+                      ".kanban__col-dot",
+                    ) as HTMLElement;
+                    if (boardDot) {
+                      boardDot.style.background = oldColorHex;
+                    }
+                  }
                   Toast.error("Ошибка сохранения цвета");
                 }
               }
             });
+
           const closeOnOutside = (ev: MouseEvent) => {
             if (!picker.contains(ev.target as Node)) {
               picker.remove();
@@ -320,6 +426,33 @@ export const renderKanban = async (
           );
         });
       });
+
+    manageList
+      .querySelectorAll(".manage-columns__delete")
+      .forEach((btn: any) => {
+        btn.addEventListener("click", (e: MouseEvent) => {
+          e.stopPropagation();
+          const id = btn.getAttribute("data-id");
+          const name = btn.getAttribute("data-name");
+          const section = sections.find((s: any) => s.id === id);
+          if (id && section) {
+            if (sections[0]?.id === id) {
+              Toast.error("Нельзя удалять бэклог");
+              return;
+            }
+            modalManage.classList.add("hidden");
+            openDeleteSectionModal(name || "", async () => {
+              try {
+                await kanbanApi.deleteSection(id);
+                cachedSections = cachedSections.filter((s) => s.id !== id);
+                renderKanban(appDiv, true);
+              } catch (e) {
+                Toast.error("Ошибка при удалении колонки");
+              }
+            });
+          }
+        });
+      });
   };
 
   document
@@ -330,29 +463,111 @@ export const renderKanban = async (
       modalOverlay.classList.remove("hidden");
       modalManage.classList.remove("hidden");
     });
+
   document.getElementById("btn-close-manage")?.addEventListener("click", () => {
     renderKanban(appDiv);
   });
+
+  const createColNameInput = document.getElementById(
+    "create-col-name",
+  ) as HTMLInputElement;
+  const createColMandatory = document.getElementById(
+    "create-col-mandatory",
+  ) as HTMLInputElement;
+  const createColMax = document.getElementById(
+    "create-col-max",
+  ) as HTMLInputElement;
+  const btnConfirmCreateColumn = document.getElementById(
+    "btn-confirm-create-column",
+  ) as HTMLButtonElement;
+  let selectedColColor = "white";
+
+  const openCreateColumnModal = () => {
+    closeModals();
+    modalOverlay.classList.remove("hidden");
+    modalCreateColumn.classList.remove("hidden");
+
+    if (createColNameInput) {
+      createColNameInput.value = "";
+    }
+    if (createColMandatory) {
+      createColMandatory.checked = false;
+    }
+    if (createColMax) {
+      createColMax.value = "";
+    }
+    if (btnConfirmCreateColumn) {
+      btnConfirmCreateColumn.disabled = true;
+    }
+
+    selectedColColor = "white";
+    document
+      .querySelectorAll(".create-column-form__color-btn")
+      .forEach((btn) => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-color") === "white") {
+          btn.classList.add("active");
+        }
+      });
+    setTimeout(() => {
+      if (createColNameInput) {
+        createColNameInput.focus();
+      }
+    }, 100);
+  };
+
   document
     .getElementById("btn-add-column-modal")
-    ?.addEventListener("click", async () => {
-      try {
-        const res = (await kanbanApi.createSection({
-          board_link: boardId,
-          section_name: "Новая секция",
-          max_tasks: 100,
-          is_mandatory: false,
-          color: "white",
-        })) as any;
-        const newSec = res.data || res;
-        newSec.id = newSec.section_link || newSec.id;
-        newSec.tasks = [];
-        cachedSections.push(newSec);
-        renderManageList();
-      } catch (e) {
-        Toast.error("Ошибка при создании секции");
-      }
+    ?.addEventListener("click", openCreateColumnModal);
+  document
+    .getElementById("btn-add-column")
+    ?.addEventListener("click", openCreateColumnModal);
+
+  createColNameInput?.addEventListener("input", () => {
+    btnConfirmCreateColumn.disabled = !createColNameInput.value.trim();
+  });
+
+  document.querySelectorAll(".create-column-form__color-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".create-column-form__color-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedColColor = btn.getAttribute("data-color") || "white";
     });
+  });
+
+  btnConfirmCreateColumn?.addEventListener("click", async () => {
+    const name = createColNameInput.value.trim();
+    if (!name) {
+      return;
+    }
+    const maxTasks = parseInt(createColMax.value);
+
+    try {
+      btnConfirmCreateColumn.disabled = true;
+      const res = (await kanbanApi.createSection({
+        board_link: boardId,
+        section_name: name,
+        max_tasks: isNaN(maxTasks) || maxTasks <= 0 ? 100 : maxTasks,
+        is_mandatory: createColMandatory.checked,
+        color: selectedColColor,
+      })) as any;
+
+      const newSec = res.data || res;
+      newSec.id = newSec.section_link || newSec.id;
+      newSec.tasks = [];
+      newSec.color = selectedColColor;
+      newSec.colorHex = colorMap[selectedColColor] || selectedColColor;
+      cachedSections.push(newSec);
+
+      closeModals();
+      renderKanban(appDiv);
+    } catch (e) {
+      Toast.error("Ошибка при создании колонки");
+      btnConfirmCreateColumn.disabled = false;
+    }
+  });
 
   document
     .getElementById("nav-boards")
@@ -363,15 +578,19 @@ export const renderKanban = async (
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     try {
       await authApi.logout();
-    } catch (err) {}
+    } catch {}
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   });
+
   document
     .querySelectorAll(".modal__close-btn")
     .forEach((btn) => btn.addEventListener("click", closeModals));
+
   modalOverlay.addEventListener("click", (e) => {
-    if (e.target === modalOverlay) closeModals();
+    if (e.target === modalOverlay) {
+      closeModals();
+    }
   });
 
   let activeMenu: HTMLElement | null = null;
@@ -392,15 +611,16 @@ export const renderKanban = async (
       );
       const menu = document.createElement("div");
       menu.className = "context-menu";
-      menu.innerHTML = `<div class="context-menu__item" id="ctx-edit-list">Изменить</div><div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить секцию</div>`;
+      menu.innerHTML = `<div class="context-menu__item" id="ctx-edit-list">Изменить</div><div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить колонку</div>`;
       const rect = btn.getBoundingClientRect();
       menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
       menu.style.left = `${rect.left + window.scrollX - 150}px`;
       document.body.appendChild(menu);
       activeMenu = menu;
       menu.querySelector("#ctx-edit-list")?.addEventListener("click", () => {
-        if (sectionId)
+        if (sectionId) {
           navigateTo(`/section?boardId=${boardId}&sectionId=${sectionId}`);
+        }
       });
       menu
         .querySelector("#ctx-delete-list")
@@ -417,9 +637,9 @@ export const renderKanban = async (
                 cachedSections = cachedSections.filter(
                   (s) => s.id !== sectionId,
                 );
-                renderKanban(appDiv);
+                renderKanban(appDiv, true);
               } catch (e) {
-                Toast.error("Ошибка при удалении секции");
+                Toast.error("Ошибка при удалении колонки");
               }
             });
           }
@@ -442,10 +662,11 @@ export const renderKanban = async (
       document.body.appendChild(menu);
       activeMenu = menu;
       menu.querySelector("#ctx-edit-card")?.addEventListener("click", () => {
-        if (taskId)
+        if (taskId) {
           navigateTo(
             `/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title || "")}`,
           );
+        }
       });
       menu.querySelector("#ctx-delete-card")?.addEventListener("click", () => {
         document.getElementById("delete-card-name")!.textContent = title || "";
@@ -510,20 +731,6 @@ export const renderKanban = async (
     });
   });
 
-  const addColumnBtn = document.getElementById("btn-add-column");
-  if (addColumnBtn) {
-    addColumnBtn.addEventListener("click", async () => {
-      await kanbanApi.createSection({
-        board_link: boardId,
-        section_name: "Новая секция",
-        max_tasks: 100,
-        is_mandatory: false,
-        color: "white",
-      });
-      renderKanban(appDiv, true);
-    });
-  }
-
   document.querySelectorAll(".kanban-card").forEach((card) => {
     card.addEventListener("click", (e) => {
       if (
@@ -554,7 +761,9 @@ export const renderKanban = async (
       newTaskInput.value = "";
       newTaskInput.focus();
       selectedAssigneeId = null;
-      if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
+      if (modalAssigneeBtn) {
+        modalAssigneeBtn.textContent = "Выбрать...";
+      }
     });
   }
   if (modalAssigneeBtn) {
@@ -570,8 +779,9 @@ export const renderKanban = async (
         const item = document.createElement("div");
         item.className = "assignee-dropdown-item";
         item.style.cssText = `display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #333;`;
-        if (user.id === selectedAssigneeId)
+        if (user.id === selectedAssigneeId) {
           item.style.backgroundColor = "#3a3a3c";
+        }
         item.innerHTML = `${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">${user.name.charAt(0).toUpperCase()}</div>`}<div class="assignee-info" style="display:flex;flex-direction:column;margin-left:8px;min-width:0;"><span class="assignee-name" style="color:white;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.name}</span><span class="assignee-email" style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</span></div>`;
         item.addEventListener("click", () => {
           selectedAssigneeId = user.id;
@@ -586,7 +796,9 @@ export const renderKanban = async (
   }
   btnConfirmCreate.addEventListener("click", async () => {
     const title = newTaskInput.value.trim();
-    if (!title) return;
+    if (!title) {
+      return;
+    }
     try {
       await kanbanApi.createTask({
         title,
@@ -594,7 +806,6 @@ export const renderKanban = async (
         description: "",
         link_executer: selectedAssigneeId || null,
       });
-      clearKanbanCache();
       closeModals();
       renderKanban(appDiv, true);
     } catch (e) {
@@ -624,7 +835,9 @@ export const renderKanban = async (
   appDiv.querySelectorAll(".kanban__column-cards").forEach((dropZone) => {
     dropZone.addEventListener("dragover", (e: any) => {
       e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move";
+      }
     });
     dropZone.addEventListener("drop", async (e: any) => {
       e.preventDefault();
@@ -637,7 +850,9 @@ export const renderKanban = async (
         const cardEl = document.querySelector(
           `.kanban-card[data-id="${draggedTaskId}"]`,
         );
-        if (cardEl) dropZone.appendChild(cardEl);
+        if (cardEl) {
+          dropZone.appendChild(cardEl);
+        }
         const srcSec = cachedSections.find((s) => s.id === sourceSectionId);
         const tgtSec = cachedSections.find((s) => s.id === targetSectionId);
         let movedTask: any = null;
@@ -657,9 +872,11 @@ export const renderKanban = async (
             position: 1,
           });
         } catch (err: any) {
-          if (err.data?.message === "can not skip mandatory section")
-            Toast.error("НЕЛЬЗЯ ПРОПУСКАТЬ ОБЯЗАТЕЛЬНУЮ СЕКЦИЮ");
-          else Toast.error("Ошибка при переносе");
+          if (err.data?.message === "can not skip mandatory section") {
+            Toast.error("Нельзя пропускать обязательную секцию");
+          } else {
+            Toast.error("Ошибка при переносе");
+          }
           if (srcSec && tgtSec && movedTask) {
             const idx = tgtSec.tasks.findIndex(
               (t: any) => t.id === draggedTaskId,

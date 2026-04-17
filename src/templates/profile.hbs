@@ -18,7 +18,7 @@
       <div class="profile__avatar-actions">
         <label for="avatar-upload" class="profile__action-link cursor-pointer">Изменить фото</label>
         <input type="file" id="avatar-upload" class="hidden" accept="image/*">
-        <span id="btn-delete-avatar" class="profile__action-delete cursor-pointer">Удалить фото</span>
+        <span id="btn-delete-avatar" class="profile__action-delete{{#unless user.avatar_url}} profile__action-delete--disabled{{/unless}} cursor-pointer">Удалить фото</span>
       </div>
     </div>
 

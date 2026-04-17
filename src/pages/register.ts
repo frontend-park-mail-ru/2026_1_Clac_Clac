@@ -22,7 +22,9 @@ export const renderRegister = (appDiv: HTMLElement): void => {
   const submitBtn = document.getElementById('register-submit') as HTMLButtonElement | null;
   const linkLogin = document.getElementById('link-login') as HTMLAnchorElement | null;
 
-  if (!form) return;
+  if (!form) {
+    return;
+  }
 
   const registerSchema: ValidationSchema = {
     name: [

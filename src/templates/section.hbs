@@ -43,18 +43,8 @@
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
           </svg>
           <span class="task__meta-label">Цвет:</span>
-          <div class="color-picker-list">
-            <button class="color-dot white" data-color="white" title="White"></button>
-            <button class="color-dot grey" data-color="grey" title="Grey"></button>
-            <button class="color-dot red" data-color="red" title="Red"></button>
-            <button class="color-dot orange" data-color="orange" title="Orange"></button>
-            <button class="color-dot blue" data-color="blue" title="Blue"></button>
-            <button class="color-dot green" data-color="green" title="Green"></button>
-            <button class="color-dot purple" data-color="purple" title="Purple"></button>
-            <button class="color-dot pink" data-color="pink" title="Pink"></button>
+          {{> colorPicker}}
           </div>
-        </div>
-
         <div class="task__meta-item">
           <span class="task__meta-label" style="min-width: 160px;">Обязательная секция</span>
           <label class="toggle">
