@@ -151,7 +151,9 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
   optionsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     const existingMenu = document.querySelector(".context-menu");
-    if (existingMenu) existingMenu.remove();
+    if (existingMenu) {
+      existingMenu.remove();
+    }
 
     const menu = document.createElement("div");
     menu.className = "context-menu";

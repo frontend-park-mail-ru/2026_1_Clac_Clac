@@ -43,12 +43,16 @@ export const renderKanban = async (
 ): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const boardId = urlParams.get("id") || urlParams.get("boardId");
-  if (!boardId || boardId === "null") return navigateTo("/boards");
+  if (!boardId || boardId === "null") {
+    return navigateTo("/boards");
+  }
 
   if (boardId !== cachedBoardId || forceFetch || cachedSections.length === 0) {
     try {
       const boardRes = (await boardsApi.getBoard(boardId)) as any;
-      if (boardRes?.data?.name) cachedBoardName = boardRes.data.name;
+      if (boardRes?.data?.name) {
+        cachedBoardName = boardRes.data.name;
+      }
 
       const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
       const rawUsers = Array.isArray(usersRes?.data)
@@ -59,7 +63,9 @@ export const renderKanban = async (
 
       const userPromises = rawUsers.map(async (u: any) => {
         const link = u.user_link || u.id || u;
-        if (profileCache.has(link)) return profileCache.get(link)!;
+        if (profileCache.has(link)) {
+          return profileCache.get(link)!;
+        }
         try {
           const pRes = (await profileApi.getProfileByLink(link)) as any;
           const pData = pRes?.data || pRes;
@@ -80,7 +86,9 @@ export const renderKanban = async (
       const res = (await kanbanApi.getSections(boardId)) as any;
       let fetchedSections =
         res.data?.sections || res.sections || res.data || res || [];
-      if (!Array.isArray(fetchedSections)) fetchedSections = [];
+      if (!Array.isArray(fetchedSections)) {
+        fetchedSections = [];
+      }
 
       const colors = Object.keys(colorMap);
       const sectionPromises = fetchedSections.map(
@@ -138,7 +146,9 @@ export const renderKanban = async (
       cachedSections = await Promise.all(sectionPromises);
       cachedBoardId = boardId;
     } catch (err) {
-      if (forceFetch || boardId !== cachedBoardId) return navigateTo("/boards");
+      if (forceFetch || boardId !== cachedBoardId) {
+        return navigateTo("/boards");
+      }
     }
   }
 
@@ -147,12 +157,16 @@ export const renderKanban = async (
   const scrollMap = new Map<string, number>();
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
-    if (id) scrollMap.set(id, el.scrollTop);
+    if (id) {
+      scrollMap.set(id, el.scrollTop);
+    }
   });
   appDiv.innerHTML = template({ board_name: boardName, sections });
   appDiv.querySelectorAll(".kanban__column-cards").forEach((el) => {
     const id = el.getAttribute("data-section-id");
-    if (id && scrollMap.has(id)) el.scrollTop = scrollMap.get(id)!;
+    if (id && scrollMap.has(id)) {
+      el.scrollTop = scrollMap.get(id)!;
+    }
   });
 
   const btnNewTask = document.getElementById(
@@ -288,7 +302,9 @@ export const renderKanban = async (
               });
             } catch (err) {
               section.section_name = oldName;
-              if (sections[0]?.id === id) Toast.error("Нельзя изменять бэклог");
+              if (sections[0]?.id === id) {
+                Toast.error("Нельзя изменять бэклог");
+              }
               else Toast.error("Ошибка при сохранении");
               renderManageList();
             }
@@ -347,7 +363,9 @@ export const renderKanban = async (
                   const dot = item.querySelector(
                     ".manage-columns__dot",
                   ) as HTMLElement;
-                  if (dot) dot.style.background = colorMap[tempColor];
+                  if (dot) {
+                    dot.style.background = colorMap[tempColor];
+                  }
                 }
 
                 const boardColumnTitle = document.querySelector(
@@ -358,7 +376,9 @@ export const renderKanban = async (
                   const boardDot = boardColumnTitle.querySelector(
                     ".kanban__col-dot",
                   ) as HTMLElement;
-                  if (boardDot) boardDot.style.background = colorMap[tempColor];
+                  if (boardDot) {
+                    boardDot.style.background = colorMap[tempColor];
+                  }
                 }
 
                 picker.remove();
@@ -376,14 +396,18 @@ export const renderKanban = async (
                     const dot = item.querySelector(
                       ".manage-columns__dot",
                     ) as HTMLElement;
-                    if (dot) dot.style.background = oldColorHex;
+                    if (dot) {
+                      dot.style.background = oldColorHex;
+                    }
                   }
                   if (boardColumnTitle) {
                     boardColumnTitle.style.color = oldColorHex;
                     const boardDot = boardColumnTitle.querySelector(
                       ".kanban__col-dot",
                     ) as HTMLElement;
-                    if (boardDot) boardDot.style.background = oldColorHex;
+                    if (boardDot) {
+                      boardDot.style.background = oldColorHex;
+                    }
                   }
                   Toast.error("Ошибка сохранения цвета");
                 }
@@ -463,21 +487,32 @@ export const renderKanban = async (
     modalOverlay.classList.remove("hidden");
     modalCreateColumn.classList.remove("hidden");
 
-    if (createColNameInput) createColNameInput.value = "";
-    if (createColMandatory) createColMandatory.checked = false;
-    if (createColMax) createColMax.value = "";
-    if (btnConfirmCreateColumn) btnConfirmCreateColumn.disabled = true;
+    if (createColNameInput) {
+      createColNameInput.value = "";
+    }
+    if (createColMandatory) {
+      createColMandatory.checked = false;
+    }
+    if (createColMax) {
+      createColMax.value = "";
+    }
+    if (btnConfirmCreateColumn) {
+      btnConfirmCreateColumn.disabled = true;
+    }
 
     selectedColColor = "white";
     document
       .querySelectorAll(".create-column-form__color-btn")
       .forEach((btn) => {
         btn.classList.remove("active");
-        if (btn.getAttribute("data-color") === "white")
+        if (btn.getAttribute("data-color") === "white") {
           btn.classList.add("active");
+        }
       });
     setTimeout(() => {
-      if (createColNameInput) createColNameInput.focus();
+      if (createColNameInput) {
+        createColNameInput.focus();
+      }
     }, 100);
   };
 
@@ -504,7 +539,9 @@ export const renderKanban = async (
 
   btnConfirmCreateColumn?.addEventListener("click", async () => {
     const name = createColNameInput.value.trim();
-    if (!name) return;
+    if (!name) {
+      return;
+    }
     const maxTasks = parseInt(createColMax.value);
 
     try {
@@ -551,7 +588,9 @@ export const renderKanban = async (
     .forEach((btn) => btn.addEventListener("click", closeModals));
 
   modalOverlay.addEventListener("click", (e) => {
-    if (e.target === modalOverlay) closeModals();
+    if (e.target === modalOverlay) {
+      closeModals();
+    }
   });
 
   let activeMenu: HTMLElement | null = null;
@@ -579,8 +618,9 @@ export const renderKanban = async (
       document.body.appendChild(menu);
       activeMenu = menu;
       menu.querySelector("#ctx-edit-list")?.addEventListener("click", () => {
-        if (sectionId)
+        if (sectionId) {
           navigateTo(`/section?boardId=${boardId}&sectionId=${sectionId}`);
+        }
       });
       menu
         .querySelector("#ctx-delete-list")
@@ -622,10 +662,11 @@ export const renderKanban = async (
       document.body.appendChild(menu);
       activeMenu = menu;
       menu.querySelector("#ctx-edit-card")?.addEventListener("click", () => {
-        if (taskId)
+        if (taskId) {
           navigateTo(
             `/task?boardId=${boardId}&taskId=${taskId}&title=${encodeURIComponent(title || "")}`,
           );
+        }
       });
       menu.querySelector("#ctx-delete-card")?.addEventListener("click", () => {
         document.getElementById("delete-card-name")!.textContent = title || "";
@@ -720,7 +761,9 @@ export const renderKanban = async (
       newTaskInput.value = "";
       newTaskInput.focus();
       selectedAssigneeId = null;
-      if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
+      if (modalAssigneeBtn) {
+        modalAssigneeBtn.textContent = "Выбрать...";
+      }
     });
   }
   if (modalAssigneeBtn) {
@@ -736,8 +779,9 @@ export const renderKanban = async (
         const item = document.createElement("div");
         item.className = "assignee-dropdown-item";
         item.style.cssText = `display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #333;`;
-        if (user.id === selectedAssigneeId)
+        if (user.id === selectedAssigneeId) {
           item.style.backgroundColor = "#3a3a3c";
+        }
         item.innerHTML = `${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee-avatar" style="width:24px;height:24px;border-radius:50%;background:#8b5cf6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;">${user.name.charAt(0).toUpperCase()}</div>`}<div class="assignee-info" style="display:flex;flex-direction:column;margin-left:8px;min-width:0;"><span class="assignee-name" style="color:white;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.name}</span><span class="assignee-email" style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</span></div>`;
         item.addEventListener("click", () => {
           selectedAssigneeId = user.id;
@@ -752,7 +796,9 @@ export const renderKanban = async (
   }
   btnConfirmCreate.addEventListener("click", async () => {
     const title = newTaskInput.value.trim();
-    if (!title) return;
+    if (!title) {
+      return;
+    }
     try {
       await kanbanApi.createTask({
         title,
@@ -789,7 +835,9 @@ export const renderKanban = async (
   appDiv.querySelectorAll(".kanban__column-cards").forEach((dropZone) => {
     dropZone.addEventListener("dragover", (e: any) => {
       e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move";
+      }
     });
     dropZone.addEventListener("drop", async (e: any) => {
       e.preventDefault();
@@ -802,7 +850,9 @@ export const renderKanban = async (
         const cardEl = document.querySelector(
           `.kanban-card[data-id="${draggedTaskId}"]`,
         );
-        if (cardEl) dropZone.appendChild(cardEl);
+        if (cardEl) {
+          dropZone.appendChild(cardEl);
+        }
         const srcSec = cachedSections.find((s) => s.id === sourceSectionId);
         const tgtSec = cachedSections.find((s) => s.id === targetSectionId);
         let movedTask: any = null;
@@ -822,9 +872,11 @@ export const renderKanban = async (
             position: 1,
           });
         } catch (err: any) {
-          if (err.data?.message === "can not skip mandatory section")
+          if (err.data?.message === "can not skip mandatory section") {
             Toast.error("Нельзя пропускать обязательную секцию");
-          else Toast.error("Ошибка при переносе");
+          } else {
+            Toast.error("Ошибка при переносе");
+          }
           if (srcSec && tgtSec && movedTask) {
             const idx = tgtSec.tasks.findIndex(
               (t: any) => t.id === draggedTaskId,

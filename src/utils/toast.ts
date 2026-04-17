@@ -2,7 +2,9 @@ export class Toast {
   private static container: HTMLDivElement | null = null;
 
   private static initContainer() {
-    if (this.container && document.body.contains(this.container)) return;
+    if (this.container && document.body.contains(this.container)) {
+      return;
+    }
     this.container = document.createElement("div");
     this.container.id = "toast-container";
     this.container.style.cssText = `

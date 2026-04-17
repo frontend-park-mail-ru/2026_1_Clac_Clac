@@ -37,7 +37,9 @@ initGlobalListeners();
 const urlParams = new URLSearchParams(window.location.search);
 const vkCode = urlParams.get("code");
 if (vkCode) {
-  if (vkCode === "200") localStorage.setItem("isAuth", "true");
+  if (vkCode === "200") {
+    localStorage.setItem("isAuth", "true");
+  }
   window.history.replaceState({}, "", "/boards");
 }
 

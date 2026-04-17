@@ -113,7 +113,9 @@ export const renderLogin = (appDiv: HTMLElement): void => {
     const password = passwordInput?.value.trim() || '';
 
     try {
-      if (submitBtn) submitBtn.disabled = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+      }
       await apiClient.post('/login', { email, password });
 
       localStorage.setItem('isAuth', 'true');

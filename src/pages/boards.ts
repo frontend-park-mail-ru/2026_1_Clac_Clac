@@ -131,7 +131,9 @@ const attachEventListeners = (
     const editBoardNameInputEl = appDiv.querySelector<HTMLInputElement>("#edit-board-name");
     const btnConfirmEditEl = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-edit");
     const editImgInputEl = appDiv.querySelector<HTMLInputElement>("#edit-board-image");
-    if (!btnConfirmEditEl) return;
+    if (!btnConfirmEditEl) {
+      return;
+    }
     const nameChanged = editBoardNameInputEl?.value.trim() !== currentBoardName;
     const imageSelected = !!editImgInputEl?.files?.length;
     const nameEmpty = !editBoardNameInputEl?.value.trim();
