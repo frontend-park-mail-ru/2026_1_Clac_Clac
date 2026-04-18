@@ -3,7 +3,7 @@ import { boardsApi, kanbanApi } from "../api";
 import sectionTpl from "../templates/section.hbs?raw";
 import { navigateTo } from "../router";
 import { Toast } from "../utils/toast";
-import { renderKanban, clearKanbanCache } from "./kanban";
+import { renderKanbanModule, clearKanbanCache } from "../modules/kanban";
 
 const template = Handlebars.compile(sectionTpl);
 
@@ -37,7 +37,7 @@ export const renderSection = async (appDiv: HTMLElement): Promise<void> => {
   }
 
   try {
-    await renderKanban(appDiv);
+    await renderKanbanModule(appDiv);
   } catch (err) {
     console.error("Board render error", err);
   }
