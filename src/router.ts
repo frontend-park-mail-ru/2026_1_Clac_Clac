@@ -1,7 +1,7 @@
 import { renderLogin } from "./pages/login";
 import { renderRegister } from "./pages/register";
 import { renderBoards } from "./pages/boards";
-import { renderPasswordRecovery } from "./pages/passwordRecovery";
+import { renderPasswordRecoveryModule } from "./modules/passwordRecovery";
 import { renderProfile } from "./pages/profile";
 import { renderKanban } from "./pages/kanban";
 import { renderTask } from "./pages/task";
@@ -10,7 +10,7 @@ import { renderSection } from "./pages/section";
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/login": renderLogin,
   "/register": renderRegister,
-  "/forgot-password": renderPasswordRecovery,
+  "/forgot-password": renderPasswordRecoveryModule,
   "/boards": renderBoards,
   "/profile": renderProfile,
   "/board": renderKanban,
