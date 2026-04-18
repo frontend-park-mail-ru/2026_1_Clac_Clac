@@ -5,7 +5,7 @@ import { renderPasswordRecovery } from "./pages/passwordRecovery";
 import { renderProfile } from "./pages/profile";
 import { renderKanban } from "./pages/kanban";
 import { renderTask } from "./pages/task";
-import { renderSection } from "./pages/section";
+import { renderSectionModule } from "./modules/section";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/login": renderLogin,
@@ -15,7 +15,7 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/profile": renderProfile,
   "/board": renderKanban,
   "/task": renderTask,
-  "/section": renderSection,
+  "/section": renderSectionModule,
 };
 
 export const navigateTo = (path: string): void => {
