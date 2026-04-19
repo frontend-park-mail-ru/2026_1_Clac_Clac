@@ -3,7 +3,7 @@ import sectionTpl from "../../templates/section.hbs?raw";
 import { sectionStore } from "./SectionStore";
 import { SectionActions } from "./SectionActions";
 import { navigateTo } from "../../router";
-import { renderKanban } from "../../pages/kanban";
+import { renderKanbanModule } from "../../modules/kanban";
 
 const template = Handlebars.compile(sectionTpl);
 
@@ -33,7 +33,7 @@ export class SectionView {
     }
 
     try {
-      await renderKanban(this.appDiv);
+      await renderKanbanModule(this.appDiv);
     } catch (err) {
       console.error("Board render error", err);
     }

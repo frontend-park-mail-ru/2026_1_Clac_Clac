@@ -1,19 +1,19 @@
 import { renderLogin } from "./pages/login";
-import { renderRegister } from "./pages/register";
+import { renderRegisterModule } from "./modules/register";
 import { renderBoardsModule } from "./modules/boards";
 import { renderPasswordRecovery } from "./pages/passwordRecovery";
 import { renderProfileModule } from "./modules/profile";
-import { renderKanban } from "./pages/kanban";
+import { renderKanbanModule } from "./modules/kanban";
 import { renderTask } from "./pages/task";
 import { renderSectionModule } from "./modules/section";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/login": renderLogin,
-  "/register": renderRegister,
+  "/register": renderRegisterModule,
   "/forgot-password": renderPasswordRecovery,
   "/boards": renderBoardsModule,
   "/profile": renderProfileModule,
-  "/board": renderKanban,
+  "/board": renderKanbanModule,
   "/task": renderTask,
   "/section": renderSectionModule,
 };
