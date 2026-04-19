@@ -3,7 +3,7 @@ import { ActionTypes } from './section.types';
 import { boardsApi, kanbanApi } from '../../api';
 import { navigateTo } from '../../router';
 import { Toast } from '../../utils/toast';
-import { clearKanbanCache } from '../../pages/kanban';
+import { clearKanbanCache } from '../../modules/kanban';
 import { sectionStore } from './SectionStore';
 
 export const SectionActions = {

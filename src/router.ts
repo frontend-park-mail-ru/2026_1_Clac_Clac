@@ -3,7 +3,7 @@ import { renderRegister } from "./pages/register";
 import { renderBoardsModule } from "./modules/boards";
 import { renderPasswordRecovery } from "./pages/passwordRecovery";
 import { renderProfile } from "./pages/profile";
-import { renderKanban } from "./pages/kanban";
+import { renderKanbanModule } from "./modules/kanban";
 import { renderTask } from "./pages/task";
 import { renderSectionModule } from "./modules/section";
 
@@ -13,7 +13,7 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/forgot-password": renderPasswordRecovery,
   "/boards": renderBoardsModule,
   "/profile": renderProfile,
-  "/board": renderKanban,
+  "/board": renderKanbanModule,
   "/task": renderTask,
   "/section": renderSectionModule,
 };
