@@ -199,18 +199,21 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     dropdown.className = "assignee__dropdown";
 
     const clearItem = document.createElement("div");
-    clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";
+    const hasExecutor = !!currentExecuterId;
+    clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear" + (!hasExecutor ? " assignee__dropdown-item--disabled" : "");
     clearItem.innerHTML = `
       <div class="assignee__avatar assignee__avatar--clear">✕</div>
       <div class="assignee__info">
         <span class="assignee__name">Убрать исполнителя</span>
       </div>
     `;
-    clearItem.addEventListener("click", () => {
-      execBtn.textContent = "Не назначен";
-      currentExecuterId = "";
-      dropdown.remove();
-    });
+    if (hasExecutor) {
+      clearItem.addEventListener("click", () => {
+        execBtn.textContent = "Не назначен";
+        currentExecuterId = "";
+        dropdown.remove();
+      });
+    }
     dropdown.appendChild(clearItem);
 
     usersList.forEach((user) => {

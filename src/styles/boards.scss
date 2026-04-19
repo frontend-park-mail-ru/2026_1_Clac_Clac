@@ -876,6 +876,12 @@
                 background-color: rgba(224, 85, 85, 0.08);
             }
         }
+
+        &--disabled {
+            opacity: 0.4;
+            cursor: default;
+            pointer-events: none;
+        }
     }
 
     &__avatar--clear {
