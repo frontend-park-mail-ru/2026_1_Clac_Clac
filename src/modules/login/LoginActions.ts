@@ -1,6 +1,6 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { apiClient } from "../../api";
-import { navigateTo } from "../../router";
+import { navigateTo, setIsAuth } from "../../router";
 import { Toast } from "../../utils/toast";
 import { ApiError } from "./login.types";
 
@@ -56,7 +56,7 @@ export const LoginActions = {
     try {
       await apiClient.post("/login", { email, password });
 
-      localStorage.setItem("isAuth", "true");
+      setIsAuth(true);
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
     } catch (err: unknown) {

@@ -18,6 +18,14 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/section": renderSection,
 };
 
+let isAuthenticated = false;
+
+export const setIsAuth = (value: boolean) => {
+  isAuthenticated = value;
+};
+
+export const getIsAuth = () => isAuthenticated;
+
 export const navigateTo = (path: string): void => {
   window.history.pushState({}, "", path);
   handleRoute();
@@ -30,10 +38,20 @@ export const handleRoute = (): void => {
   }
 
   const path = window.location.pathname;
-  const isAuth = localStorage.getItem("isAuth") === "true";
+  const isAuth = getIsAuth();
 
-  if (path === "/" || (path === "/login" && isAuth)) {
+  const publicRoutes = ["/login", "/register", "/forgot-password"];
+
+  if (path === "/") {
     return navigateTo(isAuth ? "/boards" : "/login");
+  }
+
+  if (isAuth && publicRoutes.includes(path)) {
+    return navigateTo("/boards");
+  }
+
+  if (!isAuth && !publicRoutes.includes(path)) {
+    return navigateTo("/login");
   }
 
   const routeHandler = routes[path] || routes["/login"];
