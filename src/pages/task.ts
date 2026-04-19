@@ -199,7 +199,7 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     dropdown.className = "assignee__dropdown";
 
     const clearItem = document.createElement("div");
-    const hasExecutor = !!currentExecuterId;
+    const hasExecutor = !!currentExecuterId || (execBtn.textContent?.trim() !== "Не назначен");
     clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear" + (!hasExecutor ? " assignee__dropdown-item--disabled" : "");
     clearItem.innerHTML = `
       <div class="assignee__avatar assignee__avatar--clear">✕</div>
