@@ -100,7 +100,9 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     "";
   if (currentExecuterId) {
     const found = usersList.find((u) => u.id === currentExecuterId);
-    executorName = found ? found.name : "Пользователь";
+    executorName = found ? found.name : (taskData.name_executer || taskData.name_executor || "Пользователь");
+  } else if (taskData.name_executer || taskData.name_executor) {
+    executorName = taskData.name_executer || taskData.name_executor;
   }
 
   const taskOverlayContainer = document.createElement("div");
@@ -195,6 +197,24 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
 
     const dropdown = document.createElement("div");
     dropdown.className = "assignee__dropdown";
+
+    const clearItem = document.createElement("div");
+    const hasExecutor = !!currentExecuterId || (execBtn.textContent?.trim() !== "Не назначен");
+    clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear" + (!hasExecutor ? " assignee__dropdown-item--disabled" : "");
+    clearItem.innerHTML = `
+      <div class="assignee__avatar assignee__avatar--clear">✕</div>
+      <div class="assignee__info">
+        <span class="assignee__name">Убрать исполнителя</span>
+      </div>
+    `;
+    if (hasExecutor) {
+      clearItem.addEventListener("click", () => {
+        execBtn.textContent = "Не назначен";
+        currentExecuterId = "";
+        dropdown.remove();
+      });
+    }
+    dropdown.appendChild(clearItem);
 
     usersList.forEach((user) => {
       const item = document.createElement("div");
