@@ -4,7 +4,7 @@ import tplCode from '../../templates/password_recovery_code.hbs?raw';
 import tplNewPass from '../../templates/password_recovery_new_pass.hbs?raw';
 import { passwordRecoveryStore } from './PasswordRecoveryStore';
 import { PasswordRecoveryActions } from './PasswordRecoveryActions';
-import { PasswordRecoveryStep } from './passwordRecovery.types';
+import { PasswordRecoveryState, PasswordRecoveryStep } from './passwordRecovery.types';
 import { setInputError, setGlobalError } from '../../utils';
 
 const renderStepEmail = Handlebars.compile(tplEmail);
@@ -43,7 +43,7 @@ export class PasswordRecoveryView {
     this.updateStateUI(state);
   }
 
-  private renderStep(step: PasswordRecoveryStep, state: any) {
+  private renderStep(step: PasswordRecoveryStep, state: PasswordRecoveryState) {
     if (step === PasswordRecoveryStep.EMAIL) {
       this.appDiv.innerHTML = renderStepEmail({});
       this.attachEmailListeners();
@@ -147,7 +147,7 @@ export class PasswordRecoveryView {
     }
   }
 
-  private updateErrors(state: any) {
+  private updateErrors(state: PasswordRecoveryState) {
     setGlobalError(state.globalError);
 
     if (state.step === PasswordRecoveryStep.EMAIL) {
@@ -160,41 +160,66 @@ export class PasswordRecoveryView {
     }
   }
 
-  private updateStateUI(state: any) {
-    if (state.step === PasswordRecoveryStep.CODE) {
-      const timerSpan = document.getElementById('timer');
-      const resendLink = document.getElementById('resend-link');
-
-      if (state.timeLeft > 0) {
-        if (timerSpan) timerSpan.textContent = `0:${state.timeLeft.toString().padStart(2, '0')}`;
-      } else {
-        if (resendLink && !resendLink.querySelector('#resend-action')) {
-          resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
-          document.getElementById('resend-action')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            PasswordRecoveryActions.resendCode();
-          });
-        }
+  private isCurrentStepValid(step: PasswordRecoveryStep): boolean {
+    switch (step) {
+      case PasswordRecoveryStep.EMAIL: {
+        const emailInput = document.getElementById('email') as HTMLInputElement | null;
+        return Boolean(emailInput?.value.trim());
       }
-    }
 
+      case PasswordRecoveryStep.CODE: {
+        const codeInput = document.getElementById('code') as HTMLInputElement | null;
+        return Boolean(codeInput?.value.trim());
+      }
+
+      case PasswordRecoveryStep.NEW_PASS: {
+        const password = document.getElementById('password') as HTMLInputElement | null;
+        const repeatPassword = document.getElementById('repeatPassword') as HTMLInputElement | null;
+        return Boolean(password?.value.trim() && repeatPassword?.value.trim());
+      }
+
+      default:
+        return false;
+    }
+  }
+
+  private updateSubmitButtonUI(state: PasswordRecoveryState) {
     const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-    if (submitBtn) {
-      if (state.isLoading) {
-        submitBtn.disabled = true;
-      } else {
-        if (state.step === PasswordRecoveryStep.EMAIL) {
-          const emailInput = document.getElementById('email') as HTMLInputElement | null;
-          submitBtn.disabled = !emailInput?.value.trim();
-        } else if (state.step === PasswordRecoveryStep.CODE) {
-          const codeInput = document.getElementById('code') as HTMLInputElement | null;
-          submitBtn.disabled = !codeInput?.value.trim();
-        } else if (state.step === PasswordRecoveryStep.NEW_PASS) {
-          const password = document.getElementById('password') as HTMLInputElement | null;
-          const repeatPassword = document.getElementById('repeatPassword') as HTMLInputElement | null;
-          submitBtn.disabled = !(password?.value.trim() && repeatPassword?.value.trim());
-        }
-      }
+
+    if (!submitBtn) return;
+
+    if (state.isLoading) {
+      submitBtn.disabled = true;
+      return;
     }
+
+    submitBtn.disabled = !this.isCurrentStepValid(state.step);
+  }
+
+  private updateTimerUI(state: PasswordRecoveryState) {
+    if (state.step !== PasswordRecoveryStep.CODE) return;
+
+    const timerSpan = document.getElementById('timer');
+    const resendLink = document.getElementById('resend-link');
+
+    if (state.timeLeft > 0) {
+      if (timerSpan) {
+        timerSpan.textContent = `0:${state.timeLeft.toString().padStart(2, '0')}`;
+      }
+      return;
+    }
+
+    if (resendLink && !resendLink.querySelector('#resend-action')) {
+      resendLink.innerHTML = '<a href="#" id="resend-action">Отправить повторно</a>';
+      document.getElementById('resend-action')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        PasswordRecoveryActions.resendCode();
+      });
+    }
+  }
+
+  private updateStateUI(state: PasswordRecoveryState) {
+    this.updateTimerUI(state);
+    this.updateSubmitButtonUI(state);
   }
 }
