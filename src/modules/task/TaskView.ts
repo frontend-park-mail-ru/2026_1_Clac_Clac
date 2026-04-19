@@ -4,7 +4,7 @@ import { taskStore } from "./TaskStore";
 import { TaskActions } from "./TaskActions";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
-import { clearKanbanCache } from "../../pages/kanban";
+import { clearKanbanCache } from "../../modules/kanban";
 
 const template = Handlebars.compile(taskTpl);
 

@@ -1,4 +1,4 @@
-import { renderKanban } from "../../pages/kanban";
+import { renderKanbanModule } from "../../modules/kanban";
 import { navigateTo } from "../../router";
 import { TaskActions } from "./TaskActions";
 import { TaskView } from "./TaskView";
@@ -15,7 +15,7 @@ export const renderTaskModule = async (appDiv: HTMLElement): Promise<void> => {
   }
 
   try {
-    await renderKanban(appDiv);
+    await renderKanbanModule(appDiv);
   } catch (err) {
     console.error("Board render error", err);
   }
