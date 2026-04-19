@@ -1,21 +1,21 @@
 import { renderLoginModule } from "./modules/login";
-import { renderRegister } from "./pages/register";
-import { renderBoards } from "./pages/boards";
+import { renderRegisterModule } from "./modules/register";
+import { renderBoardsModule } from "./modules/boards";
 import { renderPasswordRecovery } from "./pages/passwordRecovery";
 import { renderProfile } from "./pages/profile";
-import { renderKanban } from "./pages/kanban";
+import { renderKanbanModule } from "./modules/kanban";
 import { renderTask } from "./pages/task";
-import { renderSection } from "./pages/section";
+import { renderSectionModule } from "./modules/section";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/login": renderLoginModule,
-  "/register": renderRegister,
+  "/register": renderRegisterModule,
   "/forgot-password": renderPasswordRecovery,
-  "/boards": renderBoards,
+  "/boards": renderBoardsModule,
   "/profile": renderProfile,
-  "/board": renderKanban,
+  "/board": renderKanbanModule,
   "/task": renderTask,
-  "/section": renderSection,
+  "/section": renderSectionModule,
 };
 
 let isAuthenticated = false;
