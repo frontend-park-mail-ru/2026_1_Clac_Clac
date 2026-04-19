@@ -222,6 +222,10 @@ export class TaskView {
         dropdown.appendChild(item);
       });
 
+      if (!execBtn.parentElement) {
+        return;
+      };
+      
       execBtn.parentElement!.appendChild(dropdown);
     });
 

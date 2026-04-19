@@ -866,6 +866,22 @@
             background-color: rgba(139, 92, 246, 0.1);
             color: var(--primary);
         }
+
+        &--clear {
+            border-bottom: 1px solid #2a2a2c;
+            color: #888;
+
+            &:hover {
+                color: #e05555;
+                background-color: rgba(224, 85, 85, 0.08);
+            }
+        }
+
+        &--disabled {
+            opacity: 0.4;
+            cursor: default;
+            pointer-events: none;
+        }
     }
 
     &__avatar {
@@ -880,6 +896,11 @@
         font-weight: bold;
         color: white;
         flex-shrink: 0;
+
+        &--clear {
+            background-color: transparent;
+            color: #888;
+        }
     }
 
     &__info {
