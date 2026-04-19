@@ -884,11 +884,6 @@
         }
     }
 
-    &__avatar--clear {
-        background-color: transparent;
-        color: #888;
-    }
-
     &__avatar {
         width: 24px;
         height: 24px;
@@ -901,6 +896,11 @@
         font-weight: bold;
         color: white;
         flex-shrink: 0;
+
+        &--clear {
+            background-color: transparent;
+            color: #888;
+        }
     }
 
     &__info {
