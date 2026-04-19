@@ -100,7 +100,9 @@ export const renderTask = async (appDiv: HTMLElement): Promise<void> => {
     "";
   if (currentExecuterId) {
     const found = usersList.find((u) => u.id === currentExecuterId);
-    executorName = found ? found.name : "Пользователь";
+    executorName = found ? found.name : (taskData.name_executer || taskData.name_executor || "Пользователь");
+  } else if (taskData.name_executer || taskData.name_executor) {
+    executorName = taskData.name_executer || taskData.name_executor;
   }
 
   const taskOverlayContainer = document.createElement("div");
