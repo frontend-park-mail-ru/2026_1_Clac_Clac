@@ -710,8 +710,12 @@ export const renderKanban = async (
               description: "",
             });
             renderKanban(appDiv, true);
-          } catch (e) {
-            Toast.error("Ошибка создания карточки");
+          } catch (e: any) {
+            if (e.data?.message === "rich limit task") {
+              Toast.error("Секция переполнена");
+            } else {
+              Toast.error("Ошибка создания карточки");
+            }
             renderKanban(appDiv);
           }
         } else {
@@ -808,8 +812,12 @@ export const renderKanban = async (
       });
       closeModals();
       renderKanban(appDiv, true);
-    } catch (e) {
-      Toast.error("Ошибка создания");
+    } catch (e: any) {
+      if (e.data?.message === "rich limit task") {
+        Toast.error("Секция переполнена");
+      } else {
+        Toast.error("Ошибка создания");
+      }
     }
   });
 
@@ -874,6 +882,8 @@ export const renderKanban = async (
         } catch (err: any) {
           if (err.data?.message === "can not skip mandatory section") {
             Toast.error("Нельзя пропускать обязательную секцию");
+          } else if (err.data?.message === "rich limit task") {
+            Toast.error("Секция переполнена");
           } else {
             Toast.error("Ошибка при переносе");
           }
