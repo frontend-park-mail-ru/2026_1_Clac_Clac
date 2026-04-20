@@ -1,22 +1,30 @@
-import { renderLogin } from "./pages/login";
+import { renderLoginModule } from "./modules/login";
 import { renderRegisterModule } from "./modules/register";
 import { renderBoardsModule } from "./modules/boards";
-import { renderPasswordRecovery } from "./pages/passwordRecovery";
+import { renderPasswordRecoveryModule } from "./modules/passwordRecovery";
 import { renderProfileModule } from "./modules/profile";
 import { renderKanbanModule } from "./modules/kanban";
-import { renderTask } from "./pages/task";
+import { renderTaskModule } from "./modules/task";
 import { renderSectionModule } from "./modules/section";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
-  "/login": renderLogin,
+  "/login": renderLoginModule,
   "/register": renderRegisterModule,
-  "/forgot-password": renderPasswordRecovery,
+  "/forgot-password": renderPasswordRecoveryModule,
   "/boards": renderBoardsModule,
   "/profile": renderProfileModule,
   "/board": renderKanbanModule,
-  "/task": renderTask,
+  "/task": renderTaskModule,
   "/section": renderSectionModule,
 };
+
+let isAuthenticated = false;
+
+export const setIsAuth = (value: boolean) => {
+  isAuthenticated = value;
+};
+
+export const getIsAuth = () => isAuthenticated;
 
 export const navigateTo = (path: string): void => {
   window.history.pushState({}, "", path);
@@ -30,10 +38,20 @@ export const handleRoute = (): void => {
   }
 
   const path = window.location.pathname;
-  const isAuth = localStorage.getItem("isAuth") === "true";
+  const isAuth = getIsAuth();
 
-  if (path === "/" || (path === "/login" && isAuth)) {
+  const publicRoutes = ["/login", "/register", "/forgot-password"];
+
+  if (path === "/") {
     return navigateTo(isAuth ? "/boards" : "/login");
+  }
+
+  if (isAuth && publicRoutes.includes(path)) {
+    return navigateTo("/boards");
+  }
+
+  if (!isAuth && !publicRoutes.includes(path)) {
+    return navigateTo("/login");
   }
 
   const routeHandler = routes[path] || routes["/login"];
