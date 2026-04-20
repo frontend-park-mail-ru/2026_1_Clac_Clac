@@ -3,10 +3,11 @@ import "./styles/boards.scss";
 
 import Handlebars from "handlebars";
 import { initGlobalListeners } from "./utils";
-import { handleRoute } from "./router";
+import { handleRoute, setIsAuth } from "./router";
 import inputPartial from "/src/templates/partials/input.hbs?raw";
 import sidebarPartial from "/src/templates/partials/sidebar.hbs?raw";
 import colorPickerPartial from "/src/templates/partials/colorPicker.hbs?raw";
+import { authApi } from "./api";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -34,13 +35,24 @@ Handlebars.registerHelper("eq", function (a, b) {
 
 initGlobalListeners();
 
-const urlParams = new URLSearchParams(window.location.search);
-const vkCode = urlParams.get("code");
-if (vkCode) {
-  if (vkCode === "200") {
-    localStorage.setItem("isAuth", "true");
+const initApp = async () => {
+  try {
+    await authApi.checkAuth();
+    setIsAuth(true);
+  } catch (err) {
+    setIsAuth(false);
   }
-  window.history.replaceState({}, "", "/boards");
-}
 
-handleRoute();
+  const urlParams = new URLSearchParams(window.location.search);
+  const vkCode = urlParams.get("code");
+  if (vkCode) {
+    if (vkCode === "200") {
+      setIsAuth(true);
+    }
+    window.history.replaceState({}, "", "/boards");
+  }
+
+  handleRoute();
+};
+
+initApp();
