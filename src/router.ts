@@ -4,7 +4,7 @@ import { renderBoardsModule } from "./modules/boards";
 import { renderPasswordRecovery } from "./pages/passwordRecovery";
 import { renderProfile } from "./pages/profile";
 import { renderKanbanModule } from "./modules/kanban";
-import { renderTask } from "./pages/task";
+import { renderTaskModule } from "./modules/task";
 import { renderSectionModule } from "./modules/section";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
@@ -14,7 +14,7 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/boards": renderBoardsModule,
   "/profile": renderProfile,
   "/board": renderKanbanModule,
-  "/task": renderTask,
+  "/task": renderTaskModule,
   "/section": renderSectionModule,
 };
 
