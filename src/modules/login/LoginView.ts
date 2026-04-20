@@ -35,11 +35,16 @@ export class LoginView {
 
     this.initValidation();
     this.attachEventListeners();
+
+    this.checkButtonState();
   }
 
   public updateUI(state: LoginState): void {
     if (this.submitBtn) {
-      this.submitBtn.disabled = state.isLoading || !this.formValidator?.validate();
+      const emailFilled = Boolean(this.emailInput?.value.trim());
+      const passFilled = Boolean(this.passwordInput?.value.trim());
+
+      this.submitBtn.disabled = state.isLoading || !(emailFilled && passFilled);
       this.submitBtn.textContent = state.isLoading ? "Вход..." : "Войти";
     }
 
@@ -56,6 +61,16 @@ export class LoginView {
     } else {
       this.passwordInput?.classList.remove("input-group__field--error");
     }
+  }
+
+  private checkButtonState(): void {
+    if (!this.submitBtn) return;
+    if (this.submitBtn.textContent === "Вход...") return;
+
+    const emailFilled = Boolean(this.emailInput?.value.trim());
+    const passFilled = Boolean(this.passwordInput?.value.trim());
+
+    this.submitBtn.disabled = !(emailFilled && passFilled);
   }
 
   private initValidation(): void {
@@ -76,10 +91,8 @@ export class LoginView {
       (fieldId: string, message: string | null) => {
         setInputError(fieldId, message);
       },
-      (isValid: boolean) => {
-        if (this.submitBtn) {
-          this.submitBtn.disabled = !isValid;
-        }
+      () => {
+        this.checkButtonState();
       }
     );
 
@@ -91,8 +104,14 @@ export class LoginView {
     const linkRegister = this.appDiv.querySelector<HTMLElement>("#link-register");
     const forgotLink = this.appDiv.querySelector<HTMLElement>(".forgot-link");
 
-    this.emailInput?.addEventListener("input", () => LoginActions.clearError());
-    this.passwordInput?.addEventListener("input", () => LoginActions.clearError());
+    this.emailInput?.addEventListener("input", () => {
+      this.emailInput?.classList.remove("input-group__field--error");
+      LoginActions.clearError();
+    });
+    this.passwordInput?.addEventListener("input", () => {
+      this.passwordInput?.classList.remove("input-group__field--error");
+      LoginActions.clearError();
+    });
 
     linkRegister?.addEventListener("click", (e: MouseEvent) => {
       e.preventDefault();
