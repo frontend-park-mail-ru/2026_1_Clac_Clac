@@ -2,7 +2,7 @@ import { renderLoginModule } from "./modules/login";
 import { renderRegisterModule } from "./modules/register";
 import { renderBoardsModule } from "./modules/boards";
 import { renderPasswordRecoveryModule } from "./modules/passwordRecovery";
-import { renderProfile } from "./pages/profile";
+import { renderProfileModule } from "./modules/profile";
 import { renderKanbanModule } from "./modules/kanban";
 import { renderTaskModule } from "./modules/task";
 import { renderSectionModule } from "./modules/section";
@@ -12,7 +12,7 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/register": renderRegisterModule,
   "/forgot-password": renderPasswordRecoveryModule,
   "/boards": renderBoardsModule,
-  "/profile": renderProfile,
+  "/profile": renderProfileModule,
   "/board": renderKanbanModule,
   "/task": renderTaskModule,
   "/section": renderSectionModule,
