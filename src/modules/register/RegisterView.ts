@@ -12,7 +12,6 @@ export class RegisterView {
   private appDiv: HTMLElement;
   private boundUpdate: () => void;
   private validator: FormValidator | null = null;
-  private isFormValid: boolean = false;
 
   constructor(appDiv: HTMLElement) {
     this.appDiv = appDiv;
@@ -50,7 +49,13 @@ export class RegisterView {
     const submitBtn = document.getElementById('register-submit') as HTMLButtonElement | null;
 
     if (submitBtn) {
-      submitBtn.disabled = state.isLoading || !this.isFormValid;
+      const name = (document.getElementById('name') as HTMLInputElement | null)?.value.trim() || '';
+      const email = (document.getElementById('email') as HTMLInputElement | null)?.value.trim() || '';
+      const password = (document.getElementById('password') as HTMLInputElement | null)?.value.trim() || '';
+      const repeatPassword = (document.getElementById('repeatPassword') as HTMLInputElement | null)?.value.trim() || '';
+
+      const isFilled = Boolean(name && email && password && repeatPassword);
+      submitBtn.disabled = state.isLoading || !isFilled;
     }
   }
 
@@ -100,8 +105,7 @@ export class RegisterView {
       (fieldId, error) => {
         setInputError(fieldId, error);
       },
-      (isValid) => {
-        this.isFormValid = isValid;
+      () => {
         this.updateUI();
       }
     );

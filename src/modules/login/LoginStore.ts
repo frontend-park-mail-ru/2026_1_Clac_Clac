@@ -39,6 +39,9 @@ class LoginStore extends Store {
       case "SET_GLOBAL_ERROR": {
         const payload = action.payload as SetGlobalErrorPayload;
         this.state.globalError = payload.error;
+        if (!payload.error) {
+          this.state.fieldErrors = {};
+        }
         this.emit("change");
         break;
       }
