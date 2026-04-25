@@ -232,7 +232,7 @@ export const kanbanApi = {
 
 export const supportApi = {
   getTickets: () => apiClient.get("/support/tickets"),
-  createTicket: (data: { title: string; description: string; category: string }) => apiClient.post("/support/tickets", data),
+  createTicket: (data: any) => apiClient.post("/support/tickets", data),
   getTicket: (id: string) => apiClient.get(`/support/tickets/${id}`),
   updateTicket: (id: string, data: any) => apiClient.put(`/support/tickets/${id}`, data),
   sendMessage: (id: string, text: string) => apiClient.post(`/support/tickets/${id}/messages`, { text }),

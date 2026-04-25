@@ -1,6 +1,6 @@
 import { currentUser } from './main';
-import { navigateTo } from './router';
 import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
+import { navigateTo } from './router';
 
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.

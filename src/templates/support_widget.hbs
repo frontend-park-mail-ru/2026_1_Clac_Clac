@@ -22,23 +22,45 @@
   {{#if (eq view 'create')}}
     <button class="icon-btn" id="sw-btn-back" style="align-self: flex-start; margin-bottom: 1rem;">&larr; Назад</button>
     <div class="support-widget__create">
-      <div class="input-group">
+      
+      <div class="input-group" style="margin-bottom: 0.8rem;">
+        <label class="input-group__label">Email</label>
+        <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}">
+      </div>
+
+      <div class="input-group" style="margin-bottom: 0.8rem;">
+        <label class="input-group__label">Имя</label>
+        <input type="text" id="sw-name" class="input-group__field" placeholder="Как к вам обращаться?" value="{{user.display_name}}">
+      </div>
+
+      <div class="input-group relative-wrapper" style="margin-bottom: 0.8rem;">
         <label class="input-group__label">Категория</label>
-        <select id="sw-category" class="input-group__field">
-          <option value="Баг">Баг</option>
-          <option value="Предложение">Предложение</option>
-          <option value="Жалоба">Продуктовая жалоба</option>
-          <option value="Вопрос">Вопрос</option>
-        </select>
+        <button type="button" id="sw-category-btn" class="input-group__field" style="text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+          <span id="sw-category-text">Баг</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div id="sw-category-dropdown" class="support-widget__dropdown hidden">
+          <div class="support-widget__dropdown-item">Баг</div>
+          <div class="support-widget__dropdown-item">Предложение</div>
+          <div class="support-widget__dropdown-item">Продуктовая проблема</div>
+        </div>
       </div>
-      <div class="input-group">
-        <label class="input-group__label">Тема</label>
-        <input type="text" id="sw-title" class="input-group__field" placeholder="Краткая суть проблемы">
-      </div>
-      <div class="input-group">
+
+      <div class="input-group" style="margin-bottom: 0.8rem;">
         <label class="input-group__label">Описание</label>
-        <textarea id="sw-desc" class="input-group__field" rows="4" placeholder="Подробности..."></textarea>
+        <textarea id="sw-desc" class="input-group__field" rows="4" placeholder="Опишите проблему максимально подробно..."></textarea>
       </div>
+
+      <div class="input-group" style="margin-bottom: 1.5rem;">
+        <label for="sw-attachment" class="support-widget__attachment-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+          </svg>
+          <span id="sw-attachment-name">Прикрепить фото (необязательно)</span>
+          <input type="file" id="sw-attachment" class="hidden" accept="image/*">
+        </label>
+      </div>
+
       <button class="btn btn--primary" id="sw-btn-submit">Отправить</button>
     </div>
   {{/if}}
@@ -54,6 +76,11 @@
 
     <div class="support-widget__messages" id="sw-messages">
       <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
+      {{#if currentTicket.file_url}}
+        <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
+           <img src="{{currentTicket.file_url}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
+        </div>
+      {{/if}}
       {{#each currentTicket.messages}}
         <div class="msg msg-{{sender}}">{{text}}</div>
       {{/each}}
