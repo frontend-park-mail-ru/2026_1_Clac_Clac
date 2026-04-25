@@ -117,17 +117,19 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       const fileIcon = document.getElementById('sw-attachment-icon');
       const previewContainer = document.getElementById('sw-attachment-preview-container');
       const previewImg = document.getElementById('sw-attachment-preview') as HTMLImageElement;
+      const removeBtn = document.getElementById('sw-attachment-remove');
       let selectedFile: File | null = null;
 
       fileInput?.addEventListener('change', (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           selectedFile = file;
-
+          
           if (fileName) fileName.textContent = file.name;
           if (fileHint) fileHint.style.display = 'none';
           if (fileIcon) fileIcon.style.display = 'none';
-
+          if (removeBtn) removeBtn.classList.remove('hidden');
+          
           if (previewContainer && previewImg) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -138,6 +140,23 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
             };
             reader.readAsDataURL(file);
           }
+        }
+      });
+
+      removeBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        
+        if (fileName) fileName.textContent = 'Прикрепить фото';
+        if (fileHint) fileHint.style.display = 'inline';
+        if (fileIcon) fileIcon.style.display = 'inline-block';
+        if (removeBtn) removeBtn.classList.add('hidden');
+        
+        if (previewContainer && previewImg) {
+          previewContainer.classList.add('hidden');
+          previewImg.src = '';
         }
       });
 

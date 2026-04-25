@@ -64,8 +64,9 @@
         placeholder="Опишите проблему максимально подробно..."></textarea>
     </div>
 
-    <div class="input-group" style="margin-bottom: 1.5rem;">
-      <label for="sw-attachment" class="support-widget__attachment-btn">
+    <div
+      style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+      <label for="sw-attachment" class="support-widget__attachment-btn" style="margin: 0; width: auto; flex: 1;">
         <div id="sw-attachment-preview-container" class="hidden support-widget__preview-box">
           <img id="sw-attachment-preview" src="" alt="Preview">
         </div>
@@ -79,6 +80,15 @@
         <span id="sw-attachment-hint" class="support-widget__attachment-hint">(необязательно)</span>
         <input type="file" id="sw-attachment" class="hidden" accept="image/*">
       </label>
+
+      <button type="button" id="sw-attachment-remove" class="icon-btn hidden" style="color: #ff5c5c; padding: 4px;"
+        title="Удалить вложение">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <button class="btn btn--primary" id="sw-btn-submit" disabled>Отправить</button>
