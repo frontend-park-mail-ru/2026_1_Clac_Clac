@@ -20,6 +20,10 @@ class SupportWidgetStore extends Store {
       }
     });
   }
+
+  public getState() {
+    return this.state;
+  }
 }
 
 const store = new SupportWidgetStore();
@@ -28,9 +32,19 @@ export const SupportWidgetActions = {
   async fetchTickets() {
     try {
       const res = await supportApi.getTickets() as any;
-      const data = res.data || res;
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets: data.appeals || [], role: data.role } });
-    } catch (e) { }
+      const data = res?.data || res || {};
+
+      let tickets = [];
+      if (Array.isArray(data)) {
+        tickets = data;
+      } else if (Array.isArray(data?.appeals)) {
+        tickets = data.appeals;
+      }
+
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: data.role || 'user' } });
+    } catch (e) {
+      console.error("Failed to fetch tickets", e);
+    }
   },
 
   async createTicket(data: { email: string, name: string, category: string, description: string, title: string, file: File | null }) {
@@ -53,6 +67,7 @@ export const SupportWidgetActions = {
         fd.append('attachment', data.file);
         await supportApi.uploadAttachment(newTicketId, fd);
       }
+
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list' } });
       this.fetchTickets();
       Toast.success("Обращение отправлено");
@@ -65,8 +80,8 @@ export const SupportWidgetActions = {
   },
 
   async openTicket(id: string) {
-    const state = store.state;
-    const ticket = state.tickets.find((t: any) => t.appeal_link === id);
+    const state = store.getState();
+    const ticket = state.tickets.find((t: any) => t.appeal_link === id || t.id === id);
     if (ticket) {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: ticket, view: 'chat' } });
     }
@@ -85,21 +100,21 @@ document.addEventListener('click', (e) => {
 
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template({ ...store.state, user: currentUser });
+    appDiv.innerHTML = template({ ...store.getState(), user: currentUser });
 
-    document.getElementById('sw-btn-create')?.addEventListener('click', () => {
+    appDiv.querySelector('#sw-btn-create')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'create' } });
     });
 
-    document.getElementById('sw-btn-back')?.addEventListener('click', () => {
+    appDiv.querySelector('#sw-btn-back')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list' } });
     });
 
-    if (store.state.view === 'create') {
-      const catBtn = document.getElementById('sw-category-btn');
-      const catText = document.getElementById('sw-category-text');
-      const catDropdown = document.getElementById('sw-category-dropdown');
-      const submitBtn = document.getElementById('sw-btn-submit') as HTMLButtonElement;
+    if (store.getState().view === 'create') {
+      const catBtn = appDiv.querySelector('#sw-category-btn');
+      const catText = appDiv.querySelector('#sw-category-text');
+      const catDropdown = appDiv.querySelector('#sw-category-dropdown');
+      const submitBtn = appDiv.querySelector('#sw-btn-submit') as HTMLButtonElement;
       let selectedCategory = 'Баг';
 
       catBtn?.addEventListener('click', (e) => {
@@ -107,22 +122,20 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         catDropdown?.classList.toggle('hidden');
       });
 
-      document.addEventListener('click', () => catDropdown?.classList.add('hidden'));
-
-      document.querySelectorAll('.support-widget__dropdown-item').forEach(item => {
+      appDiv.querySelectorAll('.support-widget__dropdown-item').forEach(item => {
         item.addEventListener('click', (e) => {
           selectedCategory = (e.target as HTMLElement).textContent || 'Баг';
           if (catText) catText.textContent = selectedCategory;
         });
       });
 
-      const fileInput = document.getElementById('sw-attachment') as HTMLInputElement;
-      const fileName = document.getElementById('sw-attachment-name');
-      const fileHint = document.getElementById('sw-attachment-hint');
-      const fileIcon = document.getElementById('sw-attachment-icon');
-      const previewContainer = document.getElementById('sw-attachment-preview-container');
-      const previewImg = document.getElementById('sw-attachment-preview') as HTMLImageElement;
-      const removeBtn = document.getElementById('sw-attachment-remove');
+      const fileInput = appDiv.querySelector('#sw-attachment') as HTMLInputElement;
+      const fileName = appDiv.querySelector('#sw-attachment-name');
+      const fileHint = appDiv.querySelector('#sw-attachment-hint');
+      const fileIcon = appDiv.querySelector('#sw-attachment-icon') as HTMLElement;
+      const previewContainer = appDiv.querySelector('#sw-attachment-preview-container');
+      const previewImg = appDiv.querySelector('#sw-attachment-preview') as HTMLImageElement;
+      const removeBtn = appDiv.querySelector('#sw-attachment-remove');
       let selectedFile: File | null = null;
 
       fileInput?.addEventListener('change', (e) => {
@@ -131,7 +144,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
           selectedFile = file;
 
           if (fileName) fileName.textContent = file.name;
-          if (fileHint) fileHint.style.display = 'none';
+          if (fileHint) (fileHint as HTMLElement).style.display = 'none';
           if (fileIcon) fileIcon.style.display = 'none';
           if (removeBtn) removeBtn.classList.remove('hidden');
 
@@ -155,7 +168,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         if (fileInput) fileInput.value = '';
 
         if (fileName) fileName.textContent = 'Прикрепить фото';
-        if (fileHint) fileHint.style.display = 'inline';
+        if (fileHint) (fileHint as HTMLElement).style.display = 'inline';
         if (fileIcon) fileIcon.style.display = 'inline-block';
         if (removeBtn) removeBtn.classList.add('hidden');
 
@@ -166,9 +179,9 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       });
 
       const validateForm = () => {
-        const email = (document.getElementById('sw-email') as HTMLInputElement)?.value.trim();
-        const name = (document.getElementById('sw-name') as HTMLInputElement)?.value.trim();
-        const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement)?.value.trim();
+        const email = (appDiv.querySelector('#sw-email') as HTMLInputElement)?.value.trim();
+        const name = (appDiv.querySelector('#sw-name') as HTMLInputElement)?.value.trim();
+        const desc = (appDiv.querySelector('#sw-desc') as HTMLTextAreaElement)?.value.trim();
 
         const isEmailValid = validateEmail(email);
 
@@ -176,7 +189,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
           submitBtn.disabled = !(isEmailValid && name && desc);
         }
       };['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', (e) => {
+        appDiv.querySelector(`#${id}`)?.addEventListener('input', (e) => {
           (e.target as HTMLElement).classList.remove('input-group__field--error');
           validateForm();
         });
@@ -185,9 +198,9 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       validateForm();
 
       submitBtn?.addEventListener('click', async () => {
-        const email = (document.getElementById('sw-email') as HTMLInputElement).value.trim();
-        const name = (document.getElementById('sw-name') as HTMLInputElement).value.trim();
-        const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement).value.trim();
+        const email = (appDiv.querySelector('#sw-email') as HTMLInputElement).value.trim();
+        const name = (appDiv.querySelector('#sw-name') as HTMLInputElement).value.trim();
+        const desc = (appDiv.querySelector('#sw-desc') as HTMLTextAreaElement).value.trim();
 
         if (validateEmail(email) && name && desc) {
           submitBtn.disabled = true;
@@ -210,8 +223,11 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       });
     }
 
-    document.querySelectorAll('.support-widget__ticket').forEach(el => {
-      el.addEventListener('click', () => SupportWidgetActions.openTicket(el.getAttribute('data-id')!));
+    appDiv.querySelectorAll('.support-widget__ticket').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        if (id) SupportWidgetActions.openTicket(id);
+      });
     });
   };
 

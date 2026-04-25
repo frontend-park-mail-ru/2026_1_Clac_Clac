@@ -1,21 +1,25 @@
 <div class="support-widget">
   {{#if (eq view 'list')}}
   <button class="btn btn--primary" id="sw-btn-create">+ Новое обращение</button>
+
   <div class="support-widget__list mt-1">
     {{#each tickets}}
-    <div class="support-widget__ticket" data-id="{{appeal_link}}">
+    <div class="support-widget__ticket" data-id="{{#if appeal_link}}{{appeal_link}}{{else}}{{id}}{{/if}}">
       <h4>{{display_name}}</h4>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="status status-{{status}}">
-          {{#if (eq status 'new')}}Новое{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
-          'closed')}}Закрыто{{/if}}
-          {{#if (eq status 'close')}}Закрыто{{/if}}{{#if (eq status 'in_work')}}В работе{{/if}}{{#if (eq status
-          'open')}}Открыто{{/if}}
+          {{#if (eq status 'new')}}Новое{{/if}}
+          {{#if (eq status 'in_progress')}}В работе{{/if}}
+          {{#if (eq status 'closed')}}Закрыто{{/if}}
+          {{#if (eq status 'close')}}Закрыто{{/if}}
+          {{#if (eq status 'in_work')}}В работе{{/if}}
+          {{#if (eq status 'open')}}Открыто{{/if}}
         </span>
         <span style="font-size:0.8rem; color:#888;">{{category}}</span>
       </div>
     </div>
     {{/each}}
+
     {{#if (eq tickets.length 0)}}
     <p style="color:#888; text-align:center; margin-top:2rem;">У вас пока нет обращений</p>
     {{/if}}
@@ -120,10 +124,11 @@
 
   <div class="support-widget__messages" id="sw-messages">
     <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
+
     {{#if currentTicket.attachment_key}}
     <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
       <img src="/{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение"
-        onerror="this.src='{{currentTicket.attachment_key}}'">
+        onerror="this.style.display='none';">
     </div>
     {{/if}}
   </div>

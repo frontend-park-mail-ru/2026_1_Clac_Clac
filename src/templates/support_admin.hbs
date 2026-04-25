@@ -23,8 +23,9 @@
       <div class="support-admin__list">
         <h3 style="margin-top:0;">Список тикетов</h3>
         {{#each tickets}}
-        <div class="support-widget__ticket sa-ticket-item" data-id="{{appeal_link}}" {{#if (eq
-          ../currentTicket.appeal_link appeal_link)}}style="border-color: #8b5cf6;" {{/if}}>
+        <div class="support-widget__ticket sa-ticket-item"
+          data-id="{{#if appeal_link}}{{appeal_link}}{{else}}{{id}}{{/if}}" {{#if (eq ../currentTicket.appeal_link
+          appeal_link)}}style="border-color: #8b5cf6;" {{/if}}>
           <h4>{{display_name}}</h4>
           <div style="display:flex; justify-content:space-between; margin-top:0.5rem; align-items: center;">
             <span class="status status-{{status}}">
@@ -36,6 +37,7 @@
           </div>
         </div>
         {{/each}}
+
         {{#if (eq tickets.length 0)}}
         <p style="color:#888;">Нет обращений</p>
         {{/if}}
@@ -59,12 +61,12 @@
         <div class="support-widget__messages" id="sa-messages"
           style="background:#1e1e20; padding:1rem; border-radius:8px;">
           <div class="msg msg-user" style="background:#444; align-self:flex-start;">
-            <strong>Описание пользователя:</strong><br>{{currentTicket.description}}
+            <strong>Описание:</strong><br>{{currentTicket.description}}
           </div>
           {{#if currentTicket.attachment_key}}
           <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden; align-self:flex-start; background:#444;">
             <img src="/{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение"
-              onerror="this.src='{{currentTicket.attachment_key}}'">
+              onerror="this.style.display='none';">
           </div>
           {{/if}}
         </div>

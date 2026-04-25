@@ -17,51 +17,97 @@ class SupportAdminStore extends Store {
       }
     });
   }
+
+  public getState() {
+    return this.state;
+  }
 }
 const store = new SupportAdminStore();
 
 export const SupportAdminActions = {
   async fetchAll() {
     try {
-      const [tRes, sRes] = await Promise.all([supportApi.getTickets() as any, supportApi.getStatistics() as any]);
-      const ticketsData = tRes.data || tRes;
-      const statsData = sRes.data || sRes;
+      let ticketsData: any = {};
+      let statsData: any = { close: 0, in_work: 0, open: 0 };
 
-      const tickets = ticketsData.appeals || [];
+      try {
+        const tRes = await supportApi.getTickets() as any;
+        ticketsData = tRes?.data || tRes || {};
+      } catch (e) {
+        console.error("Failed to load tickets", e);
+      }
+
+      try {
+        const sRes = await supportApi.getStatistics() as any;
+        statsData = sRes?.data || sRes || statsData;
+      } catch (e) {
+        console.error("Failed to load stats", e);
+      }
+
+      let tickets = [];
+      if (Array.isArray(ticketsData)) {
+        tickets = ticketsData;
+      } else if (Array.isArray(ticketsData?.appeals)) {
+        tickets = ticketsData.appeals;
+      }
+
       appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { tickets, statistics: statsData } });
-    } catch (e) { }
+    } catch (e) {
+      console.error("Error in fetchAll", e);
+    }
   },
+
   async openTicket(id: string) {
-    const state = store.state;
-    const ticket = state.tickets.find((t: any) => t.appeal_link === id);
+    const state = store.getState();
+    const ticket = state.tickets.find((t: any) => t.appeal_link === id || t.id === id);
     if (ticket) {
       appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { currentTicket: ticket } });
     }
   },
+
   async updateTicket(id: string, data: any) {
     try {
       await supportApi.updateTicket(id, data);
       await this.fetchAll();
       this.openTicket(id);
-    } catch (e) { }
+    } catch (e) {
+      console.error("Failed to update ticket", e);
+    }
   }
 };
 
+let boundRender: (() => void) | null = null;
+
 export const renderSupportAdminModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template(store.state);
+    appDiv.innerHTML = template(store.getState());
 
-    document.querySelectorAll('.sa-ticket-item').forEach(el => {
-      el.addEventListener('click', () => SupportAdminActions.openTicket(el.getAttribute('data-id')!));
+    appDiv.querySelectorAll('.sa-ticket-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        if (id) SupportAdminActions.openTicket(id);
+      });
     });
 
-    document.getElementById('sa-status-select')?.addEventListener('change', (e) => {
-      const status = (e.target as HTMLSelectElement).value;
-      if (store.state.currentTicket) SupportAdminActions.updateTicket(store.state.currentTicket.appeal_link, { status });
-    });
+    const statusSelect = appDiv.querySelector('#sa-status-select') as HTMLSelectElement;
+    if (statusSelect) {
+      statusSelect.addEventListener('change', (e) => {
+        const status = (e.target as HTMLSelectElement).value;
+        const currentTicket = store.getState().currentTicket;
+        if (currentTicket) {
+          const id = currentTicket.appeal_link || currentTicket.id;
+          SupportAdminActions.updateTicket(id, { status });
+        }
+      });
+    }
   };
 
-  store.on('change', render);
+  if (boundRender) {
+    store.off('change', boundRender);
+  }
+  boundRender = render;
+  store.on('change', boundRender);
+
   render();
   SupportAdminActions.fetchAll();
 };
