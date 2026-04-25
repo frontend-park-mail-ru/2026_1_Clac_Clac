@@ -1,0 +1,80 @@
+<div class="support-widget">
+  {{#if (eq view 'list')}}
+    <button class="btn btn--primary" id="sw-btn-create">+ Новое обращение</button>
+    <div class="support-widget__list mt-1">
+      {{#each tickets}}
+        <div class="support-widget__ticket" data-id="{{id}}">
+          <h4>{{title}}</h4>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="status status-{{status}}">
+              {{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status 'closed')}}Закрыто{{/if}}
+            </span>
+            <span style="font-size:0.8rem; color:#888;">{{category}}</span>
+          </div>
+        </div>
+      {{/each}}
+      {{#if (eq tickets.length 0)}}
+        <p style="color:#888; text-align:center; margin-top:2rem;">У вас пока нет обращений</p>
+      {{/if}}
+    </div>
+  {{/if}}
+
+  {{#if (eq view 'create')}}
+    <button class="icon-btn" id="sw-btn-back" style="align-self: flex-start; margin-bottom: 1rem;">&larr; Назад</button>
+    <div class="support-widget__create">
+      <div class="input-group">
+        <label class="input-group__label">Категория</label>
+        <select id="sw-category" class="input-group__field">
+          <option value="Баг">Баг</option>
+          <option value="Предложение">Предложение</option>
+          <option value="Жалоба">Продуктовая жалоба</option>
+          <option value="Вопрос">Вопрос</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-group__label">Тема</label>
+        <input type="text" id="sw-title" class="input-group__field" placeholder="Краткая суть проблемы">
+      </div>
+      <div class="input-group">
+        <label class="input-group__label">Описание</label>
+        <textarea id="sw-desc" class="input-group__field" rows="4" placeholder="Подробности..."></textarea>
+      </div>
+      <button class="btn btn--primary" id="sw-btn-submit">Отправить</button>
+    </div>
+  {{/if}}
+
+  {{#if (eq view 'chat')}}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <button class="icon-btn" id="sw-btn-back">&larr; Назад</button>
+      <span class="status status-{{currentTicket.status}}">
+        {{#if (eq currentTicket.status 'open')}}Открыто{{/if}}{{#if (eq currentTicket.status 'in_progress')}}В работе{{/if}}{{#if (eq currentTicket.status 'closed')}}Закрыто{{/if}}
+      </span>
+    </div>
+    <h3 style="margin:0 0 1rem 0;">{{currentTicket.title}}</h3>
+
+    <div class="support-widget__messages" id="sw-messages">
+      <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
+      {{#each currentTicket.messages}}
+        <div class="msg msg-{{sender}}">{{text}}</div>
+      {{/each}}
+    </div>
+
+    {{#if (eq currentTicket.status 'closed')}}
+      {{#unless currentTicket.rating}}
+      <div style="text-align:center; padding:1rem; background:#222; border-radius:8px; margin-top:1rem;">
+        <p style="margin:0 0 0.5rem 0;">Оцените решение:</p>
+        <div class="support-widget__rating" id="sw-rating-stars">
+          <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+        </div>
+      </div>
+      {{else}}
+      <div style="text-align:center; margin-top:1rem; color:#888;">Вы оценили решение: {{currentTicket.rating}} ★</div>
+      {{/unless}}
+    {{else}}
+      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <input type="text" id="sw-msg-text" class="input-group__field" placeholder="Сообщение...">
+        <button class="btn btn--primary" id="sw-btn-send" style="width:auto;">→</button>
+      </div>
+    {{/if}}
+  {{/if}}
+</div>

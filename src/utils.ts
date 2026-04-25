@@ -1,3 +1,7 @@
+import { currentUser } from './main';
+import { navigateTo } from './router';
+import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
+
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
  *
@@ -105,6 +109,17 @@ export const validatePassword = (password: string): string | null => {
 export const initGlobalListeners = (): void => {
   document.body.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
+
+    const supportBtn = target.closest('#nav-support');
+    if (supportBtn) {
+      const isAdmin = currentUser?.role === 'admin' || currentUser?.is_admin === true;
+      if (isAdmin) {
+        navigateTo('/support-admin');
+      } else {
+        SupportIframeManager.toggle();
+      }
+      return;
+    }
 
     const btn = target.closest('.input-group__toggle-btn');
     if (!btn) {

@@ -35,9 +35,12 @@ Handlebars.registerHelper("eq", function (a, b) {
 
 initGlobalListeners();
 
+export let currentUser: any = null;
+
 const initApp = async () => {
   try {
-    await authApi.checkAuth();
+    const res = await authApi.checkAuth() as any;
+    currentUser = res?.data || res;
     setIsAuth(true);
   } catch (err) {
     setIsAuth(false);

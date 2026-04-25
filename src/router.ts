@@ -6,6 +6,8 @@ import { renderProfileModule } from "./modules/profile";
 import { renderKanbanModule } from "./modules/kanban";
 import { renderTaskModule } from "./modules/task";
 import { renderSectionModule } from "./modules/section";
+import { renderSupportWidgetModule } from "./modules/supportWidget";
+import { renderSupportAdminModule } from "./modules/supportAdmin";
 
 export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/login": renderLoginModule,
@@ -16,6 +18,8 @@ export const routes: Record<string, (appDiv: HTMLElement) => void> = {
   "/board": renderKanbanModule,
   "/task": renderTaskModule,
   "/section": renderSectionModule,
+  "/support-widget": renderSupportWidgetModule,
+  "/support-admin": renderSupportAdminModule,
 };
 
 let isAuthenticated = false;
