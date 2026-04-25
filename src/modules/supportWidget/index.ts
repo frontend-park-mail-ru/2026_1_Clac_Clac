@@ -10,7 +10,7 @@ import { Toast } from "../../utils/toast";
 const template = Handlebars.compile(widgetTpl);
 
 class SupportWidgetStore extends Store {
-  public state: any = { view: 'list', tickets: [], currentTicket: null };
+  public state: any = { view: 'list', tickets: [], role: 'user', currentTicket: null };
   constructor() {
     super();
     appDispatcher.register((action) => {
@@ -28,13 +28,31 @@ export const SupportWidgetActions = {
   async fetchTickets() {
     try {
       const res = await supportApi.getTickets() as any;
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets: res.data || res } });
+      const data = res.data || res;
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets: data.appeals || [], role: data.role } });
     } catch (e) { }
   },
 
-  async createTicket(data: FormData) {
+  async createTicket(data: { email: string, name: string, category: string, description: string, title: string, file: File | null }) {
     try {
-      await supportApi.createTicket(data);
+      const res = await supportApi.createTicket({
+        mail: data.email,
+        display_name: data.title,
+        category: data.category,
+        description: data.description
+      }) as any;
+
+      let newTicketId = typeof res === 'string' ? res : (res.data?.appeal_link || res.data || res.appeal_link || res);
+
+      if (typeof newTicketId === 'string' && newTicketId.startsWith('"') && newTicketId.endsWith('"')) {
+        newTicketId = newTicketId.slice(1, -1);
+      }
+
+      if (data.file && newTicketId && typeof newTicketId === 'string') {
+        const fd = new FormData();
+        fd.append('attachment', data.file);
+        await supportApi.uploadAttachment(newTicketId, fd);
+      }
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list' } });
       this.fetchTickets();
       Toast.success("Обращение отправлено");
@@ -47,24 +65,11 @@ export const SupportWidgetActions = {
   },
 
   async openTicket(id: string) {
-    try {
-      const res = await supportApi.getTicket(id) as any;
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: res.data || res, view: 'chat' } });
-    } catch (e) { }
-  },
-
-  async sendMessage(id: string, text: string) {
-    try {
-      await supportApi.sendMessage(id, text);
-      this.openTicket(id);
-    } catch (e) { }
-  },
-
-  async rateTicket(id: string, rating: number) {
-    try {
-      await supportApi.updateTicket(id, { rating });
-      this.openTicket(id);
-    } catch (e) { }
+    const state = store.state;
+    const ticket = state.tickets.find((t: any) => t.appeal_link === id);
+    if (ticket) {
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: ticket, view: 'chat' } });
+    }
   }
 };
 
@@ -124,12 +129,12 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           selectedFile = file;
-          
+
           if (fileName) fileName.textContent = file.name;
           if (fileHint) fileHint.style.display = 'none';
           if (fileIcon) fileIcon.style.display = 'none';
           if (removeBtn) removeBtn.classList.remove('hidden');
-          
+
           if (previewContainer && previewImg) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -145,15 +150,15 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
 
       removeBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        
+
         selectedFile = null;
         if (fileInput) fileInput.value = '';
-        
+
         if (fileName) fileName.textContent = 'Прикрепить фото';
         if (fileHint) fileHint.style.display = 'inline';
         if (fileIcon) fileIcon.style.display = 'inline-block';
         if (removeBtn) removeBtn.classList.add('hidden');
-        
+
         if (previewContainer && previewImg) {
           previewContainer.classList.add('hidden');
           previewImg.src = '';
@@ -170,9 +175,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         if (submitBtn) {
           submitBtn.disabled = !(isEmailValid && name && desc);
         }
-      };
-
-      ['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
+      };['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', (e) => {
           (e.target as HTMLElement).classList.remove('input-group__field--error');
           validateForm();
@@ -187,20 +190,18 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement).value.trim();
 
         if (validateEmail(email) && name && desc) {
-          const fd = new FormData();
-          fd.append('email', email);
-          fd.append('name', name);
-          fd.append('category', selectedCategory);
-          fd.append('description', desc);
-          fd.append('title', `[${selectedCategory}] Обращение от ${name}`);
-
-          if (selectedFile) fd.append('file', selectedFile);
-
           submitBtn.disabled = true;
           submitBtn.textContent = 'Отправка...';
 
           try {
-            await SupportWidgetActions.createTicket(fd);
+            await SupportWidgetActions.createTicket({
+              email,
+              name,
+              category: selectedCategory,
+              description: desc,
+              title: `[${selectedCategory}] Обращение от ${name}`,
+              file: selectedFile
+            });
           } catch (e) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Отправить';
@@ -212,23 +213,6 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
     document.querySelectorAll('.support-widget__ticket').forEach(el => {
       el.addEventListener('click', () => SupportWidgetActions.openTicket(el.getAttribute('data-id')!));
     });
-
-    document.getElementById('sw-btn-send')?.addEventListener('click', () => {
-      const text = (document.getElementById('sw-msg-text') as HTMLInputElement).value;
-      if (text && store.state.currentTicket) {
-        SupportWidgetActions.sendMessage(store.state.currentTicket.id, text);
-      }
-    });
-
-    document.querySelectorAll('.star').forEach(star => {
-      star.addEventListener('click', (e) => {
-        const rating = parseInt((e.target as HTMLElement).getAttribute('data-val')!);
-        if (store.state.currentTicket) SupportWidgetActions.rateTicket(store.state.currentTicket.id, rating);
-      });
-    });
-
-    const msgContainer = document.getElementById('sw-messages');
-    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
   };
 
   if (boundRender) {

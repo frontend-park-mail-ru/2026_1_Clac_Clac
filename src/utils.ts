@@ -1,4 +1,4 @@
-import { currentUser } from './main';
+import { supportApi } from './api';
 import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
 import { navigateTo } from './router';
 
@@ -112,12 +112,17 @@ export const initGlobalListeners = (): void => {
 
     const supportBtn = target.closest('#nav-support');
     if (supportBtn) {
-      const isAdmin = currentUser?.role === 'admin' || currentUser?.is_admin === true;
-      if (isAdmin) {
-        navigateTo('/support-admin');
-      } else {
+      supportApi.getTickets().then((res: any) => {
+        const data = res.data || res;
+        const role = data.role;
+        if (role === 'admin' || role === 'support') {
+          navigateTo('/support-admin');
+        } else {
+          SupportIframeManager.toggle();
+        }
+      }).catch(() => {
         SupportIframeManager.toggle();
-      }
+      });
       return;
     }
 

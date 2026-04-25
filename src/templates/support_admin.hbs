@@ -6,20 +6,16 @@
 
     <div class="support-admin__stats mb-1">
       <div class="stat-card">
-        <h3>Всего обращений</h3>
-        <div class="val">{{statistics.total}}</div>
-      </div>
-      <div class="stat-card">
-        <h3>Открыто / В работе</h3>
+        <h3>Новые / Открытые</h3>
         <div class="val">{{statistics.open}}</div>
       </div>
       <div class="stat-card">
-        <h3>Закрыто</h3>
-        <div class="val">{{statistics.closed}}</div>
+        <h3>В работе</h3>
+        <div class="val">{{statistics.in_work}}</div>
       </div>
       <div class="stat-card">
-        <h3>Средняя оценка</h3>
-        <div class="val">{{statistics.avgRating}} ★</div>
+        <h3>Закрыто</h3>
+        <div class="val">{{statistics.close}}</div>
       </div>
     </div>
 
@@ -27,54 +23,55 @@
       <div class="support-admin__list">
         <h3 style="margin-top:0;">Список тикетов</h3>
         {{#each tickets}}
-          <div class="support-widget__ticket sa-ticket-item" data-id="{{id}}" {{#if (eq ../currentTicket.id id)}}style="border-color: #8b5cf6;"{{/if}}>
-            <h4>{{title}}</h4>
-            <div style="display:flex; justify-content:space-between; margin-top:0.5rem; align-items: center;">
-              <span class="status status-{{status}}">
-                {{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status 'closed')}}Закрыто{{/if}}
-              </span>
-              <span style="font-size:0.8rem; color:#888;">Линия: {{support_line}}</span>
-            </div>
+        <div class="support-widget__ticket sa-ticket-item" data-id="{{appeal_link}}" {{#if (eq
+          ../currentTicket.appeal_link appeal_link)}}style="border-color: #8b5cf6;" {{/if}}>
+          <h4>{{display_name}}</h4>
+          <div style="display:flex; justify-content:space-between; margin-top:0.5rem; align-items: center;">
+            <span class="status status-{{status}}">
+              {{#if (eq status 'new')}}Новое{{/if}}{{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status
+              'in_work')}}В работе{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
+              'close')}}Закрыто{{/if}}{{#if (eq status 'closed')}}Закрыто{{/if}}
+            </span>
+            <span style="font-size:0.8rem; color:#888;">{{category}}</span>
           </div>
+        </div>
         {{/each}}
+        {{#if (eq tickets.length 0)}}
+        <p style="color:#888;">Нет обращений</p>
+        {{/if}}
       </div>
 
       <div class="support-admin__detail">
         {{#if currentTicket}}
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-            <h2 style="margin:0;">{{currentTicket.title}}</h2>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
-              <select id="sa-status-select" class="input-group__field" style="width:auto; padding:0.4rem;">
-                <option value="open" {{#if (eq currentTicket.status 'open')}}selected{{/if}}>Открыто</option>
-                <option value="in_progress" {{#if (eq currentTicket.status 'in_progress')}}selected{{/if}}>В работе</option>
-                <option value="closed" {{#if (eq currentTicket.status 'closed')}}selected{{/if}}>Закрыто</option>
-              </select>
-              {{#if (eq currentTicket.support_line 1)}}
-                <button class="btn btn--secondary" id="sa-escalate" title="Перевести на 2-ю линию (сложные тех. вопросы)">На 2 линию</button>
-              {{/if}}
-            </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+          <h2 style="margin:0;">{{currentTicket.display_name}}</h2>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <select id="sa-status-select" class="input-group__field" style="width:auto; padding:0.4rem;">
+              <option value="new" {{#if (eq currentTicket.status 'new' )}}selected{{/if}}>Новое</option>
+              <option value="open" {{#if (eq currentTicket.status 'open' )}}selected{{/if}}>Открыто</option>
+              <option value="in_work" {{#if (eq currentTicket.status 'in_work' )}}selected{{/if}}>В работе</option>
+              <option value="close" {{#if (eq currentTicket.status 'close' )}}selected{{/if}}>Закрыто</option>
+            </select>
           </div>
-          <p style="color:#aaa; margin-top:0;">Категория: {{currentTicket.category}}</p>
+        </div>
+        <p style="color:#aaa; margin-top:0;">Категория: {{currentTicket.category}} | Email: {{currentTicket.email}}</p>
 
-          <div class="support-widget__messages" id="sa-messages" style="background:#1e1e20; padding:1rem; border-radius:8px;">
-            <div class="msg msg-user" style="background:#444; align-self:flex-start;">
-              <strong>Описание пользователя:</strong><br>{{currentTicket.description}}
-            </div>
-            {{#each currentTicket.messages}}
-              <div class="msg msg-{{sender}}" {{#if (eq sender 'user')}}style="align-self:flex-start; background:#444;"{{else}}style="align-self:flex-end; background:#8b5cf6;"{{/if}}>
-                {{text}}
-              </div>
-            {{/each}}
+        <div class="support-widget__messages" id="sa-messages"
+          style="background:#1e1e20; padding:1rem; border-radius:8px;">
+          <div class="msg msg-user" style="background:#444; align-self:flex-start;">
+            <strong>Описание пользователя:</strong><br>{{currentTicket.description}}
           </div>
-
-          <div class="support-widget__input-area mt-1">
-            <input type="text" id="sa-msg-text" class="input-group__field" placeholder="Ответ пользователю...">
-            <button class="btn btn--primary" id="sa-btn-send" style="width:auto;">Отправить</button>
+          {{#if currentTicket.attachment_key}}
+          <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden; align-self:flex-start; background:#444;">
+            <img src="/{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение"
+              onerror="this.src='{{currentTicket.attachment_key}}'">
           </div>
+          {{/if}}
+        </div>
         {{else}}
-          <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#888;">
-            Выберите обращение из списка для ответа
-          </div>
+        <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#888;">
+          Выберите обращение из списка
+        </div>
         {{/if}}
       </div>
     </div>

@@ -30,7 +30,7 @@ const fetchCsrfToken = async (): Promise<string | null> => {
       try {
         const data = await csrfRes.json();
         token = data.csrf_token || data.token || data.csrfToken || null;
-      } catch {}
+      } catch { }
     }
 
     if (!token) {
@@ -104,9 +104,18 @@ const request = async <TResponse = unknown, TBody = unknown>(
     cachedCsrfToken = null;
   }
 
-  let data: TResponse | null;
+  let data: TResponse | null = null;
   try {
-    data = (await response.json()) as TResponse;
+    const text = await response.text();
+    if (text) {
+      try {
+        data = JSON.parse(text) as TResponse;
+      } catch {
+        data = text as unknown as TResponse;
+      }
+    } else {
+      data = null;
+    }
   } catch (err) {
     data = null;
   }
@@ -231,10 +240,9 @@ export const kanbanApi = {
 };
 
 export const supportApi = {
-  getTickets: () => apiClient.get("/support/tickets"),
-  createTicket: (data: any) => apiClient.post("/support/tickets", data),
-  getTicket: (id: string) => apiClient.get(`/support/tickets/${id}`),
-  updateTicket: (id: string, data: any) => apiClient.put(`/support/tickets/${id}`, data),
-  sendMessage: (id: string, text: string) => apiClient.post(`/support/tickets/${id}/messages`, { text }),
-  getStatistics: () => apiClient.get("/support/statistics")
+  getTickets: () => apiClient.get("/appeals"),
+  createTicket: (data: { category: string; description: string; display_name: string; mail: string }) => apiClient.post("/appeals", data),
+  updateTicket: (id: string, data: { status: string }) => apiClient.patch(`/appeals/${id}`, data),
+  getStatistics: () => apiClient.get("/stats"),
+  uploadAttachment: (id: string, formData: FormData) => apiClient.put(`/appeals/${id}/attachment`, formData),
 };

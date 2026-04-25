@@ -7,7 +7,7 @@ import { Store } from "../../core/Store";
 const template = Handlebars.compile(adminTpl);
 
 class SupportAdminStore extends Store {
-  public state: any = { tickets:[], statistics: { total: 0, open: 0, closed: 0, avgRating: 0 }, currentTicket: null };
+  public state: any = { tickets: [], statistics: { close: 0, in_work: 0, open: 0 }, currentTicket: null };
   constructor() {
     super();
     appDispatcher.register((action) => {
@@ -24,27 +24,26 @@ export const SupportAdminActions = {
   async fetchAll() {
     try {
       const [tRes, sRes] = await Promise.all([supportApi.getTickets() as any, supportApi.getStatistics() as any]);
-      appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { tickets: tRes.data || tRes, statistics: sRes.data || sRes } });
-    } catch(e) {}
+      const ticketsData = tRes.data || tRes;
+      const statsData = sRes.data || sRes;
+
+      const tickets = ticketsData.appeals || [];
+      appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { tickets, statistics: statsData } });
+    } catch (e) { }
   },
   async openTicket(id: string) {
-    try {
-      const res = await supportApi.getTicket(id) as any;
-      appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { currentTicket: res.data || res } });
-    } catch(e) {}
+    const state = store.state;
+    const ticket = state.tickets.find((t: any) => t.appeal_link === id);
+    if (ticket) {
+      appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { currentTicket: ticket } });
+    }
   },
   async updateTicket(id: string, data: any) {
     try {
       await supportApi.updateTicket(id, data);
+      await this.fetchAll();
       this.openTicket(id);
-      this.fetchAll();
-    } catch(e) {}
-  },
-  async sendMessage(id: string, text: string) {
-    try {
-      await supportApi.sendMessage(id, text);
-      this.openTicket(id);
-    } catch(e) {}
+    } catch (e) { }
   }
 };
 
@@ -58,22 +57,8 @@ export const renderSupportAdminModule = (appDiv: HTMLElement): void => {
 
     document.getElementById('sa-status-select')?.addEventListener('change', (e) => {
       const status = (e.target as HTMLSelectElement).value;
-      if (store.state.currentTicket) SupportAdminActions.updateTicket(store.state.currentTicket.id, { status });
+      if (store.state.currentTicket) SupportAdminActions.updateTicket(store.state.currentTicket.appeal_link, { status });
     });
-
-    document.getElementById('sa-escalate')?.addEventListener('click', () => {
-      if (store.state.currentTicket) SupportAdminActions.updateTicket(store.state.currentTicket.id, { support_line: 2 });
-    });
-
-    document.getElementById('sa-btn-send')?.addEventListener('click', () => {
-      const text = (document.getElementById('sa-msg-text') as HTMLInputElement).value;
-      if (text && store.state.currentTicket) {
-        SupportAdminActions.sendMessage(store.state.currentTicket.id, text);
-      }
-    });
-
-    const msgContainer = document.getElementById('sa-messages');
-    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
   };
 
   store.on('change', render);
