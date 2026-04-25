@@ -239,9 +239,18 @@ export const kanbanApi = {
   ) => apiClient.patch(`/cards/${taskId}/reorder`, data),
 };
 
+const categoryMap: Record<string, string> = {
+  "Баг": "bug",
+  "Предложение": "proposal",
+  "Продуктовая проблема": "complaint"
+};
+
 export const supportApi = {
   getTickets: () => apiClient.get("/appeals"),
-  createTicket: (data: { category: string; description: string; display_name: string; mail: string }) => apiClient.post("/appeals", data),
+  createTicket: (data: { category: string; description: string; display_name: string; mail: string }) => {
+    const categoryKey = categoryMap[data.category] || data.category;
+    return apiClient.post("/appeals", { ...data, category: categoryKey });
+  },
   updateTicket: (id: string, data: { status: string }) => apiClient.patch(`/appeals/${id}`, data),
   getStatistics: () => apiClient.get("/stats"),
   uploadAttachment: (id: string, formData: FormData) => apiClient.put(`/appeals/${id}/attachment`, formData),
