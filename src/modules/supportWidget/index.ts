@@ -4,29 +4,18 @@ import Handlebars from "handlebars";
 import widgetTpl from "../../templates/support_widget.hbs?raw";
 import { Store } from "../../core/Store";
 import { currentUser } from "../../main";
+import { validateEmail } from "../../utils";
+import { Toast } from "../../utils/toast"; 
 
 const template = Handlebars.compile(widgetTpl);
 
-interface SupportState {
-  view: 'list' | 'create' | 'chat';
-  tickets: any[];
-  currentTicket: any | null;
-  isLoading: boolean;
-}
-
 class SupportWidgetStore extends Store {
-  public state: SupportState = { 
-    view: 'list', 
-    tickets:[], 
-    currentTicket: null, 
-    isLoading: false 
-  };
-
+  public state: any = { view: 'list', tickets:[], currentTicket: null };
   constructor() {
     super();
     appDispatcher.register((action) => {
       if (action.type === 'SW_SET_STATE') {
-        this.state = { ...this.state, ...(action.payload as Partial<SupportState>) };
+        this.state = { ...this.state, ...(action.payload as any) };
         this.emit('change');
       }
     });
@@ -40,20 +29,20 @@ export const SupportWidgetActions = {
     try {
       const res = await supportApi.getTickets() as any;
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets: res.data || res } });
-    } catch(e) {
-      console.error("Ошибка при получении тикетов:", e);
-    }
+    } catch(e) {}
   },
   
   async createTicket(data: FormData) {
     try {
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { isLoading: true } });
       await supportApi.createTicket(data);
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list', isLoading: false } });
-      SupportWidgetActions.fetchTickets();
-    } catch(e) {
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list' } });
+      this.fetchTickets();
+      Toast.success("Обращение отправлено");
+    } catch(e: any) {
       console.error("Ошибка при создании тикета:", e);
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { isLoading: false } });
+      const msg = e.data?.message || e.data?.error || "Ошибка при отправке";
+      Toast.error(msg);
+      throw e;
     }
   },
   
@@ -61,31 +50,24 @@ export const SupportWidgetActions = {
     try {
       const res = await supportApi.getTicket(id) as any;
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: res.data || res, view: 'chat' } });
-    } catch(e) {
-      console.error("Ошибка при открытии тикета:", e);
-    }
+    } catch(e) {}
   },
   
   async sendMessage(id: string, text: string) {
     try {
       await supportApi.sendMessage(id, text);
-      SupportWidgetActions.openTicket(id);
-    } catch(e) {
-      console.error("Ошибка при отправке сообщения:", e);
-    }
+      this.openTicket(id);
+    } catch(e) {}
   },
   
   async rateTicket(id: string, rating: number) {
     try {
       await supportApi.updateTicket(id, { rating });
-      SupportWidgetActions.openTicket(id);
-    } catch(e) {
-      console.error("Ошибка при оценке тикета:", e);
-    }
+      this.openTicket(id);
+    } catch(e) {}
   }
 };
 
-let isBound = false;
 let boundRender: (() => void) | null = null;
 
 document.addEventListener('click', (e) => {
@@ -99,12 +81,6 @@ document.addEventListener('click', (e) => {
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
     appDiv.innerHTML = template({ ...store.state, user: currentUser });
-
-    const submitBtn = document.getElementById('sw-btn-submit') as HTMLButtonElement;
-    if (submitBtn && store.state.isLoading) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Отправка...';
-    }
 
     document.getElementById('sw-btn-create')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'create' } });
@@ -126,9 +102,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         catDropdown?.classList.toggle('hidden');
       });
 
-      document.addEventListener('click', () => {
-        catDropdown?.classList.add('hidden');
-      });
+      document.addEventListener('click', () => catDropdown?.classList.add('hidden'));
 
       document.querySelectorAll('.support-widget__dropdown-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -140,6 +114,9 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       const fileInput = document.getElementById('sw-attachment') as HTMLInputElement;
       const fileName = document.getElementById('sw-attachment-name');
       const fileHint = document.getElementById('sw-attachment-hint');
+      const fileIcon = document.getElementById('sw-attachment-icon');
+      const previewContainer = document.getElementById('sw-attachment-preview-container');
+      const previewImg = document.getElementById('sw-attachment-preview') as HTMLImageElement;
       let selectedFile: File | null = null;
 
       fileInput?.addEventListener('change', (e) => {
@@ -147,7 +124,13 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         if (file) {
           selectedFile = file;
           if (fileName) fileName.textContent = file.name;
-          if (fileHint) fileHint.style.display = 'none'; // Скрываем подпись (необязательно)
+          if (fileHint) fileHint.style.display = 'none';
+          
+          if (fileIcon) fileIcon.style.display = 'none';
+          if (previewContainer && previewImg) {
+             previewContainer.classList.remove('hidden');
+             previewImg.src = URL.createObjectURL(file);
+          }
         }
       });
 
@@ -156,8 +139,10 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         const name = (document.getElementById('sw-name') as HTMLInputElement)?.value.trim();
         const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement)?.value.trim();
         
+        const isEmailValid = validateEmail(email);
+
         if (submitBtn) {
-          submitBtn.disabled = !(email && name && desc);
+          submitBtn.disabled = !(isEmailValid && name && desc);
         }
       };
 
@@ -170,12 +155,12 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
 
       validateForm();
 
-      submitBtn?.addEventListener('click', () => {
+      submitBtn?.addEventListener('click', async () => {
         const email = (document.getElementById('sw-email') as HTMLInputElement).value.trim();
         const name = (document.getElementById('sw-name') as HTMLInputElement).value.trim();
         const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement).value.trim();
 
-        if (email && name && desc) {
+        if (validateEmail(email) && name && desc) {
           const fd = new FormData();
           fd.append('email', email);
           fd.append('name', name);
@@ -183,14 +168,17 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
           fd.append('description', desc);
           fd.append('title', `[${selectedCategory}] Обращение от ${name}`);
           
-          if (selectedFile) {
-            fd.append('file', selectedFile);
-          }
+          if (selectedFile) fd.append('file', selectedFile);
 
           submitBtn.disabled = true;
           submitBtn.textContent = 'Отправка...';
 
-          SupportWidgetActions.createTicket(fd);
+          try {
+            await SupportWidgetActions.createTicket(fd);
+          } catch (e) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Отправить';
+          }
         }
       });
     }
@@ -209,9 +197,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
     document.querySelectorAll('.star').forEach(star => {
       star.addEventListener('click', (e) => {
         const rating = parseInt((e.target as HTMLElement).getAttribute('data-val')!);
-        if (store.state.currentTicket) {
-          SupportWidgetActions.rateTicket(store.state.currentTicket.id, rating);
-        }
+        if (store.state.currentTicket) SupportWidgetActions.rateTicket(store.state.currentTicket.id, rating);
       });
     });
 
@@ -226,9 +212,5 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   store.on('change', boundRender);
   
   render();
-  
-  if (!isBound) {
-    SupportWidgetActions.fetchTickets();
-    isBound = true;
-  }
+  SupportWidgetActions.fetchTickets();
 };
