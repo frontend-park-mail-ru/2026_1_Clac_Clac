@@ -5,12 +5,12 @@ import widgetTpl from "../../templates/support_widget.hbs?raw";
 import { Store } from "../../core/Store";
 import { currentUser } from "../../main";
 import { validateEmail } from "../../utils";
-import { Toast } from "../../utils/toast"; 
+import { Toast } from "../../utils/toast";
 
 const template = Handlebars.compile(widgetTpl);
 
 class SupportWidgetStore extends Store {
-  public state: any = { view: 'list', tickets:[], currentTicket: null };
+  public state: any = { view: 'list', tickets: [], currentTicket: null };
   constructor() {
     super();
     appDispatcher.register((action) => {
@@ -29,42 +29,42 @@ export const SupportWidgetActions = {
     try {
       const res = await supportApi.getTickets() as any;
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets: res.data || res } });
-    } catch(e) {}
+    } catch (e) { }
   },
-  
+
   async createTicket(data: FormData) {
     try {
       await supportApi.createTicket(data);
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'list' } });
       this.fetchTickets();
       Toast.success("Обращение отправлено");
-    } catch(e: any) {
+    } catch (e: any) {
       console.error("Ошибка при создании тикета:", e);
       const msg = e.data?.message || e.data?.error || "Ошибка при отправке";
       Toast.error(msg);
       throw e;
     }
   },
-  
+
   async openTicket(id: string) {
     try {
       const res = await supportApi.getTicket(id) as any;
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: res.data || res, view: 'chat' } });
-    } catch(e) {}
+    } catch (e) { }
   },
-  
+
   async sendMessage(id: string, text: string) {
     try {
       await supportApi.sendMessage(id, text);
       this.openTicket(id);
-    } catch(e) {}
+    } catch (e) { }
   },
-  
+
   async rateTicket(id: string, rating: number) {
     try {
       await supportApi.updateTicket(id, { rating });
       this.openTicket(id);
-    } catch(e) {}
+    } catch (e) { }
   }
 };
 
@@ -123,13 +123,20 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           selectedFile = file;
+
           if (fileName) fileName.textContent = file.name;
           if (fileHint) fileHint.style.display = 'none';
-          
           if (fileIcon) fileIcon.style.display = 'none';
+
           if (previewContainer && previewImg) {
-             previewContainer.classList.remove('hidden');
-             previewImg.src = URL.createObjectURL(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              if (event.target?.result) {
+                previewImg.src = event.target.result as string;
+                previewContainer.classList.remove('hidden');
+              }
+            };
+            reader.readAsDataURL(file);
           }
         }
       });
@@ -138,7 +145,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         const email = (document.getElementById('sw-email') as HTMLInputElement)?.value.trim();
         const name = (document.getElementById('sw-name') as HTMLInputElement)?.value.trim();
         const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement)?.value.trim();
-        
+
         const isEmailValid = validateEmail(email);
 
         if (submitBtn) {
@@ -148,8 +155,8 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
 
       ['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', (e) => {
-           (e.target as HTMLElement).classList.remove('input-group__field--error');
-           validateForm();
+          (e.target as HTMLElement).classList.remove('input-group__field--error');
+          validateForm();
         });
       });
 
@@ -167,7 +174,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
           fd.append('category', selectedCategory);
           fd.append('description', desc);
           fd.append('title', `[${selectedCategory}] Обращение от ${name}`);
-          
+
           if (selectedFile) fd.append('file', selectedFile);
 
           submitBtn.disabled = true;
@@ -210,7 +217,7 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   }
   boundRender = render;
   store.on('change', boundRender);
-  
+
   render();
   SupportWidgetActions.fetchTickets();
 };
