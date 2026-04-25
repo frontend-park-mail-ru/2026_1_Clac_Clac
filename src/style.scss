@@ -1095,7 +1095,7 @@ a {
             font-weight: bold;
         }
 
-        .status-open {
+        .status-new {
             background: #3b82f6;
         }
 
@@ -1212,4 +1212,16 @@ a {
     }
 
 
+}
+
+.status-new {
+    background: #3b82f6;
+}
+
+.status-in_progress {
+    background: #f59e0b;
+}
+
+.status-closed {
+    background: #10b981;
 }

@@ -6,16 +6,16 @@
 
     <div class="support-admin__stats mb-1">
       <div class="stat-card">
-        <h3>Новые / Открытые</h3>
-        <div class="val">{{statistics.open}}</div>
+        <h3>Новые</h3>
+        <div class="val">{{statistics.new}}</div>
       </div>
       <div class="stat-card">
         <h3>В работе</h3>
-        <div class="val">{{statistics.in_work}}</div>
+        <div class="val">{{statistics.in_progress}}</div>
       </div>
       <div class="stat-card">
         <h3>Закрыто</h3>
-        <div class="val">{{statistics.close}}</div>
+        <div class="val">{{statistics.closed}}</div>
       </div>
     </div>
 
@@ -29,9 +29,8 @@
           <h4>{{display_name}}</h4>
           <div style="display:flex; justify-content:space-between; margin-top:0.5rem; align-items: center;">
             <span class="status status-{{status}}">
-              {{#if (eq status 'new')}}Новое{{/if}}{{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status
-              'in_work')}}В работе{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
-              'close')}}Закрыто{{/if}}{{#if (eq status 'closed')}}Закрыто{{/if}}
+              {{#if (eq status 'new')}}Новое{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
+              'closed')}}Закрыто{{/if}}
             </span>
             <span style="font-size:0.8rem; color:#888;">{{category}}</span>
           </div>
@@ -50,9 +49,9 @@
           <div style="display:flex; gap:0.5rem; align-items:center;">
             <select id="sa-status-select" class="input-group__field" style="width:auto; padding:0.4rem;">
               <option value="new" {{#if (eq currentTicket.status 'new' )}}selected{{/if}}>Новое</option>
-              <option value="open" {{#if (eq currentTicket.status 'open' )}}selected{{/if}}>Открыто</option>
-              <option value="in_work" {{#if (eq currentTicket.status 'in_work' )}}selected{{/if}}>В работе</option>
-              <option value="close" {{#if (eq currentTicket.status 'close' )}}selected{{/if}}>Закрыто</option>
+              <option value="in_progress" {{#if (eq currentTicket.status 'in_progress' )}}selected{{/if}}>В работе
+              </option>
+              <option value="closed" {{#if (eq currentTicket.status 'closed' )}}selected{{/if}}>Закрыто</option>
             </select>
           </div>
         </div>

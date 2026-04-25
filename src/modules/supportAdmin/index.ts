@@ -7,7 +7,7 @@ import { Store } from "../../core/Store";
 const template = Handlebars.compile(adminTpl);
 
 class SupportAdminStore extends Store {
-  public state: any = { tickets: [], statistics: { close: 0, in_work: 0, open: 0 }, currentTicket: null };
+  public state: any = { tickets: new Array(), statistics: { new: 0, in_progress: 0, closed: 0 }, currentTicket: null };
   constructor() {
     super();
     appDispatcher.register((action) => {
@@ -22,36 +22,35 @@ class SupportAdminStore extends Store {
     return this.state;
   }
 }
+
 const store = new SupportAdminStore();
 
 export const SupportAdminActions = {
   async fetchAll() {
     try {
-      let ticketsData: any = {};
-      let statsData: any = { close: 0, in_work: 0, open: 0 };
+      const tRes = await supportApi.getTickets() as any;
+      const rawData = tRes?.data || tRes || {};
 
-      try {
-        const tRes = await supportApi.getTickets() as any;
-        ticketsData = tRes?.data || tRes || {};
-      } catch (e) {
-        console.error("Failed to load tickets", e);
+      let resultList = new Array();
+      if (Array.isArray(rawData)) {
+        resultList = rawData;
+      } else if (rawData && Array.isArray(rawData.appeals)) {
+        resultList = rawData.appeals;
       }
 
-      try {
-        const sRes = await supportApi.getStatistics() as any;
-        statsData = sRes?.data || sRes || statsData;
-      } catch (e) {
-        console.error("Failed to load stats", e);
+      const stats = { new: 0, in_progress: 0, closed: 0 };
+
+      for (let i = 0; i < resultList.length; i++) {
+        const s = resultList[i].status;
+        if (s === 'new') stats.new += 1;
+        if (s === 'in_progress') stats.in_progress += 1;
+        if (s === 'closed') stats.closed += 1;
       }
 
-      let tickets = [];
-      if (Array.isArray(ticketsData)) {
-        tickets = ticketsData;
-      } else if (Array.isArray(ticketsData?.appeals)) {
-        tickets = ticketsData.appeals;
-      }
-
-      appDispatcher.dispatch({ type: 'SA_SET_STATE', payload: { tickets, statistics: statsData } });
+      appDispatcher.dispatch({
+        type: 'SA_SET_STATE',
+        payload: { tickets: resultList, statistics: stats }
+      });
     } catch (e) {
       console.error("Error in fetchAll", e);
     }
