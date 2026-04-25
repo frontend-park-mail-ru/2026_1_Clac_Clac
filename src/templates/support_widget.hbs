@@ -1,107 +1,133 @@
 <div class="support-widget">
   {{#if (eq view 'list')}}
-    <button class="btn btn--primary" id="sw-btn-create">+ Новое обращение</button>
-    <div class="support-widget__list mt-1">
-      {{#each tickets}}
-        <div class="support-widget__ticket" data-id="{{id}}">
-          <h4>{{title}}</h4>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="status status-{{status}}">
-              {{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status 'closed')}}Закрыто{{/if}}
-            </span>
-            <span style="font-size:0.8rem; color:#888;">{{category}}</span>
-          </div>
-        </div>
-      {{/each}}
-      {{#if (eq tickets.length 0)}}
-        <p style="color:#888; text-align:center; margin-top:2rem;">У вас пока нет обращений</p>
-      {{/if}}
+  <button class="btn btn--primary" id="sw-btn-create">+ Новое обращение</button>
+  <div class="support-widget__list mt-1">
+    {{#each tickets}}
+    <div class="support-widget__ticket" data-id="{{id}}">
+      <h4>{{title}}</h4>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="status status-{{status}}">
+          {{#if (eq status 'open')}}Открыто{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
+          'closed')}}Закрыто{{/if}}
+        </span>
+        <span style="font-size:0.8rem; color:#888;">{{category}}</span>
+      </div>
     </div>
+    {{/each}}
+    {{#if (eq tickets.length 0)}}
+    <p style="color:#888; text-align:center; margin-top:2rem;">У вас пока нет обращений</p>
+    {{/if}}
+  </div>
   {{/if}}
 
   {{#if (eq view 'create')}}
-    <button class="icon-btn" id="sw-btn-back" style="align-self: flex-start; margin-bottom: 1rem;">&larr; Назад</button>
-    <div class="support-widget__create">
-      
-      <div class="input-group" style="margin-bottom: 0.8rem;">
-        <label class="input-group__label">Email</label>
-        <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}">
-      </div>
+  <button class="support-widget__back-btn" id="sw-btn-back">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Назад
+  </button>
 
-      <div class="input-group" style="margin-bottom: 0.8rem;">
-        <label class="input-group__label">Имя</label>
-        <input type="text" id="sw-name" class="input-group__field" placeholder="Как к вам обращаться?" value="{{user.display_name}}">
-      </div>
-
-      <div class="input-group relative-wrapper" style="margin-bottom: 0.8rem;">
-        <label class="input-group__label">Категория</label>
-        <button type="button" id="sw-category-btn" class="input-group__field" style="text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-          <span id="sw-category-text">Баг</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        <div id="sw-category-dropdown" class="support-widget__dropdown hidden">
-          <div class="support-widget__dropdown-item">Баг</div>
-          <div class="support-widget__dropdown-item">Предложение</div>
-          <div class="support-widget__dropdown-item">Продуктовая проблема</div>
-        </div>
-      </div>
-
-      <div class="input-group" style="margin-bottom: 0.8rem;">
-        <label class="input-group__label">Описание</label>
-        <textarea id="sw-desc" class="input-group__field" rows="4" placeholder="Опишите проблему максимально подробно..."></textarea>
-      </div>
-
-      <div class="input-group" style="margin-bottom: 1.5rem;">
-        <label for="sw-attachment" class="support-widget__attachment-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-          </svg>
-          <span id="sw-attachment-name">Прикрепить фото (необязательно)</span>
-          <input type="file" id="sw-attachment" class="hidden" accept="image/*">
-        </label>
-      </div>
-
-      <button class="btn btn--primary" id="sw-btn-submit">Отправить</button>
+  <div class="support-widget__create">
+    <div class="input-group" style="margin-bottom: 0.8rem;">
+      <label class="input-group__label">Email</label>
+      <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}">
     </div>
+
+    <div class="input-group" style="margin-bottom: 0.8rem;">
+      <label class="input-group__label">Имя</label>
+      <input type="text" id="sw-name" class="input-group__field" placeholder="Как к вам обращаться?"
+        value="{{user.display_name}}">
+    </div>
+
+    <div class="input-group relative-wrapper" style="margin-bottom: 0.8rem;">
+      <label class="input-group__label">Категория</label>
+      <button type="button" id="sw-category-btn" class="input-group__field"
+        style="text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+        <span id="sw-category-text">Баг</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div id="sw-category-dropdown" class="support-widget__dropdown hidden">
+        <div class="support-widget__dropdown-item">Баг</div>
+        <div class="support-widget__dropdown-item">Предложение</div>
+        <div class="support-widget__dropdown-item">Продуктовая проблема</div>
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 0.8rem;">
+      <label class="input-group__label">Описание</label>
+      <textarea id="sw-desc" class="input-group__field"
+        placeholder="Опишите проблему максимально подробно..."></textarea>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 1.5rem;">
+      <label for="sw-attachment" class="support-widget__attachment-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+          <path
+            d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+          </path>
+        </svg>
+        <span id="sw-attachment-name" class="support-widget__attachment-text">Прикрепить фото</span>
+        <span id="sw-attachment-hint" class="support-widget__attachment-hint">(необязательно)</span>
+        <input type="file" id="sw-attachment" class="hidden" accept="image/*">
+      </label>
+    </div>
+
+    <button class="btn btn--primary" id="sw-btn-submit" disabled>Отправить</button>
+  </div>
   {{/if}}
 
   {{#if (eq view 'chat')}}
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-      <button class="icon-btn" id="sw-btn-back">&larr; Назад</button>
-      <span class="status status-{{currentTicket.status}}">
-        {{#if (eq currentTicket.status 'open')}}Открыто{{/if}}{{#if (eq currentTicket.status 'in_progress')}}В работе{{/if}}{{#if (eq currentTicket.status 'closed')}}Закрыто{{/if}}
-      </span>
-    </div>
-    <h3 style="margin:0 0 1rem 0;">{{currentTicket.title}}</h3>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <button class="support-widget__back-btn" id="sw-btn-back" style="margin-bottom: 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Назад
+    </button>
+    <span class="status status-{{currentTicket.status}}">
+      {{#if (eq currentTicket.status 'open')}}Открыто{{/if}}{{#if (eq currentTicket.status 'in_progress')}}В
+      работе{{/if}}{{#if (eq currentTicket.status 'closed')}}Закрыто{{/if}}
+    </span>
+  </div>
+  <h3 style="margin:0 0 1rem 0;">{{currentTicket.title}}</h3>
 
-    <div class="support-widget__messages" id="sw-messages">
-      <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
-      {{#if currentTicket.file_url}}
-        <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
-           <img src="{{currentTicket.file_url}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
-        </div>
-      {{/if}}
-      {{#each currentTicket.messages}}
-        <div class="msg msg-{{sender}}">{{text}}</div>
-      {{/each}}
+  <div class="support-widget__messages" id="sw-messages">
+    <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
+    {{#if currentTicket.file_url}}
+    <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
+      <img src="{{currentTicket.file_url}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
     </div>
-
-    {{#if (eq currentTicket.status 'closed')}}
-      {{#unless currentTicket.rating}}
-      <div style="text-align:center; padding:1rem; background:#222; border-radius:8px; margin-top:1rem;">
-        <p style="margin:0 0 0.5rem 0;">Оцените решение:</p>
-        <div class="support-widget__rating" id="sw-rating-stars">
-          <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
-        </div>
-      </div>
-      {{else}}
-      <div style="text-align:center; margin-top:1rem; color:#888;">Вы оценили решение: {{currentTicket.rating}} ★</div>
-      {{/unless}}
-    {{else}}
-      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-        <input type="text" id="sw-msg-text" class="input-group__field" placeholder="Сообщение...">
-        <button class="btn btn--primary" id="sw-btn-send" style="width:auto;">→</button>
-      </div>
     {{/if}}
+    {{#each currentTicket.messages}}
+    <div class="msg msg-{{sender}}">{{text}}</div>
+    {{/each}}
+  </div>
+
+  {{#if (eq currentTicket.status 'closed')}}
+  {{#unless currentTicket.rating}}
+  <div style="text-align:center; padding:1rem; background:#222; border-radius:8px; margin-top:1rem;">
+    <p style="margin:0 0 0.5rem 0;">Оцените решение:</p>
+    <div class="support-widget__rating" id="sw-rating-stars">
+      <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star"
+        data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+    </div>
+  </div>
+  {{else}}
+  <div style="text-align:center; margin-top:1rem; color:#888;">Вы оценили решение: {{currentTicket.rating}} ★</div>
+  {{/unless}}
+  {{else}}
+  <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+    <input type="text" id="sw-msg-text" class="input-group__field" placeholder="Сообщение...">
+    <button class="btn btn--primary" id="sw-btn-send" style="width:auto;">→</button>
+  </div>
+  {{/if}}
   {{/if}}
 </div>

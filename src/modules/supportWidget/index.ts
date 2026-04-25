@@ -96,14 +96,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-const localFormState = {
-  category: 'Баг',
-  file: null as File | null,
-  email: '',
-  name: '',
-  desc: ''
-};
-
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
     appDiv.innerHTML = template({ ...store.state, user: currentUser });
@@ -126,80 +118,80 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       const catBtn = document.getElementById('sw-category-btn');
       const catText = document.getElementById('sw-category-text');
       const catDropdown = document.getElementById('sw-category-dropdown');
-
-      const emailInput = document.getElementById('sw-email') as HTMLInputElement;
-      const nameInput = document.getElementById('sw-name') as HTMLInputElement;
-      const descInput = document.getElementById('sw-desc') as HTMLTextAreaElement;
-
-      if (emailInput && localFormState.email) emailInput.value = localFormState.email;
-      if (nameInput && localFormState.name) nameInput.value = localFormState.name;
-      if (descInput && localFormState.desc) descInput.value = localFormState.desc;
-      if (catText) catText.textContent = localFormState.category;
-
-      emailInput?.addEventListener('input', (e) => { localFormState.email = (e.target as HTMLInputElement).value; });
-      nameInput?.addEventListener('input', (e) => { localFormState.name = (e.target as HTMLInputElement).value; });
-      descInput?.addEventListener('input', (e) => { localFormState.desc = (e.target as HTMLTextAreaElement).value; });
+      const submitBtn = document.getElementById('sw-btn-submit') as HTMLButtonElement;
+      let selectedCategory = 'Баг';
 
       catBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
         catDropdown?.classList.toggle('hidden');
       });
 
+      document.addEventListener('click', () => {
+        catDropdown?.classList.add('hidden');
+      });
+
       document.querySelectorAll('.support-widget__dropdown-item').forEach(item => {
         item.addEventListener('click', (e) => {
-          localFormState.category = (e.target as HTMLElement).textContent || 'Баг';
-          if (catText) catText.textContent = localFormState.category;
+          selectedCategory = (e.target as HTMLElement).textContent || 'Баг';
+          if (catText) catText.textContent = selectedCategory;
         });
       });
 
       const fileInput = document.getElementById('sw-attachment') as HTMLInputElement;
       const fileName = document.getElementById('sw-attachment-name');
-
-      if (fileName && localFormState.file) fileName.textContent = localFormState.file.name;
+      const fileHint = document.getElementById('sw-attachment-hint');
+      let selectedFile: File | null = null;
 
       fileInput?.addEventListener('change', (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
-          localFormState.file = file;
+          selectedFile = file;
           if (fileName) fileName.textContent = file.name;
+          if (fileHint) fileHint.style.display = 'none'; // Скрываем подпись (необязательно)
         }
       });
 
+      const validateForm = () => {
+        const email = (document.getElementById('sw-email') as HTMLInputElement)?.value.trim();
+        const name = (document.getElementById('sw-name') as HTMLInputElement)?.value.trim();
+        const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement)?.value.trim();
+        
+        if (submitBtn) {
+          submitBtn.disabled = !(email && name && desc);
+        }
+      };
+
+      ['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', (e) => {
+           (e.target as HTMLElement).classList.remove('input-group__field--error');
+           validateForm();
+        });
+      });
+
+      validateForm();
+
       submitBtn?.addEventListener('click', () => {
-        const email = emailInput?.value.trim() || '';
-        const name = nameInput?.value.trim() || '';
-        const desc = descInput?.value.trim() || '';
+        const email = (document.getElementById('sw-email') as HTMLInputElement).value.trim();
+        const name = (document.getElementById('sw-name') as HTMLInputElement).value.trim();
+        const desc = (document.getElementById('sw-desc') as HTMLTextAreaElement).value.trim();
 
         if (email && name && desc) {
           const fd = new FormData();
           fd.append('email', email);
           fd.append('name', name);
-          fd.append('category', localFormState.category);
+          fd.append('category', selectedCategory);
           fd.append('description', desc);
-          fd.append('title', `[${localFormState.category}] Обращение от ${name}`);
+          fd.append('title', `[${selectedCategory}] Обращение от ${name}`);
           
-          if (localFormState.file) {
-            fd.append('file', localFormState.file);
+          if (selectedFile) {
+            fd.append('file', selectedFile);
           }
 
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Отправка...';
+
           SupportWidgetActions.createTicket(fd);
-
-          localFormState.file = null;
-          localFormState.category = 'Баг';
-          localFormState.email = '';
-          localFormState.name = '';
-          localFormState.desc = '';
-        } else {
-          if (!email) emailInput?.classList.add('input-group__field--error');
-          if (!name) nameInput?.classList.add('input-group__field--error');
-          if (!desc) descInput?.classList.add('input-group__field--error');
         }
-      });
-
-      ['sw-email', 'sw-name', 'sw-desc'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', (e) => {
-           (e.target as HTMLElement).classList.remove('input-group__field--error');
-        });
       });
     }
 
