@@ -236,3 +236,54 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .profile {
+    &__container {
+      padding: 1rem;
+    }
+
+    &__title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    &__avatar-section {
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    &__avatar-preview {
+      width: 64px;
+      height: 64px;
+    }
+
+    &__btn-save {
+      width: 100%;
+      padding: 0.8rem;
+    }
+  }
+
+  .profile-modal {
+    width: 100% !important;
+    max-width: 380px !important;
+
+    &__header {
+      height: 100px;
+    }
+
+    &__body {
+      padding: 1rem 1.5rem;
+    }
+
+    &__actions {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .profile-modal__btn {
+        width: 100%;
+      }
+    }
+  }
+}
