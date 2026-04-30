@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+codemark.ts
+st.ts
+ai_context.md
+structure.txt

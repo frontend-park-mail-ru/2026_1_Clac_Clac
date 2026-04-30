@@ -1,0 +1,87 @@
+.task {
+  &__page-container {
+    padding: 2rem 4rem;
+  }
+
+  &__header-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+  }
+
+  &__btn {
+    background: transparent;
+    border: 1px solid #444;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ccc;
+
+    &--share {
+      background: #252527;
+      border: 1px solid #333;
+    }
+  }
+
+  &__board-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  &__title {
+    color: white;
+    font-size: 2.8rem;
+    font-weight: bold;
+    margin-bottom: 3rem;
+  }
+
+  &__meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    color: #999;
+  }
+
+  &__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  &__meta-text {
+    font-size: 0.95rem;
+  }
+
+  &__meta-strong {
+    color: white;
+    font-weight: normal;
+  }
+
+  &__description-box {
+    margin-top: 3rem;
+    color: #ccc;
+    line-height: 1.6;
+    font-size: 1rem;
+    background: #252527;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+
+  &__desc-title {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  &__desc-text {
+    white-space: pre-wrap;
+    margin: 0;
+  }
+}
