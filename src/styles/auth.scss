@@ -2,6 +2,7 @@
   &__page {
     display: flex;
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
     background-color: var(--bg-main);
@@ -23,6 +24,7 @@
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
+    padding: 0 1.5rem;
   }
 
   &__title {
@@ -80,5 +82,22 @@
     flex: 1;
     height: 1px;
     background-color: #2a2a2c;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth {
+    &__form-container {
+      width: 100%;
+    }
+
+    &__logo-container {
+      display: none;
+    }
+
+    &__title {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
   }
 }
