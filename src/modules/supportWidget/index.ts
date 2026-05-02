@@ -53,7 +53,7 @@ export const SupportWidgetActions = {
   async createTicket(data: { email: string, name: string, category: string, description: string, title: string, file: File | null }) {
     try {
       const res = await supportApi.createTicket({
-        mail: data.email,
+        email: data.email,
         display_name: data.title,
         category: data.category,
         description: data.description

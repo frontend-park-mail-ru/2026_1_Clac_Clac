@@ -179,8 +179,8 @@ export class TaskView {
         link_card: state.taskId,
         title: title || "Без названия",
         description: description,
-        link_executer: this.currentExecuterId || null,
-        data_dead_line: finalDeadline,
+        executor_link: this.currentExecuterId || null,
+        deadline: finalDeadline,
       };
 
       if (state.taskId) {

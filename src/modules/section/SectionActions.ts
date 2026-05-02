@@ -64,7 +64,7 @@ export const SectionActions = {
 
     const payload = {
       section_link: state.sectionId,
-      section_name: name || "Без названия",
+      name: name || "Без названия",
       color: state.selectedColor,
       max_tasks: isNaN(maxTasks) ? 100 : maxTasks,
       is_mandatory: isMandatory,
