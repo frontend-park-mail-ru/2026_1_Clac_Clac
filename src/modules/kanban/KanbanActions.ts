@@ -184,13 +184,14 @@ export const KanbanActions = {
     }
   },
 
-  async moveTask(boardId: string, taskId: string, targetSectionId: string): Promise<void> {
+  async moveTask(boardId: string, taskId: string, targetSectionId: string, position: number): Promise<void> {
     try {
       await kanbanApi.reorderTask(taskId, {
         link_card: taskId,
         link_section: targetSectionId,
-        position: 1,
+        position,
       });
+      await this.fetchKanban(boardId, true);
     } catch (err: unknown) {
       const error = err as ApiError;
       if (error?.data?.message === "can not skip mandatory section") {
