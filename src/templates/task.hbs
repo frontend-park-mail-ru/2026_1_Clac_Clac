@@ -76,56 +76,40 @@
       <div class="task__subtasks-section">
         <h3 class="task__section-title">Подзадачи</h3>
         <div class="task__subtasks-list">
+          {{#each task.subtasks}}
           <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox">
+            <input type="checkbox" class="subtask-checkbox" data-id="{{link}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
             <span class="checkmark"></span>
-            <span class="task__subtask-text">Назначение пользователей на карточку</span>
+            <span class="task__subtask-text">{{description}}</span>
           </label>
-          <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox" checked>
-            <span class="checkmark"></span>
-            <span class="task__subtask-text" style="color: #666; text-decoration: line-through;">Срок выполнения карточки</span>
-          </label>
-          <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox">
-            <span class="checkmark"></span>
-            <span class="task__subtask-text">Комментарии</span>
-          </label>
-          <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox">
-            <span class="checkmark"></span>
-            <span class="task__subtask-text">Чеклисты</span>
-          </label>
-          <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox">
-            <span class="checkmark"></span>
-            <span class="task__subtask-text">Правки</span>
-          </label>
+          {{/each}}
+        </div>
+        <div class="task__subtask-add mt-05">
+           <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
         </div>
       </div>
 
       <div class="task__comments-section">
-        <h3 class="task__section-title">Комментарии (2)</h3>
-        
-        <div class="task__comments-date">17 апреля, 2026</div>
+        <h3 class="task__section-title">Комментарии ({{comments.length}})</h3>
         
         <div class="task__comments-list">
-          <div class="task__comment">
-            <img src="/logo.svg" alt="Avatar" class="task__comment-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="task__comment-avatar-fallback" style="display:none;">D</div>
+          {{#each comments}}
+          <div class="task__comment" data-id="{{comment_link}}">
+            {{#if author_avatar}}
+            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="task__comment-avatar-fallback" style="display:none;">{{author_fallback}}</div>
+            {{else}}
+            <div class="task__comment-avatar-fallback">{{author_fallback}}</div>
+            {{/if}}
             <div class="task__comment-content">
-              <span class="task__comment-author">Demo</span>
-              <div class="task__comment-bubble">Отлично! Но нужно доделать парочку фичей</div>
+              <span class="task__comment-author">{{author_name}}</span>
+              <div class="task__comment-bubble">{{text}}</div>
             </div>
           </div>
-          
-          <div class="task__comment">
-            <div class="task__comment-avatar-fallback">D</div>
-            <div class="task__comment-content">
-              <span class="task__comment-author">Demo2</span>
-              <div class="task__comment-bubble">Окей, всё будет готово ко вторнику</div>
-            </div>
-          </div>
+          {{/each}}
+          {{#if (eq comments.length 0)}}
+          <p style="color: #666; font-size: 0.9rem;">Нет комментариев</p>
+          {{/if}}
         </div>
       </div>
 

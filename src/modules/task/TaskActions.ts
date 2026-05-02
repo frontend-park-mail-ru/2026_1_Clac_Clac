@@ -14,7 +14,7 @@ export const TaskActions = {
         ? usersRes.data
         : Array.isArray(usersRes)
           ? usersRes
-          :[];
+          : [];
 
       const userPromises = rawUsers.map(async (u: any) => {
         const link = u.user_link || u.id || u;
@@ -40,9 +40,29 @@ export const TaskActions = {
         throw new Error("Задача не найдена");
       }
 
+      let comments = [];
+      try {
+        const commentsRes = (await kanbanApi.getComments(taskId)) as any;
+        comments = commentsRes?.data?.comments || commentsRes?.comments || [];
+
+        comments.forEach((c: any) => {
+          const u = usersList.find(user => user.id === c.author_link);
+          if (u) {
+            c.author_name = u.name;
+            c.author_avatar = u.avatarUrl;
+            c.author_fallback = u.name.charAt(0).toUpperCase();
+          } else {
+            c.author_name = "Пользователь";
+            c.author_fallback = "U";
+          }
+        });
+      } catch (e) {
+        console.error("Failed to load comments", e);
+      }
+
       appDispatcher.dispatch({
         type: TaskActionTypes.LOAD_DATA_SUCCESS,
-        payload: { boardId, taskId, boardName, usersList, taskData },
+        payload: { boardId, taskId, boardName, usersList, taskData, comments },
       });
     } catch (err: any) {
       console.error("Fetch error", err);
@@ -84,4 +104,35 @@ export const TaskActions = {
   clearStore() {
     appDispatcher.dispatch({ type: TaskActionTypes.CLEAR_STORE });
   },
+
+  async addComment(taskId: string, text: string) {
+    try {
+      await kanbanApi.createComment(taskId, { text });
+      const boardId = new URLSearchParams(window.location.search).get("boardId");
+      if (boardId) this.loadTaskData(boardId, taskId);
+    } catch (e) {
+      console.error("Add comment error", e);
+    }
+  },
+
+  async createSubtask(taskId: string, description: string) {
+    try {
+      await kanbanApi.createSubtask(taskId, { description });
+      const boardId = new URLSearchParams(window.location.search).get("boardId");
+      if (boardId) this.loadTaskData(boardId, taskId);
+    } catch (e) {
+      console.error("Create subtask error", e);
+    }
+  },
+
+  async toggleSubtask(subtaskId: string, isDone: boolean, description: string) {
+    try {
+      await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
+      const taskId = new URLSearchParams(window.location.search).get("taskId");
+      const boardId = new URLSearchParams(window.location.search).get("boardId");
+      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+    } catch (e) {
+      console.error("Update subtask error", e);
+    }
+  }
 };

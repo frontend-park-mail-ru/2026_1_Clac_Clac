@@ -153,7 +153,9 @@ export class TaskView {
         raw_time: rawTime,
         executor: executorName,
         executor_id: this.currentExecuterId,
+        subtasks: taskData.subtasks || []
       },
+      comments: state.comments,
     });
 
     this.attachListeners();
@@ -225,7 +227,7 @@ export class TaskView {
       if (!execBtn.parentElement) {
         return;
       };
-      
+
       execBtn.parentElement!.appendChild(dropdown);
     });
 
@@ -269,5 +271,47 @@ export class TaskView {
         this.taskNode?.querySelector("#modal-delete-task")?.classList.add("hidden");
       }),
     );
+
+    const commentInput = this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement;
+    const commentBtn = this.taskNode?.querySelector(".task__comment-send-btn") as HTMLButtonElement;
+
+    const submitComment = () => {
+      const text = commentInput?.value.trim();
+      if (text && state.taskId) {
+        commentInput.value = "";
+        TaskActions.addComment(state.taskId, text);
+      }
+    };
+
+    commentBtn?.addEventListener("click", submitComment);
+    commentInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        submitComment();
+      }
+    });
+
+    const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
+    subtaskInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const desc = subtaskInput.value.trim();
+        if (desc && state.taskId) {
+          subtaskInput.value = "";
+          TaskActions.createSubtask(state.taskId, desc);
+        }
+      }
+    });
+
+    this.taskNode?.querySelectorAll(".subtask-checkbox").forEach((cb) => {
+      cb.addEventListener("change", (e) => {
+        const target = e.target as HTMLInputElement;
+        const id = target.getAttribute("data-id");
+        const desc = target.getAttribute("data-desc");
+        if (id && desc) {
+          TaskActions.toggleSubtask(id, target.checked, desc);
+        }
+      });
+    });
   }
 }

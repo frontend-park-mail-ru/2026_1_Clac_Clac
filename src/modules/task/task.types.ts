@@ -11,6 +11,7 @@ export interface TaskState {
   boardName: string;
   usersList: User[];
   taskData: any;
+  comments: any[];
   error: string | null;
   isLoading: boolean;
   isSaving: boolean;

@@ -200,7 +200,7 @@ export const kanbanApi = {
     apiClient.patch(`/boards/${boardId}/sections/reorder`, data),
   createSection: (data: {
     board_link: string;
-    section_name: string;
+    name: string;
     max_tasks?: number;
     is_mandatory?: boolean;
     color?: string;
@@ -216,27 +216,34 @@ export const kanbanApi = {
   getTask: (taskId: string) => apiClient.get(`/cards/${taskId}`),
   createTask: (data: {
     title: string;
-    link_section: string;
+    section_link: string;
     description?: string;
-    link_executer?: string | null;
-    link_author?: string;
-    data_dead_line?: string;
+    executor_link?: string | null;
+    deadline?: string;
   }) => apiClient.post(`/cards`, data),
   updateTask: (
     taskId: string,
     data: {
-      link_card: string;
       title: string;
-      link_executer?: string | null;
+      executor_link?: string | null;
       description?: string;
-      data_dead_line?: string;
+      deadline?: string;
     },
   ) => apiClient.put(`/cards/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/cards/${taskId}`),
   reorderTask: (
     taskId: string,
-    data: { link_card: string; link_section: string; position: number },
+    data: { section_link: string; position: number },
   ) => apiClient.patch(`/cards/${taskId}/reorder`, data),
+
+  getComments: (taskId: string) => apiClient.get(`/cards/${taskId}/comments`),
+  createComment: (taskId: string, data: { text: string; parent_link?: string }) => apiClient.post(`/cards/${taskId}/comments`, data),
+  updateComment: (commentId: string, data: { text: string }) => apiClient.put(`/comments/${commentId}`, data),
+  deleteComment: (commentId: string) => apiClient.delete(`/comments/${commentId}`),
+
+  createSubtask: (taskId: string, data: { description: string }) => apiClient.post(`/cards/${taskId}/subtasks`, data),
+  updateSubtask: (subtaskId: string, data: { description?: string; is_done?: boolean }) => apiClient.put(`/subtasks/${subtaskId}`, data),
+  deleteSubtask: (subtaskId: string) => apiClient.delete(`/subtasks/${subtaskId}`),
 };
 
 const categoryMap: Record<string, string> = {
@@ -247,11 +254,11 @@ const categoryMap: Record<string, string> = {
 
 export const supportApi = {
   getTickets: () => apiClient.get("/appeals"),
-  createTicket: (data: { category: string; description: string; display_name: string; mail: string }) => {
+  createTicket: (data: { category: string; description: string; display_name: string; email: string }) => {
     const categoryKey = categoryMap[data.category] || data.category;
     return apiClient.post("/appeals", { ...data, category: categoryKey });
   },
-  updateTicket: (id: string, data: { status: string }) => apiClient.patch(`/appeals/${id}`, data),
-  getStatistics: () => apiClient.get("/stats"),
+  updateTicket: (id: string, data: { new_status: string }) => apiClient.patch(`/appeals/${id}`, data),
+  getStatistics: () => apiClient.get("/appeals/stats"),
   uploadAttachment: (id: string, formData: FormData) => apiClient.put(`/appeals/${id}/attachment`, formData),
 };

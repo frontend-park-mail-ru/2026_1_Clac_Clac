@@ -109,7 +109,7 @@ export class KanbanColumnManager {
         const id = input.getAttribute("data-id")!;
         const section = sections.find((s) => s.id === id);
         if (section && input.value.trim() && input.value.trim() !== section.section_name) {
-          KanbanActions.updateSection(id, { section_name: input.value.trim(), section_link: id });
+          KanbanActions.updateSection(id, { name: input.value.trim(), link: id });
         }
       });
     });

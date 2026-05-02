@@ -12,6 +12,9 @@ export interface Task {
   time: string | null;
   executor: string | null;
   executor_id?: string | null;
+  subtasks?: any[];
+  subtasksCount?: number;
+  subtasksDone?: number;
 }
 
 export interface Section {
@@ -60,8 +63,8 @@ export interface RawUser {
 
 export interface RawSection {
   id: string;
-  section_link: string;
-  section_name: string;
+  link: string;
+  name: string;
   color: string;
   max_tasks?: number;
   is_mandatory?: boolean;

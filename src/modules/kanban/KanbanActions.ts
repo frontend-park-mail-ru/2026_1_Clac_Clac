@@ -57,12 +57,12 @@ export const KanbanActions = {
 
       const colors = Object.keys(KANBAN_COLORS);
       const sectionPromises = fetchedSections.map(async (sec, i) => {
-        const secId = sec.section_link || sec.id || "";
+        const secId = sec.link || sec.id || "";
         const secColor = sec.color || colors[i % colors.length];
 
         const section: Section = {
           id: secId,
-          section_name: sec.section_name || "Без названия",
+          section_name: sec.name || "Без названия",
           color: secColor,
           colorHex: KANBAN_COLORS[secColor] || secColor,
           max_tasks: sec.max_tasks,
@@ -123,7 +123,7 @@ export const KanbanActions = {
     try {
       await kanbanApi.createSection({
         board_link: boardId,
-        section_name: name,
+        name: name,
         max_tasks: maxTasks,
         is_mandatory: isMandatory,
         color,
@@ -165,9 +165,9 @@ export const KanbanActions = {
     try {
       await kanbanApi.createTask({
         title,
-        link_section: sectionId,
+        section_link: sectionId,
         description: "",
-        link_executer: executerId,
+        executor_link: executerId,
       });
       await this.fetchKanban(boardId, true);
     } catch {
@@ -187,8 +187,7 @@ export const KanbanActions = {
   async moveTask(boardId: string, taskId: string, targetSectionId: string, position: number): Promise<void> {
     try {
       await kanbanApi.reorderTask(taskId, {
-        link_card: taskId,
-        link_section: targetSectionId,
+        section_link: targetSectionId,
         position,
       });
       await this.fetchKanban(boardId, true);
