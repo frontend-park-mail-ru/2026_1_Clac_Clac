@@ -75,7 +75,7 @@ export class LoginView {
           setInputError(fieldId, message);
         }
       },
-      (isValid: boolean) => { }
+      (_: boolean) => { }
     );
 
     this.formValidator.attachLiveValidation();
