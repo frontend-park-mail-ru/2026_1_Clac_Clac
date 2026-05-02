@@ -1,8 +1,9 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { supportApi } from "../../api";
+import { supportApi, authApi } from "../../api";
 import Handlebars from "handlebars";
 import adminTpl from "../../templates/support_admin.hbs?raw";
 import { Store } from "../../core/Store";
+import { navigateTo, setIsAuth } from "../../router";
 
 const template = Handlebars.compile(adminTpl);
 
@@ -99,6 +100,17 @@ export const renderSupportAdminModule = (appDiv: HTMLElement): void => {
         }
       });
     }
+
+    appDiv.querySelector('#nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
+    appDiv.querySelector('#nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
+    appDiv.querySelector('#logout-btn')?.addEventListener('click', async () => {
+      try {
+        await authApi.logout();
+      } catch { }
+      setIsAuth(false);
+      localStorage.removeItem('isAuth');
+      navigateTo('/login');
+    });
   };
 
   if (boundRender) {
