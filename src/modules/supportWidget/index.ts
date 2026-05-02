@@ -17,6 +17,9 @@ class SupportWidgetStore extends Store {
       if (action.type === 'SW_SET_STATE') {
         this.state = { ...this.state, ...(action.payload as any) };
         this.emit('change');
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'SUPPORT_WIDGET_STATE', view: this.state.view }, '*');
+        }
       }
     });
   }

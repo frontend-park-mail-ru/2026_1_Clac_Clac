@@ -15,6 +15,7 @@ export class LoginView {
   private emailInput: HTMLInputElement | null = null;
   private passwordInput: HTMLInputElement | null = null;
   private formValidator: FormValidator | null = null;
+  private isSubmitted = false;
 
   constructor(appDiv: HTMLElement) {
     this.appDiv = appDiv;
@@ -39,7 +40,7 @@ export class LoginView {
 
   public updateUI(state: LoginState): void {
     if (this.submitBtn) {
-      this.submitBtn.disabled = state.isLoading || !this.formValidator?.validate();
+      this.submitBtn.disabled = state.isLoading;
       this.submitBtn.textContent = state.isLoading ? "Вход..." : "Войти";
     }
 
@@ -47,14 +48,10 @@ export class LoginView {
 
     if (state.fieldErrors.email) {
       this.emailInput?.classList.add("input-group__field--error");
-    } else {
-      this.emailInput?.classList.remove("input-group__field--error");
     }
 
     if (state.fieldErrors.password) {
       this.passwordInput?.classList.add("input-group__field--error");
-    } else {
-      this.passwordInput?.classList.remove("input-group__field--error");
     }
   }
 
@@ -74,13 +71,11 @@ export class LoginView {
     this.formValidator = new FormValidator(
       loginSchema,
       (fieldId: string, message: string | null) => {
-        setInputError(fieldId, message);
-      },
-      (isValid: boolean) => {
-        if (this.submitBtn) {
-          this.submitBtn.disabled = !isValid;
+        if (this.isSubmitted) {
+          setInputError(fieldId, message);
         }
-      }
+      },
+      (isValid: boolean) => { }
     );
 
     this.formValidator.attachLiveValidation();
@@ -106,6 +101,7 @@ export class LoginView {
 
     form?.addEventListener("submit", (e: SubmitEvent) => {
       e.preventDefault();
+      this.isSubmitted = true;
 
       if (!this.formValidator?.validate()) {
         return;

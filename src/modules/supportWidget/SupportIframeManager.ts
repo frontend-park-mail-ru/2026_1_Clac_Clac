@@ -1,5 +1,6 @@
 export class SupportIframeManager {
   private static container: HTMLElement | null = null;
+  private static isCreateView: boolean = false;
 
   static init() {
     if (this.container) return;
@@ -14,15 +15,40 @@ export class SupportIframeManager {
     `;
     document.body.appendChild(this.container);
 
-    document.getElementById('close-support-iframe')?.addEventListener('click', () => {
-      this.hide();
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === 'SUPPORT_WIDGET_STATE') {
+        this.isCreateView = e.data.view === 'create';
+      }
     });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!this.container?.classList.contains('visible')) return;
+      const target = e.target as HTMLElement;
+      if (target.closest('#nav-support')) return;
+      if (!this.container.contains(target)) {
+        this.attemptClose();
+      }
+    });
+
+    document.getElementById('close-support-iframe')?.addEventListener('click', () => {
+      this.attemptClose();
+    });
+  }
+
+  static attemptClose() {
+    if (this.isCreateView) {
+      if (confirm('Вы уверены, что хотите закрыть? Введенные данные будут потеряны.')) {
+        this.hide();
+      }
+    } else {
+      this.hide();
+    }
   }
 
   static toggle() {
     this.init();
     if (this.container?.classList.contains('visible')) {
-      this.hide();
+      this.attemptClose();
     } else {
       this.show();
     }

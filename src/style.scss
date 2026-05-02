@@ -933,6 +933,19 @@ a {
     }
 }
 
+@media (max-width: 768px) {
+  .support-iframe-container {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: auto;
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+}
+
 .support-widget {
     height: 100vh;
     display: flex;

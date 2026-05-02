@@ -1,6 +1,6 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, authApi } from "../../api";
-import { navigateTo } from "../../router";
+import { navigateTo, setIsAuth } from "../../router";
 import { 
   RawBoard, BoardsResponse, CreateBoardResponse, ApiError, Board 
 } from "./boards.types";
@@ -41,6 +41,7 @@ export const BoardsActions = {
       });
 
       if (error.status === 401) {
+        setIsAuth(false);
         localStorage.removeItem("isAuth");
         navigateTo("/login");
       }
@@ -93,6 +94,8 @@ export const BoardsActions = {
     } catch (err: unknown) {
       console.error("Logout error", err);
     }
+    
+    setIsAuth(false);
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   },
