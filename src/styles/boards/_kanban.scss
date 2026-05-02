@@ -343,6 +343,77 @@
         font-size: 0.85rem;
         font-weight: 500;
     }
+
+    &__subtasks {
+        margin-bottom: 1rem;
+        border-top: 1px solid #333;
+        padding-top: 0.8rem;
+    }
+
+    &__subtasks-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        
+        svg {
+            color: #888;
+            transition: transform 0.2s;
+        }
+
+        &:hover svg {
+            color: #fff;
+        }
+    }
+
+    &__subtasks-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+
+        &.hidden {
+            display: none;
+        }
+    }
+
+    &__subtask-item {
+        font-size: 0.8rem;
+        margin: 0;
+        .checkmark {
+            width: 16px;
+            height: 16px;
+            
+            &:after {
+                left: 4px;
+                top: 1px;
+                width: 3px;
+                height: 8px;
+            }
+        }
+    }
+
+    &__subtask-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #ccc;
+    }
+
+    &__subtasks-more {
+        font-size: 0.75rem;
+        color: #888;
+        cursor: pointer;
+        margin-top: 0.3rem;
+
+        &:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+    }
 }
 
 @media (max-width: 768px) {

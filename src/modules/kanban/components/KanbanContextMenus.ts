@@ -59,6 +59,27 @@ export class KanbanContextMenus {
       card.addEventListener("click", (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (target.closest(".kanban-card__options-btn") || target.closest(".assignee__select-btn")) return;
+
+        const subtasksHeader = target.closest(".kanban-card__subtasks-header");
+        if (subtasksHeader) {
+          e.stopPropagation();
+          const list = subtasksHeader.nextElementSibling;
+          if (list) {
+            list.classList.toggle("hidden");
+            const svg = subtasksHeader.querySelector("svg");
+            if (svg) {
+              svg.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+            }
+          }
+          return;
+        }
+
+        const subtasksList = target.closest(".kanban-card__subtasks-list");
+        if (subtasksList) {
+          e.stopPropagation();
+          return;
+        }
+
         const taskId = card.getAttribute("data-id");
         const title = card.getAttribute("data-title") || "";
         navigateTo(`/task?boardId=${state.boardId}&taskId=${taskId}&title=${encodeURIComponent(title)}`);

@@ -73,6 +73,72 @@
         </div>
       </div>
 
+      <div class="task__subtasks-section">
+        <h3 class="task__section-title">Подзадачи</h3>
+        <div class="task__subtasks-list">
+          <label class="custom-checkbox task__subtask-item">
+            <input type="checkbox">
+            <span class="checkmark"></span>
+            <span class="task__subtask-text">Назначение пользователей на карточку</span>
+          </label>
+          <label class="custom-checkbox task__subtask-item">
+            <input type="checkbox" checked>
+            <span class="checkmark"></span>
+            <span class="task__subtask-text" style="color: #666; text-decoration: line-through;">Срок выполнения карточки</span>
+          </label>
+          <label class="custom-checkbox task__subtask-item">
+            <input type="checkbox">
+            <span class="checkmark"></span>
+            <span class="task__subtask-text">Комментарии</span>
+          </label>
+          <label class="custom-checkbox task__subtask-item">
+            <input type="checkbox">
+            <span class="checkmark"></span>
+            <span class="task__subtask-text">Чеклисты</span>
+          </label>
+          <label class="custom-checkbox task__subtask-item">
+            <input type="checkbox">
+            <span class="checkmark"></span>
+            <span class="task__subtask-text">Правки</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="task__comments-section">
+        <h3 class="task__section-title">Комментарии (2)</h3>
+        
+        <div class="task__comments-date">17 апреля, 2026</div>
+        
+        <div class="task__comments-list">
+          <div class="task__comment">
+            <img src="/logo.svg" alt="Avatar" class="task__comment-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="task__comment-avatar-fallback" style="display:none;">D</div>
+            <div class="task__comment-content">
+              <span class="task__comment-author">Demo</span>
+              <div class="task__comment-bubble">Отлично! Но нужно доделать парочку фичей</div>
+            </div>
+          </div>
+          
+          <div class="task__comment">
+            <div class="task__comment-avatar-fallback">D</div>
+            <div class="task__comment-content">
+              <span class="task__comment-author">Demo2</span>
+              <div class="task__comment-bubble">Окей, всё будет готово ко вторнику</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task__comment-input-area">
+        <input type="text" class="task__comment-input" placeholder="Комментарий...">
+        <button class="icon-btn task__comment-send-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+
     </div>
   </div>
 </div>
