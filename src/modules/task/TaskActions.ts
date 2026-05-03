@@ -58,16 +58,23 @@ export const TaskActions = {
             c.author_name = "Пользователь";
             c.author_fallback = "U";
           }
-          if (c.created_at) {
-            try {
-              const date = new Date(c.created_at);
-              const hours = date.getHours().toString().padStart(2, '0');
-              const minutes = date.getMinutes().toString().padStart(2, '0');
-              c.created_time = `${hours}:${minutes}`;
-            } catch (e) {
+          try {
+            let date: Date | null = null;
+            if (c.created_at) {
+              date = new Date(c.created_at);
+              if (isNaN(date.getTime())) {
+                const ts = parseFloat(c.created_at);
+                if (!isNaN(ts)) {
+                  date = new Date(ts < 1e10 ? ts * 1000 : ts);
+                }
+              }
+            }
+            if (date && !isNaN(date.getTime())) {
+              c.created_time = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+            } else {
               c.created_time = '';
             }
-          } else {
+          } catch (e) {
             c.created_time = '';
           }
         });
