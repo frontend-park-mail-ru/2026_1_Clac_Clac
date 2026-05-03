@@ -2,6 +2,9 @@ name: Manual Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "feat/auto-deploy"
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -56,6 +59,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            ln -sfn /home/ubuntu/releases/${{ env.timestamp }} /home/ubuntu/current
+            ln -sfn /home/ubuntu/releases/${{ env.timestamp }} /home/ubuntu/public
             cd /home/ubuntu/releases
             ls -1tr | head -n -5 | xargs -d '\n' rm -rf --
