@@ -85,7 +85,7 @@ export const KanbanActions = {
               formattedTime = dlDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
-            const subtasks = Array.isArray(t.subtasks) ? t.subtasks : [];
+            const subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
 
@@ -99,8 +99,9 @@ export const KanbanActions = {
               subtasks,
               subtasksCount,
               subtasksDone,
+              position: t.position,
             };
-          });
+          }).sort((a, b) => a.position - b.position);
         } catch {
           section.tasks = [];
         }
@@ -159,6 +160,7 @@ export const KanbanActions = {
   async reorderSections(boardId: string, newOrder: string[]): Promise<void> {
     try {
       await kanbanApi.reorderSections(boardId, { list_links: newOrder });
+      await this.fetchKanban(boardId, true);
     } catch {
       Toast.error("Ошибка при сохранении порядка");
       await this.fetchKanban(boardId, true);

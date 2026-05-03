@@ -57,13 +57,13 @@ export class KanbanDragAndDrop {
         if (draggedTaskId && targetSectionId && draggedElement) {
           const cards = Array.from(dropZone.querySelectorAll(".kanban-card"));
 
-          const position = cards.indexOf(draggedElement);
-          const oldPosition = initialIndex !== null ? initialIndex : -1;
+          const position = cards.indexOf(draggedElement) + 1;
+          const oldPosition = initialIndex !== null ? initialIndex + 1 : -1;
 
           if (targetSectionId !== sourceSectionId || position !== oldPosition) {
             KanbanActions.moveTask(boardId, draggedTaskId, targetSectionId, position);
 
-            initialIndex = position;
+            initialIndex = position - 1;
             sourceSectionId = targetSectionId;
           }
         }

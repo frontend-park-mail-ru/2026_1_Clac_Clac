@@ -113,7 +113,7 @@ export const initGlobalListeners = (): void => {
     const supportBtn = target.closest('#nav-support');
     if (supportBtn) {
       supportApi.getTickets().then((res) => {
-        const role = res.role;
+        const role = res.data.role;
         if (role === 'admin' || role === 'support') {
           navigateTo('/support-admin');
         } else {

@@ -32,7 +32,8 @@
       <div class="task__board-title" id="task-board-name">{{board_name}}</div>
 
       <div class="task__title-container">
-        <input type="text" class="task__title-input" id="task-title-input" value="{{task.title}}" placeholder="Заголовок задачи" maxlength="100">
+        <input type="text" class="task__title-input" id="task-title-input" value="{{task.title}}"
+          placeholder="Заголовок задачи" maxlength="100">
       </div>
 
       <div class="task__meta-list">
@@ -42,8 +43,20 @@
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span class="task__meta-label">Исп.:</span>
-          <button class="task__meta-value-btn" id="task-executor-btn" data-id="{{task.executor_id}}">
-            {{#if task.executor}}{{task.executor}}{{else}}Не назначен{{/if}}
+          <button class="task__meta-value-btn" id="task-executor-btn" data-id="{{task.executor_id}}"
+            style="display:flex; align-items:center; gap:0.5rem;">
+            {{#if task.executor_id}}
+            {{#if task.executor_avatar}}
+            <img src="{{task.executor_avatar}}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+            {{else}}
+            <div
+              style="width:20px;height:20px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;">
+              {{task.executor_fallback}}</div>
+            {{/if}}
+            {{task.executor}}
+            {{else}}
+            Не назначен
+            {{/if}}
           </button>
         </div>
 
@@ -62,14 +75,14 @@
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span class="task__meta-label">До</span>
           <input type="time" class="task__meta-time-input" id="task-time-input" value="{{task.raw_time}}">
         </div>
       </div>
 
       <div class="task__description-section">
         <div class="task__description-box">
-          <textarea class="task__description-textarea" id="task-desc-input" placeholder="Добавить описание...">{{task.description}}</textarea>
+          <textarea class="task__description-textarea" id="task-desc-input"
+            placeholder="Добавить описание...">{{task.description}}</textarea>
         </div>
       </div>
 
@@ -77,26 +90,42 @@
         <h3 class="task__section-title">Подзадачи</h3>
         <div class="task__subtasks-list">
           {{#each task.subtasks}}
-          <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox" class="subtask-checkbox" data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
-            <span class="checkmark"></span>
-            <span class="task__subtask-text">{{description}}</span>
-          </label>
+          <div class="task__subtask-row"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
+            <label class="custom-checkbox task__subtask-item" style="flex:1; display:flex; align-items:center;">
+              <input type="checkbox" class="subtask-checkbox"
+                data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-desc="{{description}}" {{#if
+                is_done}}checked{{/if}}>
+              <span class="checkmark"></span>
+              <input type="text" class="task__subtask-text-input" value="{{description}}"
+                data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-done="{{is_done}}"
+                style="background: transparent; border: none; color: #ccc; outline: none; width: 100%; margin-left: 10px; font-size: 0.95rem;">
+            </label>
+            <button class="icon-btn task__subtask-delete-btn"
+              data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}"
+              style="color: #ff5c5c; padding: 4px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
           {{/each}}
         </div>
         <div class="task__subtask-add mt-05">
-           <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
+          <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
         </div>
       </div>
 
       <div class="task__comments-section">
         <h3 class="task__section-title">Комментарии ({{comments.length}})</h3>
-        
+
         <div class="task__comments-list">
           {{#each comments}}
           <div class="task__comment" data-id="{{comment_link}}">
             {{#if author_avatar}}
-            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="task__comment-avatar-fallback" style="display:none;">{{author_fallback}}</div>
             {{else}}
             <div class="task__comment-avatar-fallback">{{author_fallback}}</div>
@@ -116,7 +145,8 @@
       <div class="task__comment-input-area">
         <input type="text" class="task__comment-input" placeholder="Комментарий...">
         <button class="icon-btn task__comment-send-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
@@ -138,7 +168,8 @@
         </svg>
       </button>
     </div>
-    <p class="modal__text">Вы уверены, что хотите удалить карточку “<span id="delete-task-name" style="font-weight: bold;"></span>”?</p>
+    <p class="modal__text">Вы уверены, что хотите удалить карточку “<span id="delete-task-name"
+        style="font-weight: bold;"></span>”?</p>
     <div class="modal__actions">
       <button class="btn btn--danger" id="btn-confirm-delete-task">Удалить</button>
       <button class="btn btn--cancel modal__close-btn">Отменить</button>

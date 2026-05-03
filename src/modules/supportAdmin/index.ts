@@ -30,7 +30,7 @@ export const SupportAdminActions = {
   async fetchAll() {
     try {
       const tRes = await supportApi.getTickets();
-      const resultList = tRes.appeals;
+      const resultList = tRes.data.appeals;
 
       const stats = { new: 0, in_progress: 0, closed: 0 };
 

@@ -129,6 +129,7 @@ export interface Card {
   link: string;
   subtasks: SubtaskInfo[];
   title: string;
+  position: number;
 }
 export interface CardResponse {
   card_link: string;
@@ -137,6 +138,7 @@ export interface CardResponse {
   executor_link: string;
   subtasks: SubtaskResponse[];
   title: string;
+  position: number;
 }
 export interface CardsResponse {
   cards: Card[];
@@ -188,6 +190,7 @@ export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;
   attachment_url: string;
+  attachment_key?: string;
   category: string;
   created_at: string;
   description: string;
@@ -431,13 +434,13 @@ const categoryMap: Record<string, string> = {
 };
 
 export const supportApi = {
-  getTickets: () => apiClient.get<GetAppealsResponse>("/appeals"),
+  getTickets: () => apiClient.get<ApiResponse<GetAppealsResponse>>("/appeals"),
   createTicket: (data: CreateAppealRequest) => {
     const categoryKey = categoryMap[data.category] || data.category;
-    return apiClient.post<{ appeal_link: string }, CreateAppealRequest>("/appeals", { ...data, category: categoryKey });
+    return apiClient.post<ApiResponse<{ appeal_link: string }>, CreateAppealRequest>("/appeals", { ...data, category: categoryKey });
   },
-  updateTicket: (link: string, data: ChangeAppealStatusInfo) => apiClient.patch<string, ChangeAppealStatusInfo>(`/appeals/${link}`, data),
-  deleteTicket: (link: string) => apiClient.delete<string>(`/appeals/${link}`),
-  getStatistics: () => apiClient.get<AppealsStats>("/appeals/stats"),
+  updateTicket: (link: string, data: ChangeAppealStatusInfo) => apiClient.patch<ApiResponse<string>, ChangeAppealStatusInfo>(`/appeals/${link}`, data),
+  deleteTicket: (link: string) => apiClient.delete<ApiResponse<string>>(`/appeals/${link}`),
+  getStatistics: () => apiClient.get<ApiResponse<AppealsStats>>("/appeals/stats"),
   uploadAttachment: (link: string, formData: FormData) => apiClient.put<ApiResponse<UploadAttachmentResponse>, FormData>(`/appeals/${link}/attachment`, formData),
 };

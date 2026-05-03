@@ -12,7 +12,6 @@ export class TaskView {
   private appDiv: HTMLElement;
   private taskNode: HTMLElement | null = null;
   private currentExecuterId: string = "";
-  private hasRendered: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -74,8 +73,7 @@ export class TaskView {
       return;
     }
 
-    if (state.taskData && !this.hasRendered) {
-      this.hasRendered = true;
+    if (state.taskData) {
       this.renderTemplate();
     }
   }
@@ -107,6 +105,34 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const currentValues = {
+      title: (this.taskNode?.querySelector("#task-title-input") as HTMLInputElement)?.value,
+      desc: (this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement)?.value,
+      date: (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement)?.value,
+      time: (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement)?.value,
+      subtask: (this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement)?.value,
+      comment: (this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement)?.value,
+    };
+    
+    const activeEl = document.activeElement as HTMLElement;
+    const activeId = activeEl?.id;
+    const activeClass = activeEl?.className;
+    let activeSelector = activeId ? `#${activeId}` : null;
+    
+    if (!activeSelector && activeClass && activeClass.includes('task__comment-input')) {
+        activeSelector = '.task__comment-input';
+    } else if (!activeSelector && activeClass && activeClass.includes('task__subtask-text-input')) {
+        const id = activeEl.getAttribute('data-id');
+        if (id) activeSelector = `.task__subtask-text-input[data-id="${id}"]`;
+    }
+
+    let selectionStart = 0;
+    let selectionEnd = 0;
+    if (activeEl && (activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement)) {
+      selectionStart = activeEl.selectionStart || 0;
+      selectionEnd = activeEl.selectionEnd || 0;
+    }
+
     const deadline = taskData.dead_line || taskData.data_dead_line;
     let rawDate = "";
     let rawTime = "";
@@ -122,6 +148,8 @@ export class TaskView {
     }
 
     let executorName = "Не назначен";
+    let executorAvatar = "";
+    let executorFallback = "";
     let currentExecuterId =
       taskData.link_executer ||
       taskData.executer_link ||
@@ -131,7 +159,14 @@ export class TaskView {
 
     if (currentExecuterId) {
       const found = usersList.find((u) => u.id === currentExecuterId);
-      executorName = found ? found.name : "Пользователь";
+      if (found) {
+        executorName = found.name;
+        executorAvatar = found.avatarUrl || "";
+        executorFallback = found.name.charAt(0).toUpperCase();
+      } else {
+        executorName = "Пользователь";
+        executorFallback = "U";
+      }
     }
 
     this.currentExecuterId = currentExecuterId;
@@ -152,11 +187,28 @@ export class TaskView {
         raw_date: rawDate,
         raw_time: rawTime,
         executor: executorName,
+        executor_avatar: executorAvatar,
+        executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
-        subtasks: taskData.subtasks || []
+        subtasks: taskData.subtasks ||[]
       },
       comments: state.comments,
     });
+
+    if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
+    if (currentValues.desc !== undefined) (this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement).value = currentValues.desc;
+    if (currentValues.date !== undefined) (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
+    if (currentValues.time !== undefined) (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+    if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
+    if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
+
+    if (activeSelector) {
+      const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
+      if (elToFocus) {
+        elToFocus.focus();
+        if (elToFocus.setSelectionRange) elToFocus.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
 
     this.attachListeners();
   }
@@ -205,30 +257,65 @@ export class TaskView {
 
       const dropdown = document.createElement("div");
       dropdown.className = "assignee__dropdown";
+      
+      const searchContainer = document.createElement("div");
+      searchContainer.style.padding = "0.5rem";
+      const searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.placeholder = "Поиск...";
+      searchInput.className = "assignee__search-input";
+      searchInput.style.cssText = "width: 100%; background: #1a1a1c; border: 1px solid #333; color: white; padding: 0.4rem; border-radius: 4px; outline: none; margin-bottom: 0.5rem;";
+      searchContainer.appendChild(searchInput);
+      dropdown.appendChild(searchContainer);
 
-      state.usersList.forEach((user) => {
-        const item = document.createElement("div");
-        item.className = "assignee__dropdown-item";
-        item.innerHTML = `
-          ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
-          <div class="assignee__info">
-            <span class="assignee__name">${user.name}</span>
-            <span class="assignee__email">${user.email}</span>
-          </div>
-        `;
-        item.addEventListener("click", () => {
-          execBtn.textContent = user.name;
-          this.currentExecuterId = user.id;
-          dropdown.remove();
+      const listContainer = document.createElement("div");
+      listContainer.style.maxHeight = "200px";
+      listContainer.style.overflowY = "auto";
+      dropdown.appendChild(listContainer);
+
+      const renderList = (filter = "") => {
+        listContainer.innerHTML = "";
+        
+        if ("Не назначен".toLowerCase().includes(filter.toLowerCase())) {
+          const clearItem = document.createElement("div");
+          clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";
+          clearItem.innerHTML = `<div class="assignee__avatar assignee__avatar--clear">?</div><div class="assignee__info"><span class="assignee__name">Не назначен</span></div>`;
+          clearItem.addEventListener("click", () => {
+            execBtn.innerHTML = `Не назначен`;
+            this.currentExecuterId = "";
+            dropdown.remove();
+          });
+          listContainer.appendChild(clearItem);
+        }
+
+        state.usersList.filter(u => u.name.toLowerCase().includes(filter.toLowerCase())).forEach((user) => {
+          const item = document.createElement("div");
+          item.className = "assignee__dropdown-item";
+          item.innerHTML = `
+            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+            <div class="assignee__info">
+              <span class="assignee__name">${user.name}</span>
+              <span class="assignee__email">${user.email}</span>
+            </div>
+          `;
+          item.addEventListener("click", () => {
+            execBtn.innerHTML = `
+              ${user.avatarUrl ? `<img src="${user.avatarUrl}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<div style="width:20px;height:20px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;">${user.name.charAt(0).toUpperCase()}</div>`}
+              ${user.name}
+            `;
+            this.currentExecuterId = user.id;
+            dropdown.remove();
+          });
+          listContainer.appendChild(item);
         });
-        dropdown.appendChild(item);
-      });
-
-      if (!execBtn.parentElement) {
-        return;
       };
 
-      execBtn.parentElement!.appendChild(dropdown);
+      renderList();
+      searchInput.addEventListener("input", (e) => renderList((e.target as HTMLInputElement).value));
+
+      if (!execBtn.parentElement) return;
+      execBtn.parentElement.appendChild(dropdown);
+      searchInput.focus();
     });
 
     const optionsBtn = this.taskNode?.querySelector("#btn-task-options");
@@ -310,6 +397,35 @@ export class TaskView {
         const desc = target.getAttribute("data-desc");
         if (id && desc) {
           TaskActions.toggleSubtask(id, target.checked, desc);
+        }
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
+      const updateSubtask = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const id = target.getAttribute("data-id");
+        const isDone = target.getAttribute("data-done") === "true";
+        const desc = target.value.trim();
+        if (id && desc) {
+          TaskActions.toggleSubtask(id, isDone, desc);
+        }
+      };
+      input.addEventListener("blur", updateSubtask);
+      input.addEventListener("keydown", (e: Event) => {
+        const keyEvent = e as KeyboardEvent;
+        if (keyEvent.key === "Enter") {
+          keyEvent.preventDefault();
+          (keyEvent.target as HTMLElement).blur();
+        }
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__subtask-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
+        if (id) {
+          TaskActions.deleteSubtask(id);
         }
       });
     });

@@ -35,9 +35,9 @@ export const SupportWidgetActions = {
   async fetchTickets() {
     try {
       const res = await supportApi.getTickets();
-      const tickets = res.appeals;
+      const tickets = res.data.appeals;
 
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: res.role } });
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: res.data.role } });
     } catch (e) {
       console.error("Failed to fetch tickets", e);
     }
@@ -52,7 +52,7 @@ export const SupportWidgetActions = {
         description: data.description
       });
 
-      let newTicketId = res.appeal_link;
+      let newTicketId = res.data.appeal_link;
 
       if (typeof newTicketId === 'string' && newTicketId.startsWith('"') && newTicketId.endsWith('"')) {
         newTicketId = newTicketId.slice(1, -1);

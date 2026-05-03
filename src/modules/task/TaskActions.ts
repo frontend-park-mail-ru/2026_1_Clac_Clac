@@ -136,5 +136,16 @@ export const TaskActions = {
     } catch (e) {
       console.error("Update subtask error", e);
     }
+  },
+
+  async deleteSubtask(subtaskId: string) {
+    try {
+      await kanbanApi.deleteSubtask(subtaskId);
+      const taskId = new URLSearchParams(window.location.search).get("taskId");
+      const boardId = new URLSearchParams(window.location.search).get("boardId");
+      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+    } catch (e) {
+      console.error("Delete subtask error", e);
+    }
   }
 };

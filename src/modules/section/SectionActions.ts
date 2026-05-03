@@ -16,13 +16,13 @@ export const SectionActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
 
     try {
-      const boardRes = (await boardsApi.getBoard(boardId)) as any;
-      if (boardRes?.data?.name) {
+      const boardRes = await boardsApi.getBoard(boardId);
+      if (boardRes.data.name) {
         appDispatcher.dispatch({ type: ActionTypes.SET_BOARD_NAME, payload: boardRes.data.name });
       }
 
-      const sectionRes = (await kanbanApi.getSection(sectionId)) as any;
-      const sectionData = sectionRes?.data || sectionRes;
+      const sectionRes = await kanbanApi.getSection(sectionId);
+      const sectionData = sectionRes.data;
 
       if (!sectionData) {
         throw new Error('No section data');
@@ -30,7 +30,7 @@ export const SectionActions = {
 
       const formattedData = {
         section_link: sectionId,
-        section_name: sectionData.section_name || "Без названия",
+        section_name: sectionData.name || "Без названия",
         color: sectionData.color || "white",
         max_tasks: sectionData.max_tasks || 100,
         is_mandatory: sectionData.is_mandatory || false,
