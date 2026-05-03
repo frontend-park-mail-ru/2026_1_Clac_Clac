@@ -187,6 +187,17 @@
     font-size: 0.95rem;
     line-height: 1.4;
     border-top-left-radius: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  &__comment-time {
+    display: block;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
   }
 
   &__comment-input-area {

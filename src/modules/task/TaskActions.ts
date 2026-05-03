@@ -6,6 +6,7 @@ interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
   author_avatar?: string;
   author_fallback?: string;
+  created_time?: string;
 };
 
 export const TaskActions = {
@@ -57,6 +58,7 @@ export const TaskActions = {
             c.author_name = "Пользователь";
             c.author_fallback = "U";
           }
+          c.created_time = new Date(c.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         });
       } catch (e) {
         console.error("Failed to load comments", e);
