@@ -20,6 +20,7 @@ Frontend репозиторий команды "КЛАЦ КЛАЦ", проект
 
 [Ашуров Георгий](https://github.com/AshurovG) - *Frontend*
 
+
 [Ягмуров Игорь](https://github.com/UnicoYal) - *Backend*
 
 ## Ссылки
