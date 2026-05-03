@@ -18,10 +18,10 @@ export const TaskActions = {
       const usersRes = await boardsApi.getBoardUsers(boardId);
       const rawUsers = usersRes.data.user_links;
 
-      const userPromises = rawUsers.map(async (u: any) => {
+      const userPromises = rawUsers.map(async (u) => {
         const link = u;
         try {
-          const pRes = await profileApi.getProfileByLink(link)
+          const pRes = await profileApi.getProfileByLink(link);
           const pData = pRes.data;
           return {
             id: link,
@@ -44,7 +44,7 @@ export const TaskActions = {
 
       let comments: ExtendedCommentResponse[] = [];
       try {
-        const commentsRes = await kanbanApi.getComments(taskId)
+        const commentsRes = await kanbanApi.getComments(taskId);
         comments = commentsRes.data.comments;
 
         comments.forEach((c) => {

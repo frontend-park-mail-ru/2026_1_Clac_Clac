@@ -108,6 +108,14 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const currentSubtasks: Record<string, string> = {};
+    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
+      const id = input.getAttribute("data-id");
+      if (id) {
+        currentSubtasks[id] = (input as HTMLInputElement).value;
+      }
+    });
+
     const currentValues = {
       title: (this.taskNode?.querySelector("#task-title-input") as HTMLInputElement)?.value,
       desc: (this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement)?.value,
@@ -180,9 +188,9 @@ export class TaskView {
       this.appDiv.appendChild(this.taskNode);
     }
 
-    const formattedSubtasks = (taskData.subtasks || []).map((st: any) => {
+    const formattedSubtasks = taskData.subtasks.map((st: any) => {
       const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
-      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+      const validDesc = st.description;
       return {
         ...st,
         id: validId,
@@ -226,6 +234,11 @@ export class TaskView {
         if (elToFocus.setSelectionRange) elToFocus.setSelectionRange(selectionStart, selectionEnd);
       }
     }
+
+    Object.entries(currentSubtasks).forEach(([id, val]) => {
+      const el = this.taskNode?.querySelector(`.task__subtask-text-input[data-id="${id}"]`) as HTMLInputElement;
+      if (el) el.value = val;
+    });
 
     this.attachListeners();
   }
