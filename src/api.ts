@@ -191,7 +191,6 @@ export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;
   attachment_url: string;
-  attachment_key?: string;
   category: string;
   created_at: string;
   description: string;
@@ -436,7 +435,6 @@ const categoryMap: Record<string, string> = {
 
 export const supportApi = {
   getTickets: () => apiClient.get<ApiResponse<GetAppealsResponse>>("/appeals"),
-  getTicket: (link: string) => apiClient.get<ApiResponse<AppealInfo>>(`/appeals/${link}`),
   createTicket: (data: CreateAppealRequest) => {
     const categoryKey = categoryMap[data.category] || data.category;
     return apiClient.post<ApiResponse<{ appeal_link: string }>, CreateAppealRequest>("/appeals", { ...data, category: categoryKey });

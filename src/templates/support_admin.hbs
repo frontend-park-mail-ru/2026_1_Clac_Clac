@@ -62,9 +62,9 @@
           <div class="msg msg-user" style="background:#444; align-self:flex-start;">
             <strong>Описание:</strong><br>{{currentTicket.description}}
           </div>
-          {{#if currentTicket.attachment_key}}
+          {{#if currentTicket.attachment_url}}
           <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden; align-self:flex-start; background:#444;">
-            <img src="{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
+            <img src="{{currentTicket.attachment_url}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
           </div>
           {{/if}}
         </div>

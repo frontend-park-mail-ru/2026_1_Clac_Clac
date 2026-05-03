@@ -76,13 +76,10 @@ export const SupportWidgetActions = {
   },
 
   async openTicket(id: string) {
-    try {
-      const res = await supportApi.getTicket(id);
-      const ticket = res.data;
-      console.log("DEBUG ticket full:", ticket);
+    const state = store.getState();
+    const ticket = state.tickets.find((t: any) => t.appeal_link === id || t.id === id);
+    if (ticket) {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { currentTicket: ticket, view: 'chat' } });
-    } catch (e) {
-      console.error("Failed to load ticket", e);
     }
   }
 };
