@@ -37,7 +37,7 @@ export const SupportWidgetActions = {
       const res = await supportApi.getTickets();
       const tickets = res.appeals;
 
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: res.role || 'user' } });
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: res.role } });
     } catch (e) {
       console.error("Failed to fetch tickets", e);
     }

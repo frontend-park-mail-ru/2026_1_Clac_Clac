@@ -23,14 +23,14 @@ export interface UserInfoResponse {
   link: string;
 }
 export interface LogInRequest {
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 export interface RegisterRequest {
-  display_name?: string;
-  email?: string;
-  password?: string;
-  repeated_password?: string;
+  display_name: string;
+  email: string;
+  password: string;
+  repeated_password: string;
 }
 export interface PasswordRecoveryRequest {
   email: string;
@@ -39,9 +39,9 @@ export interface RecoveryCodeRequest {
   code: string;
 }
 export interface NewPasswordRequest {
-  password?: string;
-  repeated_password?: string;
-  token_id?: string;
+  password: string;
+  repeated_password: string;
+  token_id: string;
 }
 
 export interface ProfileResponse {
@@ -52,8 +52,8 @@ export interface ProfileResponse {
   link: string;
 }
 export interface UpdateProfileRequest {
-  description_user?: string;
-  display_name?: string;
+  description_user: string;
+  display_name: string;
 }
 export interface AvatarResponse {
   avatar_url: string;
@@ -72,7 +72,7 @@ export interface CreateBoardRequest {
 }
 export interface UpdateBoardRequest {
   background?: string;
-  board_link?: string;
+  board_link: string;
   description?: string;
   name?: string;
 }
@@ -118,8 +118,8 @@ export interface CreateSubtaskRequest {
   description: string;
 }
 export interface UpdateSubtaskRequest {
-  description?: string;
-  is_done?: boolean;
+  description: string;
+  is_done: boolean;
 }
 
 export interface Card {

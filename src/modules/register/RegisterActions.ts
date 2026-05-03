@@ -1,7 +1,7 @@
 import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './register.types';
 import { authApi } from '../../api';
-import { navigateTo } from '../../router';
+import { navigateTo, setIsAuth } from '../../router';
 
 export const RegisterActions = {
   resetState() {
@@ -29,6 +29,7 @@ export const RegisterActions = {
       });
 
       localStorage.setItem('isAuth', 'true');
+      setIsAuth(true);
       navigateTo('/boards');
     } catch (err: any) {
       const errMsg = err.data?.message || err.data?.error;

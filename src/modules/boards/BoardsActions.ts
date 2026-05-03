@@ -59,7 +59,7 @@ export const BoardsActions = {
 
   async updateBoard(id: string, name: string, description: string, file?: File): Promise<void> {
     try {
-      await boardsApi.updateBoard(id, { name, description });
+      await boardsApi.updateBoard(id, { name, description, board_link: id });
 
       if (file) {
         const fd = new FormData();
