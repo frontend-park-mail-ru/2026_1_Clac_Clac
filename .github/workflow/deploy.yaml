@@ -1,0 +1,58 @@
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Set Release Timestamp
+        id: timestamp
+        run: echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
+
+      - name: Create dirs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TARGET_MACHINE }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            mkdir -p /home/ubuntu/releases/${{ env.timestamp }}
+
+      - name: Upload to target machine
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.TARGET_MACHINE }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/home/ubuntu/releases/${{ env.timestamp }}"
+          strip_components: 1
+
+      - name: Switching
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TARGET_MACHINE }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            ln -sfn /home/ubuntu/releases/${{ env.timestamp }} /home/ubuntu/current
+            cd /home/ubuntu/releases
+            ls -1tr | head -n -5 | xargs -d '\n' rm -rf --
