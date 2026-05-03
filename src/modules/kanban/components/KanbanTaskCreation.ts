@@ -16,7 +16,7 @@ export class KanbanTaskCreation {
     const taskTitleInput = appDiv.querySelector<HTMLInputElement>("#new-task-title");
     const btnConfirmCreateTask = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-create-task");
     const modalAssigneeBtn = appDiv.querySelector<HTMLElement>("#assignee-select-btn");
-    let selectedAssigneeId: string | null = null;
+    let selectedAssigneeId: string;
 
     btnNewTask?.addEventListener("click", () => {
       if (state.sections.length === 0) return;
@@ -27,7 +27,6 @@ export class KanbanTaskCreation {
         taskTitleInput.value = "";
         taskTitleInput.focus();
       }
-      selectedAssigneeId = null;
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
     }, { signal });
 

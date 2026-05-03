@@ -63,7 +63,7 @@ export const SectionActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_SAVING, payload: true });
 
     const payload = {
-      section_link: state.sectionId,
+      link: state.sectionId,
       name: name || "Без названия",
       color: state.selectedColor,
       max_tasks: isNaN(maxTasks) ? 100 : maxTasks,

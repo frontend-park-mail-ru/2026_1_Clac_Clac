@@ -34,17 +34,10 @@ const store = new SupportWidgetStore();
 export const SupportWidgetActions = {
   async fetchTickets() {
     try {
-      const res = await supportApi.getTickets() as any;
-      const data = res?.data || res || {};
+      const res = await supportApi.getTickets();
+      const tickets = res.appeals;
 
-      let tickets = [];
-      if (Array.isArray(data)) {
-        tickets = data;
-      } else if (Array.isArray(data?.appeals)) {
-        tickets = data.appeals;
-      }
-
-      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: data.role || 'user' } });
+      appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { tickets, role: res.role || 'user' } });
     } catch (e) {
       console.error("Failed to fetch tickets", e);
     }
@@ -57,9 +50,9 @@ export const SupportWidgetActions = {
         display_name: data.title,
         category: data.category,
         description: data.description
-      }) as any;
+      });
 
-      let newTicketId = typeof res === 'string' ? res : (res.data?.appeal_link || res.data || res.appeal_link || res);
+      let newTicketId = res.appeal_link;
 
       if (typeof newTicketId === 'string' && newTicketId.startsWith('"') && newTicketId.endsWith('"')) {
         newTicketId = newTicketId.slice(1, -1);

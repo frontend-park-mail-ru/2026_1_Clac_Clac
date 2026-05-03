@@ -65,7 +65,8 @@ export interface RawSection {
   id: string;
   link: string;
   name: string;
-  color: string;
+  color?: string;
+  position: number;
   max_tasks?: number;
   is_mandatory?: boolean;
 }

@@ -1,10 +1,10 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, profileApi } from "../../api";
+import { boardsApi, kanbanApi, profileApi, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
 import {
-  BoardUser, Section, RawUser, RawSection, RawTask,
+  BoardUser, Section,
   KANBAN_COLORS, ApiError
 } from "./kanban.types";
 
@@ -22,29 +22,23 @@ export const KanbanActions = {
     appDispatcher.dispatch({ type: "FETCH_KANBAN_START" });
 
     try {
-      const boardRes = (await boardsApi.getBoard(boardId)) as { data?: { name?: string } };
-      const boardName = boardRes?.data?.name || "Без названия";
+      const boardRes = await boardsApi.getBoard(boardId);
+      const boardName = boardRes.data.name;
 
-      const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
-      const rawUsers: RawUser[] = Array.isArray(usersRes?.data?.user_links)
-        ? usersRes.data.user_links
-        : Array.isArray(usersRes?.user_links)
-          ? usersRes.user_links
-          : Array.isArray(usersRes?.data)
-            ? usersRes.data
-            : Array.isArray(usersRes) ? usersRes : [];
+      const usersRes = await boardsApi.getBoardUsers(boardId);
+      const rawUsers: string[] = usersRes.data.user_links;
 
       const userPromises = rawUsers.map(async (u) => {
-        const link = (u as any).user_link || (u as any).id || String(u);
+        const link = u;
         if (profileCache.has(link)) return profileCache.get(link)!;
 
         try {
-          const pRes = (await profileApi.getProfileByLink(link)) as { data?: RawUser } | RawUser;
-          const pData = (pRes as any)?.data || pRes;
+          const pRes = await profileApi.getProfileByLink(link);
+          const pData = pRes.data;
           const userObj: BoardUser = {
             id: link,
-            name: pData.display_name || "Без имени",
-            email: pData.email || "",
+            name: pData.display_name,
+            email: pData.email,
             avatarUrl: pData.avatar_url,
           };
           profileCache.set(link, userObj);
@@ -55,13 +49,12 @@ export const KanbanActions = {
       });
       const users = await Promise.all(userPromises);
 
-      const sectionsRes = (await kanbanApi.getSections(boardId)) as { data?: { sections?: RawSection[] }, sections?: RawSection[] } | RawSection[];
-      let fetchedSections: RawSection[] = (sectionsRes as any).data?.sections || (sectionsRes as any).sections || (sectionsRes as any).data || sectionsRes || [];
-      if (!Array.isArray(fetchedSections)) fetchedSections = [];
+      const sectionsRes = await kanbanApi.getSections(boardId);
+      const fetchedSections = sectionsRes.data;
 
       const colors = Object.keys(KANBAN_COLORS);
       const sectionPromises = fetchedSections.map(async (sec, i) => {
-        const secId = sec.link || sec.id || "";
+        const secId = sec.link;
         const secColor = sec.color || colors[i % colors.length];
 
         const section: Section = {
@@ -75,13 +68,13 @@ export const KanbanActions = {
         };
 
         try {
-          const tasksRes = (await kanbanApi.getTasks(secId)) as { data?: { cards?: RawTask[] }, cards?: RawTask[] } | RawTask[];
-          const tasksList: RawTask[] = (tasksRes as any)?.data?.cards || (tasksRes as any)?.cards || (tasksRes as any)?.data || tasksRes || [];
+          const tasksRes = await kanbanApi.getTasks(secId);
+          const tasksList = tasksRes.data.cards;
 
           section.tasks = tasksList.map((t) => {
-            const exId = t.executor_link || t.link_executer || t.executer_link;
+            const exId = t.executor_link;
             const exUser = users.find((u) => u.id === exId);
-            const dl = t.deadline || t.dead_line || t.data_dead_line;
+            const dl = t.deadline;
 
             let formattedDate = null;
             let formattedTime = null;
@@ -97,11 +90,11 @@ export const KanbanActions = {
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
 
             return {
-              id: t.link || t.card_link || t.link_card || t.id || "",
+              id: t.link,
               title: t.title || "Без названия",
               due_date: formattedDate,
               time: formattedTime,
-              executor: exUser ? exUser.name : t.executer_name || t.name_executer || null,
+              executor: exUser ? exUser.name : "",
               executor_id: exId,
               subtasks,
               subtasksCount,
@@ -145,7 +138,7 @@ export const KanbanActions = {
     }
   },
 
-  async updateSection(sectionId: string, data: Partial<RawSection>): Promise<void> {
+  async updateSection(sectionId: string, data: Partial<SectionInfo>): Promise<void> {
     try {
       await kanbanApi.updateSection(sectionId, data);
     } catch {
@@ -172,7 +165,7 @@ export const KanbanActions = {
     }
   },
 
-  async createTask(boardId: string, sectionId: string, title: string, executerId: string | null = null): Promise<void> {
+  async createTask(boardId: string, sectionId: string, title: string, executerId?: string): Promise<void> {
     try {
       await kanbanApi.createTask({
         title,

@@ -11,8 +11,8 @@ export const ProfileActions = {
   async fetchProfile() {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
     try {
-      const res = await profileApi.getProfile() as any;
-      const user = res.data || res;
+      const res = await profileApi.getProfile();
+      const user = res.data;
       appDispatcher.dispatch({ type: ActionTypes.SET_USER, payload: user });
     } catch (err: any) {
       console.error('Profile fetch error', err);

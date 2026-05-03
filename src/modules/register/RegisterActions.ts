@@ -1,6 +1,6 @@
 import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './register.types';
-import { apiClient } from '../../api';
+import { authApi } from '../../api';
 import { navigateTo } from '../../router';
 
 export const RegisterActions = {
@@ -21,10 +21,10 @@ export const RegisterActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
 
     try {
-      await apiClient.post('/register', {
+      await authApi.register({
         display_name: name,
-        email: email,
-        password: password,
+        email,
+        password,
         repeated_password: password
       });
 

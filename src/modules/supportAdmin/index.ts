@@ -29,15 +29,8 @@ const store = new SupportAdminStore();
 export const SupportAdminActions = {
   async fetchAll() {
     try {
-      const tRes = await supportApi.getTickets() as any;
-      const rawData = tRes?.data || tRes || {};
-
-      let resultList = new Array();
-      if (Array.isArray(rawData)) {
-        resultList = rawData;
-      } else if (rawData && Array.isArray(rawData.appeals)) {
-        resultList = rawData.appeals;
-      }
+      const tRes = await supportApi.getTickets();
+      const resultList = tRes.appeals;
 
       const stats = { new: 0, in_progress: 0, closed: 0 };
 

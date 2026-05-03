@@ -1,6 +1,6 @@
 import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes, PasswordRecoveryStep } from './passwordRecovery.types';
-import { apiClient } from '../../api';
+import { authApi } from '../../api';
 import { validateEmail, validatePassword } from '../../utils';
 import { navigateTo } from '../../router';
 import { passwordRecoveryStore } from './PasswordRecoveryStore';
@@ -24,7 +24,7 @@ export const PasswordRecoveryActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
 
     try {
-      await apiClient.post('/forgot-password', { email });
+      await authApi.forgotPassword({ email });
       appDispatcher.dispatch({ type: ActionTypes.SET_EMAIL, payload: email });
       appDispatcher.dispatch({ type: ActionTypes.SET_STEP, payload: PasswordRecoveryStep.CODE });
       this.startTimer();
@@ -59,7 +59,7 @@ export const PasswordRecoveryActions = {
     const email = passwordRecoveryStore.getState().email;
     appDispatcher.dispatch({ type: ActionTypes.CLEAR_ERRORS });
     try {
-      await apiClient.post('/forgot-password', { email });
+      await authApi.forgotPassword({ email });
       this.startTimer();
     } catch (err) {
       appDispatcher.dispatch({ type: ActionTypes.SET_FIELD_ERROR, payload: { field: 'code', error: 'Не удалось отправить код повторно' } });
@@ -71,7 +71,7 @@ export const PasswordRecoveryActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
 
     try {
-      await apiClient.post('/check-code', { code });
+      await authApi.checkCode({ code });
       if (timerInterval) clearInterval(timerInterval);
       appDispatcher.dispatch({ type: ActionTypes.SET_CODE, payload: code });
       appDispatcher.dispatch({ type: ActionTypes.SET_STEP, payload: PasswordRecoveryStep.NEW_PASS });
@@ -103,9 +103,9 @@ export const PasswordRecoveryActions = {
     const code = passwordRecoveryStore.getState().code;
 
     try {
-      await apiClient.post('/reset-password', {
+      await authApi.resetPassword({
         token_id: code,
-        password: password,
+        password,
         repeated_password: repeatPassword
       });
       navigateTo('/login');

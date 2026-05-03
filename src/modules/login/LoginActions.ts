@@ -1,5 +1,5 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { apiClient } from "../../api";
+import { authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
 import { Toast } from "../../utils/toast";
 import { ApiError } from "./login.types";
@@ -54,14 +54,14 @@ export const LoginActions = {
     appDispatcher.dispatch({ type: "LOGIN_START" });
 
     try {
-      await apiClient.post("/login", { email, password });
+      await authApi.login({ email, password });
 
       setIsAuth(true);
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
     } catch (err: unknown) {
       const error = err as ApiError;
-      const errMsg = error.data?.message || error.data?.error;
+      const errMsg = error.data.error;
 
       if (
         error.status === 401 ||

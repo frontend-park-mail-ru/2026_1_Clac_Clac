@@ -1,30 +1,28 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, profileApi } from "../../api";
+import { boardsApi, CommentResponse, kanbanApi, profileApi } from "../../api";
 import { TaskActionTypes } from "./task.types";
+
+interface ExtendedCommentResponse extends CommentResponse {
+  author_name?: string;
+  author_avatar?: string;
+  author_fallback?: string;
+};
 
 export const TaskActions = {
   async loadTaskData(boardId: string, taskId: string) {
     appDispatcher.dispatch({ type: TaskActionTypes.LOAD_DATA_START });
     try {
-      const boardRes = (await boardsApi.getBoard(boardId)) as any;
-      const boardName = boardRes?.data?.name || "Без названия";
+      const boardRes = await boardsApi.getBoard(boardId);
+      const boardName = boardRes.data.name || "Без названия";
 
-      const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
-      const rawUsers = Array.isArray(usersRes?.data?.user_links)
-        ? usersRes.data.user_links
-        : Array.isArray(usersRes?.user_links)
-          ? usersRes.user_links
-          : Array.isArray(usersRes?.data)
-            ? usersRes.data
-            : Array.isArray(usersRes)
-              ? usersRes
-              :[];
+      const usersRes = await boardsApi.getBoardUsers(boardId);
+      const rawUsers = usersRes.data.user_links;
 
       const userPromises = rawUsers.map(async (u: any) => {
-        const link = u.user_link || u.id || String(u);
+        const link = u;
         try {
-          const pRes = (await profileApi.getProfileByLink(link)) as any;
-          const pData = pRes?.data || pRes;
+          const pRes = await profileApi.getProfileByLink(link)
+          const pData = pRes.data;
           return {
             id: link,
             name: pData.display_name || "Без имени",
@@ -37,19 +35,19 @@ export const TaskActions = {
       });
       const usersList = await Promise.all(userPromises);
 
-      const taskRes = (await kanbanApi.getTask(taskId)) as any;
-      const taskData = taskRes?.data || taskRes;
+      const taskRes = await kanbanApi.getTask(taskId);
+      const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
       }
 
-      let comments =[];
+      let comments: ExtendedCommentResponse[] = [];
       try {
-        const commentsRes = (await kanbanApi.getComments(taskId)) as any;
-        comments = commentsRes?.data?.comments || commentsRes?.comments ||[];
+        const commentsRes = await kanbanApi.getComments(taskId)
+        comments = commentsRes.data.comments;
 
-        comments.forEach((c: any) => {
+        comments.forEach((c) => {
           const u = usersList.find(user => user.id === c.author_link);
           if (u) {
             c.author_name = u.name;

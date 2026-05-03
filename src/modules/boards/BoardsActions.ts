@@ -2,7 +2,7 @@ import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
 import { 
-  RawBoard, BoardsResponse, CreateBoardResponse, ApiError, Board 
+  ApiError, Board 
 } from "./boards.types";
 
 export const BoardsActions = {
@@ -10,23 +10,16 @@ export const BoardsActions = {
     appDispatcher.dispatch({ type: "FETCH_BOARDS_START" });
 
     try {
-      const res = (await boardsApi.getBoards()) as BoardsResponse | RawBoard[];
-      let rawBoards: RawBoard[] =[];
+      const res = await boardsApi.getBoards();
 
-      if ("data" in res && res.data) {
-        rawBoards = Array.isArray(res.data) ? res.data : [res.data];
-      } else if (Array.isArray(res)) {
-        rawBoards = res;
-      }
-
-      const boards: Board[] = rawBoards.map((board) => ({
-        id: board.link || board.id || "",
-        board_name: board.name || board.board_name || board.title || "Без названия",
+      const boards: Board[] = res.data.map((board) => ({
+        id: board.link,
+        board_name: board.name || "Без названия",
         description: board.description || "Без описания",
         background: board.background || "",
-        backlog: board.backlog || 0,
-        hot: board.hot || 0,
-        members: board.members || 0,
+        backlog: 0,
+        hot: 0,
+        members: 0,
       }));
 
       appDispatcher.dispatch({
@@ -50,8 +43,8 @@ export const BoardsActions = {
 
   async createBoard(name: string, description: string, file?: File): Promise<void> {
     try {
-      const res = (await boardsApi.createBoard({ name, description })) as CreateBoardResponse;
-      const newBoardId = res.data?.link;
+      const res = await boardsApi.createBoard({ name, description });
+      const newBoardId = res.data.link;
 
       if (file && newBoardId) {
         const fd = new FormData();
