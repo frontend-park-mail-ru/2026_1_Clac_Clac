@@ -59,8 +59,14 @@ export const TaskActions = {
             c.author_fallback = "U";
           }
           if (c.created_at) {
-            const timePart = c.created_at.split('T')[1]?.split('.')[0];
-            c.created_time = timePart ? timePart.slice(0, 5) : '';
+            try {
+              const date = new Date(c.created_at);
+              const hours = date.getHours().toString().padStart(2, '0');
+              const minutes = date.getMinutes().toString().padStart(2, '0');
+              c.created_time = `${hours}:${minutes}`;
+            } catch (e) {
+              c.created_time = '';
+            }
           } else {
             c.created_time = '';
           }
