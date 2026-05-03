@@ -1,4 +1,4 @@
-import supportIframeTemplate from './supportIframeTemplate.hbs?raw';
+import supportIframeTemplate from '../../templates/support_iframe.hbs?raw';
 
 export class SupportIframeManager {
   private static container: HTMLElement | null = null;
