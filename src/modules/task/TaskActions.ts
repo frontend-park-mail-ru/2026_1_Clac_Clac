@@ -1,6 +1,8 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, CommentResponse, kanbanApi, profileApi } from "../../api";
 import { TaskActionTypes } from "./task.types";
+import { taskStore } from "./TaskStore";
+import { Toast } from "../../utils/toast";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -8,6 +10,9 @@ interface ExtendedCommentResponse extends CommentResponse {
   author_fallback?: string;
   created_time?: string;
 };
+
+let currentUserLink: string | null = null;
+const commentsCache = new Map<string, ExtendedCommentResponse[]>();
 
 export const TaskActions = {
   async loadTaskData(boardId: string, taskId: string) {
@@ -36,50 +41,63 @@ export const TaskActions = {
       });
       const usersList = await Promise.all(userPromises);
 
-      const taskRes = await kanbanApi.getTask(taskId);
+      const [taskRes, meRes] = await Promise.all([
+        kanbanApi.getTask(taskId),
+        profileApi.getProfile().catch(() => null),
+      ]);
       const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
       }
 
-      let comments: ExtendedCommentResponse[] = [];
-      try {
-        const commentsRes = await kanbanApi.getComments(taskId);
-        comments = commentsRes.data.comments;
+      if (meRes?.data?.link) {
+        currentUserLink = meRes.data.link;
+      }
 
-        comments.forEach((c) => {
-          const u = usersList.find(user => user.id === c.author_link);
-          if (u) {
-            c.author_name = u.name;
-            c.author_avatar = u.avatarUrl;
-            c.author_fallback = u.name.charAt(0).toUpperCase();
-          } else {
-            c.author_name = "Пользователь";
-            c.author_fallback = "U";
-          }
-          try {
-            let date: Date | null = null;
-            if (c.created_at) {
-              date = new Date(c.created_at);
-              if (isNaN(date.getTime())) {
-                const ts = parseFloat(c.created_at);
-                if (!isNaN(ts)) {
-                  date = new Date(ts < 1e10 ? ts * 1000 : ts);
-                }
+      const enrichComment = (c: ExtendedCommentResponse, users: typeof usersList) => {
+        const u = users.find(user => user.id === c.author_link);
+        if (u) {
+          c.author_name = u.name;
+          c.author_avatar = u.avatarUrl;
+          c.author_fallback = u.name.charAt(0).toUpperCase();
+        } else {
+          c.author_name = "Пользователь";
+          c.author_fallback = "U";
+        }
+        try {
+          let date: Date | null = null;
+          if (c.created_at) {
+            date = new Date(c.created_at);
+            if (isNaN(date.getTime())) {
+              const ts = parseFloat(c.created_at);
+              if (!isNaN(ts)) {
+                date = new Date(ts < 1e10 ? ts * 1000 : ts);
               }
             }
-            if (date && !isNaN(date.getTime())) {
-              c.created_time = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-            } else {
-              c.created_time = '';
-            }
-          } catch (e) {
-            c.created_time = '';
           }
-        });
-      } catch (e) {
-        console.error("Failed to load comments", e);
+          c.created_time = (date && !isNaN(date.getTime()))
+            ? `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+            : '';
+        } catch {
+          c.created_time = '';
+        }
+        return c;
+      };
+
+      let comments: ExtendedCommentResponse[] = [];
+      const cached = commentsCache.get(taskId);
+      if (cached) {
+        comments = cached;
+      } else {
+        try {
+          const commentsRes = await kanbanApi.getComments(taskId);
+          comments = commentsRes.data.comments;
+          comments.forEach(c => enrichComment(c, usersList));
+          commentsCache.set(taskId, comments);
+        } catch (e) {
+          console.error("Failed to load comments", e);
+        }
       }
 
       appDispatcher.dispatch({
@@ -124,16 +142,41 @@ export const TaskActions = {
   },
 
   clearStore() {
+    commentsCache.clear();
+    currentUserLink = null;
     appDispatcher.dispatch({ type: TaskActionTypes.CLEAR_STORE });
   },
 
   async addComment(taskId: string, text: string) {
     try {
-      await kanbanApi.createComment(taskId, { text });
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId) this.loadTaskData(boardId, taskId);
+      const res = await kanbanApi.createComment(taskId, { text });
+      const commentLink = res.data.comment_link;
+
+      const { usersList } = taskStore.getState();
+      const me = usersList.find(u => u.id === currentUserLink);
+
+      const now = new Date();
+      const created_time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      const comment: ExtendedCommentResponse = {
+        comment_link: commentLink,
+        author_link: currentUserLink ?? "",
+        parent_link: "",
+        text,
+        created_at: now.toISOString(),
+        author_name: me?.name ?? "Пользователь",
+        author_avatar: me?.avatarUrl,
+        author_fallback: (me?.name ?? "U").charAt(0).toUpperCase(),
+        created_time,
+      };
+
+      const cached = commentsCache.get(taskId) ?? [];
+      commentsCache.set(taskId, [...cached, comment]);
+
+      appDispatcher.dispatch({ type: TaskActionTypes.APPEND_COMMENT, payload: { comment } });
     } catch (e) {
       console.error("Add comment error", e);
+      Toast.error("Ошибка при отправке комментария");
     }
   },
 

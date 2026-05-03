@@ -61,7 +61,7 @@ export class KanbanDragAndDrop {
           const oldPosition = initialIndex !== null ? initialIndex : -1;
 
           if (targetSectionId !== sourceSectionId || position !== oldPosition) {
-            KanbanActions.moveTask(boardId, draggedTaskId, targetSectionId, position);
+            KanbanActions.moveTask(boardId, draggedTaskId, sourceSectionId ?? targetSectionId, targetSectionId, position);
 
             initialIndex = position;
             sourceSectionId = targetSectionId;
