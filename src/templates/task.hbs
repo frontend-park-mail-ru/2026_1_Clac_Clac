@@ -78,7 +78,7 @@
         <div class="task__subtasks-list">
           {{#each task.subtasks}}
           <label class="custom-checkbox task__subtask-item">
-            <input type="checkbox" class="subtask-checkbox" data-id="{{link}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
+            <input type="checkbox" class="subtask-checkbox" data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
             <span class="checkmark"></span>
             <span class="task__subtask-text">{{description}}</span>
           </label>

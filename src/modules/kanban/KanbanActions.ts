@@ -25,13 +25,17 @@ export const KanbanActions = {
       const boardRes = (await boardsApi.getBoard(boardId)) as { data?: { name?: string } };
       const boardName = boardRes?.data?.name || "Без названия";
 
-      const usersRes = (await boardsApi.getBoardUsers(boardId)) as { data?: RawUser[] } | RawUser[];
-      const rawUsers: RawUser[] = Array.isArray((usersRes as any)?.data)
-        ? (usersRes as any).data
-        : Array.isArray(usersRes) ? usersRes : [];
+      const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
+      const rawUsers: RawUser[] = Array.isArray(usersRes?.data?.user_links)
+        ? usersRes.data.user_links
+        : Array.isArray(usersRes?.user_links)
+          ? usersRes.user_links
+          : Array.isArray(usersRes?.data)
+            ? usersRes.data
+            : Array.isArray(usersRes) ? usersRes : [];
 
       const userPromises = rawUsers.map(async (u) => {
-        const link = u.user_link || u.id || String(u);
+        const link = (u as any).user_link || (u as any).id || String(u);
         if (profileCache.has(link)) return profileCache.get(link)!;
 
         try {
@@ -75,9 +79,9 @@ export const KanbanActions = {
           const tasksList: RawTask[] = (tasksRes as any)?.data?.cards || (tasksRes as any)?.cards || (tasksRes as any)?.data || tasksRes || [];
 
           section.tasks = tasksList.map((t) => {
-            const exId = t.link_executer || t.executer_link;
+            const exId = t.executor_link || t.link_executer || t.executer_link;
             const exUser = users.find((u) => u.id === exId);
-            const dl = t.dead_line || t.data_dead_line;
+            const dl = t.deadline || t.dead_line || t.data_dead_line;
 
             let formattedDate = null;
             let formattedTime = null;
@@ -88,13 +92,20 @@ export const KanbanActions = {
               formattedTime = dlDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
+            const subtasks = Array.isArray(t.subtasks) ? t.subtasks : [];
+            const subtasksCount = subtasks.length;
+            const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
+
             return {
-              id: t.card_link || t.link_card || t.id || "",
+              id: t.link || t.card_link || t.link_card || t.id || "",
               title: t.title || "Без названия",
               due_date: formattedDate,
               time: formattedTime,
               executor: exUser ? exUser.name : t.executer_name || t.name_executer || null,
               executor_id: exId,
+              subtasks,
+              subtasksCount,
+              subtasksDone,
             };
           });
         } catch {

@@ -74,13 +74,17 @@ export interface RawTask {
   id: string;
   card_link: string;
   link_card: string;
+  link?: string;
   title: string;
   link_executer: string;
   executer_link: string;
+  executor_link?: string;
   executer_name: string;
   name_executer: string;
   dead_line: string;
   data_dead_line: string;
+  deadline?: string;
+  subtasks?: any[];
 }
 
 export interface FetchKanbanSuccessPayload {

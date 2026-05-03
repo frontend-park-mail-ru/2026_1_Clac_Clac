@@ -10,14 +10,18 @@ export const TaskActions = {
       const boardName = boardRes?.data?.name || "Без названия";
 
       const usersRes = (await boardsApi.getBoardUsers(boardId)) as any;
-      const rawUsers = Array.isArray(usersRes?.data)
-        ? usersRes.data
-        : Array.isArray(usersRes)
-          ? usersRes
-          : [];
+      const rawUsers = Array.isArray(usersRes?.data?.user_links)
+        ? usersRes.data.user_links
+        : Array.isArray(usersRes?.user_links)
+          ? usersRes.user_links
+          : Array.isArray(usersRes?.data)
+            ? usersRes.data
+            : Array.isArray(usersRes)
+              ? usersRes
+              :[];
 
       const userPromises = rawUsers.map(async (u: any) => {
-        const link = u.user_link || u.id || u;
+        const link = u.user_link || u.id || String(u);
         try {
           const pRes = (await profileApi.getProfileByLink(link)) as any;
           const pData = pRes?.data || pRes;
@@ -40,10 +44,10 @@ export const TaskActions = {
         throw new Error("Задача не найдена");
       }
 
-      let comments = [];
+      let comments =[];
       try {
         const commentsRes = (await kanbanApi.getComments(taskId)) as any;
-        comments = commentsRes?.data?.comments || commentsRes?.comments || [];
+        comments = commentsRes?.data?.comments || commentsRes?.comments ||[];
 
         comments.forEach((c: any) => {
           const u = usersList.find(user => user.id === c.author_link);

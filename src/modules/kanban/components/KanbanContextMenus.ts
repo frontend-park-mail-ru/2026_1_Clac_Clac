@@ -2,6 +2,7 @@ import { KanbanActions } from "../KanbanActions";
 import { KanbanState } from "../kanban.types";
 import { navigateTo } from "../../../router";
 import { Toast } from "../../../utils/toast";
+import { kanbanApi } from "../../../api";
 
 export class KanbanContextMenus {
   private static activeMenu: HTMLElement | null = null;
@@ -32,6 +33,18 @@ export class KanbanContextMenus {
       }, { signal });
     });
 
+    appDiv.querySelectorAll<HTMLInputElement>(".kanban-subtask-checkbox").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const subtaskId = cb.getAttribute("data-id");
+        const desc = cb.getAttribute("data-desc");
+        if (subtaskId && desc) {
+          kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc }).then(() => {
+            KanbanActions.fetchKanban(state.boardId!, true);
+          });
+        }
+      });
+    });
+
     appDiv.querySelectorAll<HTMLElement>(".kanban-card__options-btn").forEach((btn) => {
       btn.addEventListener("click", (e: MouseEvent) => {
         e.stopPropagation();
@@ -58,7 +71,7 @@ export class KanbanContextMenus {
     appDiv.querySelectorAll<HTMLElement>(".kanban-card").forEach((card) => {
       card.addEventListener("click", (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target.closest(".kanban-card__options-btn") || target.closest(".assignee__select-btn")) return;
+        if (target.closest(".kanban-card__options-btn") || target.closest(".assignee__select-btn") || target.closest(".kanban-card__subtask-item")) return;
 
         const subtasksHeader = target.closest(".kanban-card__subtasks-header");
         if (subtasksHeader) {
