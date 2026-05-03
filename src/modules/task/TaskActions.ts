@@ -3,6 +3,7 @@ import { boardsApi, CommentResponse, kanbanApi, profileApi } from "../../api";
 import { TaskActionTypes } from "./task.types";
 import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
+import { profileCache } from "../kanban/KanbanActions";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -24,18 +25,20 @@ export const TaskActions = {
       const usersRes = await boardsApi.getBoardUsers(boardId);
       const rawUsers = usersRes.data.user_links;
 
-      const userPromises = rawUsers.map(async (u) => {
-        const link = u;
+      const userPromises = rawUsers.map(async (link) => {
+        if (profileCache.has(link)) return profileCache.get(link)!;
         try {
           const pRes = await profileApi.getProfileByLink(link);
           const pData = pRes.data;
-          return {
+          const user = {
             id: link,
             name: pData.display_name || "Без имени",
             email: pData.email || "",
             avatarUrl: pData.avatar_url,
           };
-        } catch (e) {
+          profileCache.set(link, user);
+          return user;
+        } catch {
           return { id: link, name: "Пользователь", email: "" };
         }
       });

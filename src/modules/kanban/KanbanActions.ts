@@ -8,7 +8,7 @@ import {
   KANBAN_COLORS, ApiError
 } from "./kanban.types";
 
-const profileCache = new Map<string, BoardUser>();
+export const profileCache = new Map<string, BoardUser>();
 
 export const KanbanActions = {
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
