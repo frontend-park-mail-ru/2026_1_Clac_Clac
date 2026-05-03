@@ -90,20 +90,30 @@
         <h3 class="task__section-title">Подзадачи</h3>
         <div class="task__subtasks-list">
           {{#each task.subtasks}}
-          <div class="task__subtask-row"
-            style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
-            <label class="custom-checkbox task__subtask-item" style="flex:1; display:flex; align-items:center;">
-              <input type="checkbox" class="subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
-              <span class="checkmark"></span>
-              <input type="text" class="task__subtask-text-input" value="{{description}}" data-id="{{id}}" data-done="{{is_done}}"
-                style="background: transparent; border: none; outline: none; width: 100%; margin-left: 10px; font-size: 0.95rem; {{#if is_done}}color: #666; text-decoration: line-through;{{else}}color: #ccc;{{/if}}">
+          <div class="task__subtask-row">
+            
+            <label class="task__custom-checkbox">
+              <input type="checkbox" 
+                    class="subtask-checkbox" 
+                    data-id="{{id}}" 
+                    data-desc="{{description}}" 
+                    {{#if is_done}}checked{{/if}}>
+              <span class="task__checkmark"></span>
             </label>
-            <button class="icon-btn task__subtask-delete-btn" data-id="{{id}}" style="color: #ff5c5c; padding: 4px;">
+
+            <input type="text" 
+                  class="task__subtask-text-input {{#if is_done}}task__subtask-text-input--done{{/if}}" 
+                  value="{{description}}" 
+                  data-id="{{id}}" 
+                  data-done="{{is_done}}">
+
+            <button class="task__subtask-delete-btn" data-id="{{id}}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </button>
+            
           </div>
           {{/each}}
         </div>
