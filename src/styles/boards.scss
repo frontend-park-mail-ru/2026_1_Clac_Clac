@@ -1,6 +1,6 @@
-@import "./boards/layout";
-@import "./boards/components";
-@import "./boards/boards-list";
-@import "./boards/kanban";
-@import "./boards/profile";
-@import "./boards/task";
+@use "boards/layout";
+@use "boards/components";
+@use "boards/boards-list";
+@use "boards/kanban";
+@use "boards/profile";
+@use "boards/task";
