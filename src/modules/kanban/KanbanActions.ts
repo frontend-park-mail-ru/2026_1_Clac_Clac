@@ -86,6 +86,7 @@ export const KanbanActions = {
             }
 
             let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
+            console.log("DEBUG kanban subtasks raw:", subtasks);
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
 

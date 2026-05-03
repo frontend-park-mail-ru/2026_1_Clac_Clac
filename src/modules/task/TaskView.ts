@@ -189,6 +189,7 @@ export class TaskView {
     }
 
     const formattedSubtasks = taskData.subtasks.filter((st: any) => {
+      console.log("DEBUG subtasks input:", taskData.subtasks);
       const rawId = st.link || st.subtask_link || st.link_subtask || st.id || "";
       return rawId && rawId !== "00000000-0000-0000-0000-000000000000";
     }).map((st: any) => {
@@ -204,6 +205,7 @@ export class TaskView {
       if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
       return String(a.id).localeCompare(String(b.id));
     });
+    console.log("DEBUG subtasks output:", formattedSubtasks);
 
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
