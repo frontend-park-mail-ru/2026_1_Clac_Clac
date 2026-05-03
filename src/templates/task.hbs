@@ -129,7 +129,9 @@
               <span class="task__comment-author">{{author_name}}</span>
               <div class="task__comment-bubble">
                 {{text}}
+                {{#if created_time}}
                 <span class="task__comment-time">{{created_time}}</span>
+                {{/if}}
               </div>
             </div>
           </div>

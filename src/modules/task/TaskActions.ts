@@ -58,7 +58,12 @@ export const TaskActions = {
             c.author_name = "Пользователь";
             c.author_fallback = "U";
           }
-          c.created_time = new Date(c.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+          if (c.created_at) {
+            const timePart = c.created_at.split('T')[1]?.split('.')[0];
+            c.created_time = timePart ? timePart.slice(0, 5) : '';
+          } else {
+            c.created_time = '';
+          }
         });
       } catch (e) {
         console.error("Failed to load comments", e);
