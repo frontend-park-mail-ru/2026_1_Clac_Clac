@@ -117,7 +117,12 @@ export class KanbanColumnManager {
         const id = input.getAttribute("data-id")!;
         const section = sections.find((s) => s.id === id);
         if (section && input.value.trim() && input.value.trim() !== section.section_name) {
-          KanbanActions.updateSection(id, { name: input.value.trim(), link: id });
+          KanbanActions.updateSection(id, {
+            name: input.value.trim(),
+            link: id,
+            max_tasks: section.max_tasks ?? 100,
+            is_mandatory: section.is_mandatory ?? false,
+          });
         }
       });
     });
@@ -147,7 +152,13 @@ export class KanbanColumnManager {
           btn.style.cssText = `width:20px;height:20px;border-radius:4px;border:none;cursor:pointer;background:${c.hex};`;
           btn.addEventListener("click", () => {
             const id = trigger.getAttribute("data-id")!;
-            KanbanActions.updateSection(id, { color: c.name, link: id }).then(() => {
+            const section = sections.find((s) => s.id === id);
+            KanbanActions.updateSection(id, {
+              color: c.name,
+              link: id,
+              max_tasks: section?.max_tasks ?? 100,
+              is_mandatory: section?.is_mandatory ?? false,
+            }).then(() => {
               dropdown.remove();
               trigger.style.background = c.hex;
               (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).style.background = c.hex;
