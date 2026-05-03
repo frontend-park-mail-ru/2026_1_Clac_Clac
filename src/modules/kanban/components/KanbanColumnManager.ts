@@ -17,6 +17,12 @@ export class KanbanColumnManager {
       modalOverlay?.classList.remove("hidden");
       modalManage?.classList.remove("hidden");
     }, { signal });
+
+    appDiv.querySelector("#btn-close-manage")?.addEventListener("click", () => {
+      if (state.boardId) {
+        KanbanActions.fetchKanban(state.boardId, true);
+      }
+    });
   }
 
   private static bindCreation(appDiv: HTMLElement, boardId: string, closeModals: () => void, signal: AbortSignal): void {
@@ -123,7 +129,7 @@ export class KanbanColumnManager {
         
         const dropdown = document.createElement("div");
         dropdown.className = "color-picker-dropdown";
-        dropdown.style.cssText = "position:absolute; background:#1e1e20; border:1px solid #333; border-radius:8px; padding:0.5rem; display:flex; gap:0.5rem; z-index:100;";
+        dropdown.style.cssText = "position:absolute; background:#1e1e20; border:1px solid #333; border-radius:8px; padding:0.5rem; display:flex; gap:0.5rem; z-index:9999;";
         
         const colors = [
           { name: "white", hex: "#ffffff" },
@@ -142,7 +148,6 @@ export class KanbanColumnManager {
           btn.addEventListener("click", () => {
             const id = trigger.getAttribute("data-id")!;
             KanbanActions.updateSection(id, { color: c.name, link: id }).then(() => {
-              KanbanActions.fetchKanban(boardId, true);
               dropdown.remove();
               trigger.style.background = c.hex;
               (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).style.background = c.hex;

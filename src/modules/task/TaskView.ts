@@ -12,6 +12,7 @@ export class TaskView {
   private appDiv: HTMLElement;
   private taskNode: HTMLElement | null = null;
   private currentExecuterId: string = "";
+  private isFirstRender: boolean = true;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -23,6 +24,7 @@ export class TaskView {
   }
 
   public render() {
+    this.isFirstRender = true;
     taskStore.on("change", this.onStoreChangeBound);
     taskStore.on("success", this.onStoreSuccessBound);
     taskStore.on("error", this.onStoreErrorBound);
@@ -75,6 +77,7 @@ export class TaskView {
 
     if (state.taskData) {
       this.renderTemplate();
+      this.isFirstRender = false;
     }
   }
 
@@ -113,17 +116,17 @@ export class TaskView {
       subtask: (this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement)?.value,
       comment: (this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement)?.value,
     };
-    
+
     const activeEl = document.activeElement as HTMLElement;
     const activeId = activeEl?.id;
     const activeClass = activeEl?.className;
     let activeSelector = activeId ? `#${activeId}` : null;
-    
+
     if (!activeSelector && activeClass && activeClass.includes('task__comment-input')) {
-        activeSelector = '.task__comment-input';
+      activeSelector = '.task__comment-input';
     } else if (!activeSelector && activeClass && activeClass.includes('task__subtask-text-input')) {
-        const id = activeEl.getAttribute('data-id');
-        if (id) activeSelector = `.task__subtask-text-input[data-id="${id}"]`;
+      const id = activeEl.getAttribute('data-id');
+      if (id) activeSelector = `.task__subtask-text-input[data-id="${id}"]`;
     }
 
     let selectionStart = 0;
@@ -133,7 +136,7 @@ export class TaskView {
       selectionEnd = activeEl.selectionEnd || 0;
     }
 
-    const deadline = taskData.dead_line || taskData.data_dead_line;
+    const deadline = taskData.dead_line || taskData.data_dead_line || taskData.deadline;
     let rawDate = "";
     let rawTime = "";
     let formattedDate = "";
@@ -177,7 +180,21 @@ export class TaskView {
       this.appDiv.appendChild(this.taskNode);
     }
 
+    const formattedSubtasks = (taskData.subtasks || []).map((st: any) => {
+      const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
+      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+      return {
+        ...st,
+        id: validId,
+        description: validDesc,
+      };
+    }).sort((a: any, b: any) => {
+      if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
+      return String(a.id).localeCompare(String(b.id));
+    });
+
     this.taskNode.innerHTML = template({
+      noAnimation: !this.isFirstRender,
       board_name: state.boardName,
       task: {
         title: taskData.title || "Без названия",
@@ -190,7 +207,7 @@ export class TaskView {
         executor_avatar: executorAvatar,
         executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
-        subtasks: taskData.subtasks ||[]
+        subtasks: formattedSubtasks
       },
       comments: state.comments,
     });
@@ -222,7 +239,7 @@ export class TaskView {
       const dateVal = (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement).value;
       const timeVal = (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement).value;
 
-      let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line;
+      let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
       if (dateVal) {
         finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
       }
@@ -257,7 +274,7 @@ export class TaskView {
 
       const dropdown = document.createElement("div");
       dropdown.className = "assignee__dropdown";
-      
+
       const searchContainer = document.createElement("div");
       searchContainer.style.padding = "0.5rem";
       const searchInput = document.createElement("input");
@@ -275,7 +292,7 @@ export class TaskView {
 
       const renderList = (filter = "") => {
         listContainer.innerHTML = "";
-        
+
         if ("Не назначен".toLowerCase().includes(filter.toLowerCase())) {
           const clearItem = document.createElement("div");
           clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";

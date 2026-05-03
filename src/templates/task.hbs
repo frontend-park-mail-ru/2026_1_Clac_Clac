@@ -1,5 +1,5 @@
 <div class="task__page-container" id="task-overlay">
-  <div class="task__panel">
+  <div class="task__panel" {{#if noAnimation}}style="animation: none;"{{/if}}>
     <div class="task__header-bar">
       <div class="task__header-left">
         <button class="icon-btn task__close-btn" id="btn-back" title="Закрыть">
@@ -93,17 +93,12 @@
           <div class="task__subtask-row"
             style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
             <label class="custom-checkbox task__subtask-item" style="flex:1; display:flex; align-items:center;">
-              <input type="checkbox" class="subtask-checkbox"
-                data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-desc="{{description}}" {{#if
-                is_done}}checked{{/if}}>
+              <input type="checkbox" class="subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
               <span class="checkmark"></span>
-              <input type="text" class="task__subtask-text-input" value="{{description}}"
-                data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-done="{{is_done}}"
-                style="background: transparent; border: none; color: #ccc; outline: none; width: 100%; margin-left: 10px; font-size: 0.95rem;">
+              <input type="text" class="task__subtask-text-input" value="{{description}}" data-id="{{id}}" data-done="{{is_done}}"
+                style="background: transparent; border: none; outline: none; width: 100%; margin-left: 10px; font-size: 0.95rem; {{#if is_done}}color: #666; text-decoration: line-through;{{else}}color: #ccc;{{/if}}">
             </label>
-            <button class="icon-btn task__subtask-delete-btn"
-              data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}"
-              style="color: #ff5c5c; padding: 4px;">
+            <button class="icon-btn task__subtask-delete-btn" data-id="{{id}}" style="color: #ff5c5c; padding: 4px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

@@ -90,9 +90,9 @@
                 <div class="kanban-card__subtasks-list hidden">
                   {{#each subtasks}}
                   <label class="custom-checkbox kanban-card__subtask-item">
-                    <input type="checkbox" class="kanban-subtask-checkbox" data-id="{{#if subtask_link}}{{subtask_link}}{{else}}{{link}}{{/if}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
+                    <input type="checkbox" class="kanban-subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
                     <span class="checkmark"></span>
-                    <span class="kanban-card__subtask-text">{{description}}</span>
+                    <span class="kanban-card__subtask-text" {{#if is_done}}style="text-decoration: line-through; color: #666;"{{/if}}>{{description}}</span>
                   </label>
                   {{/each}}
                 </div>

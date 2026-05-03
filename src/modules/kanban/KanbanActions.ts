@@ -85,9 +85,22 @@ export const KanbanActions = {
               formattedTime = dlDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
-            const subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
+            let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
+
+            subtasks = subtasks.map((st: any) => {
+              const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
+              const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+              return {
+                ...st,
+                id: validId,
+                description: validDesc,
+              };
+            }).sort((a: any, b: any) => {
+              if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
+              return String(a.id).localeCompare(String(b.id));
+            });
 
             return {
               id: t.link,
@@ -103,7 +116,7 @@ export const KanbanActions = {
             };
           }).sort((a, b) => a.position - b.position);
         } catch {
-          section.tasks = [];
+          section.tasks =[];
         }
         return section;
       });
@@ -160,10 +173,8 @@ export const KanbanActions = {
   async reorderSections(boardId: string, newOrder: string[]): Promise<void> {
     try {
       await kanbanApi.reorderSections(boardId, { list_links: newOrder });
-      await this.fetchKanban(boardId, true);
     } catch {
       Toast.error("Ошибка при сохранении порядка");
-      await this.fetchKanban(boardId, true);
     }
   },
 
