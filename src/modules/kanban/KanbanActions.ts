@@ -89,8 +89,12 @@ export const KanbanActions = {
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
 
-            subtasks = subtasks.map((st: any) => {
-              const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
+            subtasks = subtasks.filter((st: any) => {
+              const rawId = st.link || st.subtask_link || st.link_subtask || st.id || "";
+              return rawId && rawId !== "00000000-0000-0000-0000-000000000000";
+            }).map((st: any) => {
+              const rawId = st.link || st.subtask_link || st.link_subtask || st.id || "";
+              const validId = (rawId && rawId !== "00000000-0000-0000-0000-000000000000") ? rawId : "";
               const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
               return {
                 ...st,

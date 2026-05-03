@@ -38,9 +38,13 @@ export class KanbanContextMenus {
         const subtaskId = cb.getAttribute("data-id");
         const desc = cb.getAttribute("data-desc");
         if (subtaskId && desc) {
-          kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc }).then(() => {
-            KanbanActions.fetchKanban(state.boardId!, true);
-          });
+          kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc })
+            .then(() => {
+              KanbanActions.fetchKanban(state.boardId!, true);
+            })
+            .catch((e) => {
+              console.error("Update subtask error", e);
+            });
         }
       });
     });
