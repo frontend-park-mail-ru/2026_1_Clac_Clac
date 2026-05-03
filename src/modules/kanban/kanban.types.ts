@@ -1,3 +1,5 @@
+import { SubtaskInfo } from "../../api";
+
 export interface BoardUser {
   id: string;
   name: string;
@@ -12,7 +14,7 @@ export interface Task {
   time: string | null;
   executor: string | null;
   executor_id?: string | null;
-  subtasks?: any[];
+  subtasks?: SubtaskInfo[];
   subtasksCount?: number;
   subtasksDone?: number;
 }
@@ -85,7 +87,7 @@ export interface RawTask {
   dead_line: string;
   data_dead_line: string;
   deadline?: string;
-  subtasks?: any[];
+  subtasks?: SubtaskInfo[];
 }
 
 export interface FetchKanbanSuccessPayload {
