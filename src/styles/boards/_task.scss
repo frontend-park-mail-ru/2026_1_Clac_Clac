@@ -152,6 +152,10 @@
     margin-left: 10px;
     font-size: 0.95rem;
     color: white;
+    position: relative;
+    opacity: 1;
+    height: auto;
+    width: auto;
 
     &--done {
       color: #888;
