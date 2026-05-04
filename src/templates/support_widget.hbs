@@ -6,25 +6,25 @@
     {{#each tickets}}
     <div class="support-widget__ticket" data-id="{{#if appeal_link}}{{appeal_link}}{{else}}{{id}}{{/if}}">
       <h4>{{display_name}}</h4>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="sw-flex-between">
         <span class="status status-{{status}}">
           {{#if (eq status 'new')}}Новое{{/if}}
           {{#if (eq status 'in_progress')}}В работе{{/if}}
           {{#if (eq status 'closed')}}Закрыто{{/if}}
         </span>
-        <span style="font-size:0.8rem; color:#888;"> </span>
+        <span class="support-widget__ticket-status-meta"> </span>
       </div>
     </div>
     {{/each}}
 
     {{#if (eq tickets.length 0)}}
-    <p style="color:#888; text-align:center; margin-top:2rem;">У вас пока нет обращений</p>
+    <p class="sw-no-tickets">У вас пока нет обращений</p>
     {{/if}}
   </div>
   {{/if}}
 
   {{#if (eq view 'create')}}
-  <button class="support-widget__back-btn" id="sw-btn-back">
+  <button class="support-widget__back-btn sw-btn-back-wrap" id="sw-btn-back">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round">
       <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -34,23 +34,23 @@
   </button>
 
   <div class="support-widget__create">
-    <div class="input-group" style="margin-bottom: 0.8rem;">
+    <div class="input-group sw-mb-08">
       <label class="input-group__label">Email</label>
       <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}">
     </div>
 
-    <div class="input-group" style="margin-bottom: 0.8rem;">
+    <div class="input-group sw-mb-08">
       <label class="input-group__label">Имя</label>
       <input type="text" id="sw-name" class="input-group__field" placeholder="Как к вам обращаться?"
         value="{{user.display_name}}">
     </div>
 
-    <div class="input-group relative-wrapper" style="margin-bottom: 0.8rem;">
+    <div class="input-group relative-wrapper sw-mb-08">
       <label class="input-group__label">Категория</label>
       <button type="button" id="sw-category-btn" class="input-group__field support-widget__select-btn">
         <span id="sw-category-text">Баг</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"
-          style="flex-shrink:0;">
+          class="sw-flex-shrink-0">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </button>
@@ -61,20 +61,19 @@
       </div>
     </div>
 
-    <div class="input-group" style="margin-bottom: 0.8rem;">
+    <div class="input-group sw-mb-08">
       <label class="input-group__label">Описание</label>
       <textarea id="sw-desc" class="input-group__field"
         placeholder="Опишите проблему максимально подробно..."></textarea>
     </div>
 
-    <div
-      style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-      <label for="sw-attachment" class="support-widget__attachment-btn" style="margin: 0; width: auto; flex: 1;">
+    <div class="sw-flex-gap-05 sw-mb-15">
+      <label for="sw-attachment" class="support-widget__attachment-btn sw-attachment-btn">
         <div id="sw-attachment-preview-container" class="hidden support-widget__preview-box">
           <img id="sw-attachment-preview" src="" alt="Preview">
         </div>
         <svg id="sw-attachment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sw-flex-shrink-0">
           <path
             d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
           </path>
@@ -84,8 +83,7 @@
         <input type="file" id="sw-attachment" class="hidden" accept="image/*">
       </label>
 
-      <button type="button" id="sw-attachment-remove" class="icon-btn hidden" style="color: #ff5c5c; padding: 4px;"
-        title="Удалить вложение">
+      <button type="button" id="sw-attachment-remove" class="icon-btn hidden sw-icon-remove" title="Удалить вложение">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -99,8 +97,8 @@
   {{/if}}
 
   {{#if (eq view 'chat')}}
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <button class="support-widget__back-btn" id="sw-btn-back" style="margin-bottom: 0;">
+  <div class="sw-flex-between sw-mb-1">
+    <button class="support-widget__back-btn sw-btn-back-wrap" id="sw-btn-back">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -114,14 +112,14 @@
       {{#if (eq currentTicket.status 'closed')}}Закрыто{{/if}}
     </span>
   </div>
-  <h3 style="margin:0 0 1rem 0;">{{currentTicket.display_name}}</h3>
+  <h3 class="sw-title-margin">{{currentTicket.display_name}}</h3>
 
   <div class="support-widget__messages" id="sw-messages">
     <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
 
     {{#if currentTicket.attachment_key}}
-    <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
-      <img src="{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
+    <div class="msg msg-user sw-msg-img-wrap">
+      <img src="{{currentTicket.attachment_key}}" class="sw-msg-img" alt="Вложение">
     </div>
     {{/if}}
   </div>

@@ -31,18 +31,18 @@ export class SupportIframeManager {
     });
 
     document.getElementById('sw-btn-confirm-close')?.addEventListener('click', () => {
-      document.getElementById('sw-close-modal')!.style.display = 'none';
+      document.getElementById('sw-close-modal')!.classList.add('hidden');
       this.hide();
     });
 
     document.getElementById('sw-btn-cancel-close')?.addEventListener('click', () => {
-      document.getElementById('sw-close-modal')!.style.display = 'none';
+      document.getElementById('sw-close-modal')!.classList.add('hidden');
     });
   }
 
   static attemptClose() {
     if (this.isCreateView) {
-      document.getElementById('sw-close-modal')!.style.display = 'flex';
+      document.getElementById('sw-close-modal')!.classList.remove('hidden');
     } else {
       this.hide();
     }
@@ -64,7 +64,7 @@ export class SupportIframeManager {
 
   static hide() {
     const modal = document.getElementById('sw-close-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.add('hidden');
     this.container?.classList.remove('visible');
   }
 }

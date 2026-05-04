@@ -75,14 +75,14 @@ export class KanbanColumnManager {
     container.innerHTML = sections.map((s) => `
       <div class="manage-columns__item" data-id="${s.id}" draggable="true">
         <div class="manage-columns__left">
-          <div class="manage-columns__dot" style="background: ${s.colorHex};"></div>
+          <div class="manage-columns__dot bg-${s.color}"></div>
           <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
         </div>
         <div class="manage-columns__actions">
           <button class="icon-btn manage-columns__delete" data-id="${s.id}" data-name="${s.section_name}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
-          <div class="manage-columns__color-trigger" style="background: ${s.colorHex};" data-id="${s.id}"></div>
+          <div class="manage-columns__color-trigger bg-${s.color}" data-id="${s.id}"></div>
           <div class="manage-columns__drag">≡</div>
         </div>
       </div>
@@ -93,10 +93,10 @@ export class KanbanColumnManager {
     container.querySelectorAll<HTMLElement>(".manage-columns__item").forEach((el) => {
       el.addEventListener("dragstart", () => {
         draggedItem = el;
-        setTimeout(() => el.style.opacity = "0.5", 0);
+        setTimeout(() => el.classList.add("kanban-card--dragging"), 0);
       });
       el.addEventListener("dragend", () => {
-        el.style.opacity = "1";
+        el.classList.remove("kanban-card--dragging");
         draggedItem = null;
         const newOrder = Array.from(container.querySelectorAll(".manage-columns__item")).map(i => i.getAttribute("data-id")!);
         KanbanActions.reorderSections(boardId, newOrder);
@@ -126,31 +126,30 @@ export class KanbanColumnManager {
       trigger.addEventListener("click", (e: MouseEvent) => {
         e.stopPropagation();
         document.querySelector(".color-picker-dropdown")?.remove();
-        
+
         const dropdown = document.createElement("div");
         dropdown.className = "color-picker-dropdown";
-        dropdown.style.cssText = "position:absolute; background:#1e1e20; border:1px solid #333; border-radius:8px; padding:0.5rem; display:flex; gap:0.5rem; z-index:9999;";
-        
+
         const colors = [
-          { name: "white", hex: "#ffffff" },
-          { name: "grey", hex: "#9ca3af" },
-          { name: "red", hex: "#f87171" },
-          { name: "orange", hex: "#fb923c" },
-          { name: "blue", hex: "#60a5fa" },
-          { name: "green", hex: "#4ade80" },
-          { name: "purple", hex: "#a5b4fc" },
-          { name: "pink", hex: "#f9a8d4" }
+          { name: "white" },
+          { name: "grey" },
+          { name: "red" },
+          { name: "orange" },
+          { name: "blue" },
+          { name: "green" },
+          { name: "purple" },
+          { name: "pink" }
         ];
-        
+
         colors.forEach(c => {
           const btn = document.createElement("button");
-          btn.style.cssText = `width:20px;height:20px;border-radius:4px;border:none;cursor:pointer;background:${c.hex};`;
+          btn.className = `color-picker-dropdown__btn bg-${c.name}`;
           btn.addEventListener("click", () => {
             const id = trigger.getAttribute("data-id")!;
             KanbanActions.updateSection(id, { color: c.name, link: id }).then(() => {
               dropdown.remove();
-              trigger.style.background = c.hex;
-              (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).style.background = c.hex;
+              trigger.className = `manage-columns__color-trigger bg-${c.name}`;
+              (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).className = `manage-columns__dot bg-${c.name}`;
             });
           });
           dropdown.appendChild(btn);
@@ -160,7 +159,7 @@ export class KanbanColumnManager {
         dropdown.style.top = `${rect.bottom + window.scrollY + 8}px`;
         dropdown.style.left = `${rect.left + window.scrollX - 80}px`;
         document.body.appendChild(dropdown);
-        
+
         const closeDropdown = (ev: MouseEvent) => {
           if (!dropdown.contains(ev.target as Node)) {
             dropdown.remove();

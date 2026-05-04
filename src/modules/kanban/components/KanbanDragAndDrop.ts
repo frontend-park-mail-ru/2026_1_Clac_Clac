@@ -20,11 +20,11 @@ export class KanbanDragAndDrop {
           e.dataTransfer.effectAllowed = "move";
           e.dataTransfer.setData("text/plain", draggedTaskId || "");
         }
-        setTimeout(() => (card.style.opacity = "0.5"), 0);
+        setTimeout(() => (card.classList.add("kanban-card--dragging")), 0);
       }, { signal });
 
       card.addEventListener("dragend", () => {
-        if (draggedElement) draggedElement.style.opacity = "1";
+        if (draggedElement) draggedElement.classList.remove("kanban-card--dragging");
         draggedElement = null;
         draggedTaskId = null;
         sourceSectionId = null;
