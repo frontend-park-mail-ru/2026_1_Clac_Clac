@@ -1119,8 +1119,7 @@ a {
     }
 
     &:hover > input[type="checkbox"] ~ .checkmark {
-        background-color: var(--primary);
-        border-color: var(--primary);
+        background-color: #333;
     }
 
     .checkmark:after {
