@@ -159,7 +159,7 @@ export const initGlobalListeners = (): void => {
     const target = e.target as HTMLElement;
 
     if (target.closest('#nav-support')) {
-      void handleSupportClick();
+      handleSupportClick();
       return;
     }
 

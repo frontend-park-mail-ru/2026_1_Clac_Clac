@@ -189,8 +189,8 @@ export class TaskView {
     }
 
     const formattedSubtasks = taskData.subtasks.map((st: any) => {
-      const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
-      const validDesc = st.description;
+      const validId = st.link || st.subtask_link || st.link_subtask || st.id || "";
+      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
       return {
         ...st,
         id: validId,
@@ -263,6 +263,7 @@ export class TaskView {
         description: description,
         executor_link: this.currentExecuterId || null,
         deadline: finalDeadline,
+        max_tasks: state.taskData?.max_tasks || 100,
       };
 
       if (state.taskId) {
