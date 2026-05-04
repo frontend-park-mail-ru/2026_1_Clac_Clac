@@ -1,5 +1,4 @@
 import supportIframeTemplate from '../../templates/support_iframe.hbs?raw';
-import { SupportAdminActions } from '../supportAdmin';
 
 export class SupportIframeManager {
   private static container: HTMLElement | null = null;
