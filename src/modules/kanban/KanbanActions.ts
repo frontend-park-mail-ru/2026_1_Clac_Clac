@@ -8,7 +8,7 @@ import {
   KANBAN_COLORS, ApiError
 } from "./kanban.types";
 
-const profileCache = new Map<string, BoardUser>();
+export const profileCache = new Map<string, BoardUser>();
 
 export const KanbanActions = {
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
@@ -171,9 +171,12 @@ export const KanbanActions = {
   },
 
   async reorderSections(boardId: string, newOrder: string[]): Promise<void> {
+    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
+    appDispatcher.dispatch({ type: "KANBAN_REORDER_SECTIONS", payload: { newOrder } });
     try {
       await kanbanApi.reorderSections(boardId, { list_links: newOrder });
     } catch {
+      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       Toast.error("Ошибка при сохранении порядка");
     }
   },
@@ -201,21 +204,22 @@ export const KanbanActions = {
     }
   },
 
-  async moveTask(boardId: string, taskId: string, targetSectionId: string, position: number): Promise<void> {
+  async moveTask(_boardId: string, taskId: string, sourceSectionId: string, targetSectionId: string, position: number): Promise<void> {
+    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
+    appDispatcher.dispatch({ type: "KANBAN_MOVE_TASK", payload: { taskId, sourceSectionId, targetSectionId, position } });
     try {
       await kanbanApi.reorderTask(taskId, {
         section_link: targetSectionId,
         position,
       });
-      await this.fetchKanban(boardId, true);
     } catch (err: unknown) {
+      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       const error = err as ApiError;
       if (error?.data?.message === "can not skip mandatory section") {
         Toast.error("Нельзя пропускать обязательную секцию");
       } else {
         Toast.error("Ошибка при переносе");
       }
-      await this.fetchKanban(boardId, true);
     }
   }
 };

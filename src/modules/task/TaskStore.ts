@@ -67,6 +67,10 @@ class TaskStore extends Store {
         this.emit("error");
         this.emit("change");
         break;
+      case TaskActionTypes.APPEND_COMMENT:
+        this.state.comments = [...this.state.comments, action.payload.comment];
+        this.emit("change");
+        break;
       case TaskActionTypes.CLEAR_STORE:
         this.state = {
           boardId: null,
