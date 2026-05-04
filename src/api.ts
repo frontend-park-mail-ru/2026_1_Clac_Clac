@@ -412,7 +412,7 @@ export const kanbanApi = {
   deleteSection: (sectionLink: string) => apiClient.delete<BaseResponse>(`/sections/${sectionLink}`),
 
   getTasks: (sectionLink: string) => apiClient.get<ApiResponse<CardsResponse>>(`/sections/${sectionLink}/cards`),
-  getTask: (taskLink: string) => apiClient.get<ApiResponse<CardResponse>>(`/cards/${taskLink}`),
+  getTask: (taskLink: string) => apiClient.get<ApiResponse<CardsResponse>>(`/cards/${taskLink}`),
   createTask: (data: CreateCardRequest) => apiClient.post<ApiResponse<CreateCardResponse>, CreateCardRequest>(`/cards`, data),
   updateTask: (taskLink: string, data: UpdateCardRequest) => apiClient.put<BaseResponse, UpdateCardRequest>(`/cards/${taskLink}`, data),
   deleteTask: (taskLink: string) => apiClient.delete<BaseResponse>(`/cards/${taskLink}`),
