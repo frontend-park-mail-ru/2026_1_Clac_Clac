@@ -1,9 +1,10 @@
 import { Store } from "../../core/Store";
 import { appDispatcher, Action } from "../../core/Dispatcher";
-import { 
-  KanbanState, 
-  FetchKanbanSuccessPayload, 
-  FetchKanbanErrorPayload 
+import {
+  KanbanState,
+  FetchKanbanSuccessPayload,
+  FetchKanbanErrorPayload,
+  Section,
 } from "./kanban.types";
 
 class KanbanStore extends Store {
@@ -49,6 +50,45 @@ class KanbanStore extends Store {
         const payload = action.payload as FetchKanbanErrorPayload;
         this.state.error = payload.error;
         this.state.isLoading = false;
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_MOVE_TASK": {
+        const { taskId, sourceSectionId, targetSectionId, position } = action.payload as {
+          taskId: string;
+          sourceSectionId: string;
+          targetSectionId: string;
+          position: number;
+        };
+        const sections = this.state.sections;
+        const srcSection = sections.find(s => s.id === sourceSectionId);
+        const tgtSection = sections.find(s => s.id === targetSectionId);
+        if (!srcSection || !tgtSection) break;
+
+        const taskIdx = srcSection.tasks.findIndex(t => t.id === taskId);
+        if (taskIdx === -1) break;
+        const [task] = srcSection.tasks.splice(taskIdx, 1);
+        tgtSection.tasks.splice(position, 0, task);
+        tgtSection.tasks.forEach((t, i) => { t.position = i; });
+        if (sourceSectionId !== targetSectionId) {
+          srcSection.tasks.forEach((t, i) => { t.position = i; });
+        }
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_REORDER_SECTIONS": {
+        const { newOrder } = action.payload as { newOrder: string[] };
+        const sectionMap = new Map(this.state.sections.map(s => [s.id, s]));
+        this.state.sections = newOrder.map(id => sectionMap.get(id)).filter(Boolean) as Section[];
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_REVERT_SECTIONS": {
+        const { sections } = action.payload as { sections: Section[] };
+        this.state.sections = sections;
         this.emit("change");
         break;
       }
