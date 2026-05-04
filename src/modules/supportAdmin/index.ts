@@ -73,7 +73,9 @@ let boundRender: (() => void) | null = null;
 
 export const renderSupportAdminModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template(store.getState());
+    const state = store.getState();
+    console.log('[SA] Render state:', JSON.stringify({ ticketsCount: state.tickets.length, currentTicket: state.currentTicket }));
+    appDiv.innerHTML = template(state);
 
     appDiv.querySelectorAll('.sa-ticket-item').forEach(el => {
       el.addEventListener('click', () => {

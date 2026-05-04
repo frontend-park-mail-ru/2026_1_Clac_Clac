@@ -60,7 +60,7 @@
         <div class="support-widget__messages" id="sa-messages"
           style="background:#1e1e20; padding:1rem; border-radius:8px;">
           <div class="msg msg-user" style="background:#444; align-self:flex-start;">
-            <strong>Описание:</strong><br>{{currentTicket.description}}
+            <strong>Описание:</strong><br>{{#if currentTicket.description}}{{currentTicket.description}}{{else}}<em style="color:#888;">Нет описания</em>{{/if}}
           </div>
           {{#if currentTicket.attachment_url}}
           <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden; align-self:flex-start; background:#444;">

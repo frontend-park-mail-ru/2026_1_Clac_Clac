@@ -1,8 +1,10 @@
 import supportIframeTemplate from '../../templates/support_iframe.hbs?raw';
+import { SupportAdminActions } from '../supportAdmin';
 
 export class SupportIframeManager {
   private static container: HTMLElement | null = null;
   private static isCreateView: boolean = false;
+  private static iframe: HTMLIFrameElement | null = null;
 
   static init() {
     if (this.container) return;
@@ -11,9 +13,20 @@ export class SupportIframeManager {
     this.container.innerHTML = supportIframeTemplate;
     document.body.appendChild(this.container);
 
+    this.iframe = document.getElementById('support-iframe-el') as HTMLIFrameElement;
+
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'SUPPORT_WIDGET_STATE') {
         this.isCreateView = e.data.view === 'create';
+        
+        if (e.data.view === 'chat' && e.data.currentTicket) {
+          this.sendToIframe({
+            type: 'SUPPORT_WIDGET_STATE',
+            view: e.data.view,
+            tickets: e.data.tickets,
+            currentTicket: e.data.currentTicket
+          });
+        }
       }
     });
 
@@ -66,5 +79,11 @@ export class SupportIframeManager {
     const modal = document.getElementById('sw-close-modal');
     if (modal) modal.style.display = 'none';
     this.container?.classList.remove('visible');
+  }
+
+  private static sendToIframe(data: any) {
+    if (this.iframe?.contentWindow) {
+      this.iframe.contentWindow.postMessage(data, '*');
+    }
   }
 }
