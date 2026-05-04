@@ -28,6 +28,7 @@ export interface Section {
   tasks: Task[];
   max_tasks?: number;
   is_mandatory?: boolean;
+  position?: number;
 }
 
 export interface KanbanState {

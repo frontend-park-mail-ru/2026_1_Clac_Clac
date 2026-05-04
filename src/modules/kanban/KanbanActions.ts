@@ -63,6 +63,7 @@ export const KanbanActions = {
           colorHex: KANBAN_COLORS[secColor] || secColor,
           max_tasks: sec.max_tasks,
           is_mandatory: sec.is_mandatory,
+          position: sec.position,
           tasks: [],
         };
 

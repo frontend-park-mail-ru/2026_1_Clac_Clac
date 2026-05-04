@@ -117,7 +117,14 @@ export class KanbanColumnManager {
         const id = input.getAttribute("data-id")!;
         const section = sections.find((s) => s.id === id);
         if (section && input.value.trim() && input.value.trim() !== section.section_name) {
-          KanbanActions.updateSection(id, { name: input.value.trim(), link: id });
+          KanbanActions.updateSection(id, {
+            link: id,
+            name: input.value.trim(),
+            color: section.color || "white",
+            max_tasks: section.max_tasks || 100,
+            position: section.position || 1,
+            is_mandatory: section.is_mandatory || false,
+          });
         }
       });
     });
@@ -146,11 +153,21 @@ export class KanbanColumnManager {
           btn.className = `color-picker-dropdown__btn bg-${c.name}`;
           btn.addEventListener("click", () => {
             const id = trigger.getAttribute("data-id")!;
-            KanbanActions.updateSection(id, { color: c.name, link: id }).then(() => {
-              dropdown.remove();
-              trigger.className = `manage-columns__color-trigger bg-${c.name}`;
-              (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).className = `manage-columns__dot bg-${c.name}`;
-            });
+            const section = sections.find((s) => s.id === id);
+            if (section) {
+              KanbanActions.updateSection(id, {
+                link: id,
+                name: section.section_name || "Секция",
+                color: c.name,
+                max_tasks: section.max_tasks || 100,
+                position: section.position || 1,
+                is_mandatory: section.is_mandatory || false,
+              }).then(() => {
+                dropdown.remove();
+                trigger.className = `manage-columns__color-trigger bg-${c.name}`;
+                (trigger.parentElement?.parentElement?.querySelector(".manage-columns__dot") as HTMLElement).className = `manage-columns__dot bg-${c.name}`;
+              });
+            }
           });
           dropdown.appendChild(btn);
         });
