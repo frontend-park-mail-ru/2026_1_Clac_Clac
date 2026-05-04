@@ -1101,7 +1101,7 @@ a {
     color: #ccc;
     font-size: 1rem;
 
-    & > input {
+    & > input[type="checkbox"] {
         position: absolute;
         opacity: 0;
         cursor: pointer;
@@ -1118,11 +1118,7 @@ a {
         position: relative;
     }
 
-    &:hover > input ~ .checkmark {
-        background-color: #333;
-    }
-
-    > input:checked ~ .checkmark {
+    &:hover > input[type="checkbox"] ~ .checkmark {
         background-color: var(--primary);
         border-color: var(--primary);
     }
@@ -1140,7 +1136,7 @@ a {
         transform: rotate(45deg);
     }
 
-    input:checked~.checkmark:after {
+    > input[type="checkbox"]:checked ~ .checkmark:after {
         display: block;
     }
 }
