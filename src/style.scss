@@ -1122,6 +1122,11 @@ a {
         background-color: #333;
     }
 
+& > input[type="checkbox"]:checked ~ .checkmark {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+
     .checkmark:after {
         content: "";
         position: absolute;
