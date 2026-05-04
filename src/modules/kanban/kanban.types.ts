@@ -17,6 +17,7 @@ export interface Task {
   subtasks?: SubtaskInfo[];
   subtasksCount?: number;
   subtasksDone?: number;
+  position: number;
 }
 
 export interface Section {

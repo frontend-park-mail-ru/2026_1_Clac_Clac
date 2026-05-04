@@ -171,6 +171,7 @@ export interface CommentResponse {
   comment_link: string;
   parent_link: string;
   text: string;
+  created_at: string;
 }
 export interface CommentsResponse {
   comments: CommentResponse[];

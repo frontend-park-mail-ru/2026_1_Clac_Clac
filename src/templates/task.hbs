@@ -123,7 +123,10 @@
             <div class="task__comment-avatar-fallback">{{author_fallback}}</div>
             {{/if}}
             <div class="task__comment-content">
-              <span class="task__comment-author">{{author_name}}</span>
+              <div class="task__comment-header">
+                <span class="task__comment-author">{{author_name}}</span>
+                {{#if created_time}}<span class="task__comment-time">{{created_time}}</span>{{/if}}
+              </div>
               <div class="task__comment-bubble">{{text}}</div>
             </div>
           </div>
