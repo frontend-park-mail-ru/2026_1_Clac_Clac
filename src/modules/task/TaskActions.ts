@@ -18,8 +18,7 @@ export const TaskActions = {
       const usersRes = await boardsApi.getBoardUsers(boardId);
       const rawUsers = usersRes.data.user_links;
 
-      const userPromises = rawUsers.map(async (u) => {
-        const link = u;
+      const userPromises = rawUsers.map(async (link) => {
         try {
           const pRes = await profileApi.getProfileByLink(link);
           const pData = pRes.data;
@@ -47,15 +46,15 @@ export const TaskActions = {
         const commentsRes = await kanbanApi.getComments(taskId);
         comments = commentsRes.data.comments;
 
-        comments.forEach((c) => {
-          const u = usersList.find(user => user.id === c.author_link);
+        comments.forEach((comment) => {
+          const u = usersList.find(user => user.id === comment.author_link);
           if (u) {
-            c.author_name = u.name;
-            c.author_avatar = u.avatarUrl;
-            c.author_fallback = u.name.charAt(0).toUpperCase();
+            comment.author_name = u.name;
+            comment.author_avatar = u.avatarUrl;
+            comment.author_fallback = u.name.charAt(0).toUpperCase();
           } else {
-            c.author_name = "Пользователь";
-            c.author_fallback = "U";
+            comment.author_name = "Пользователь";
+            comment.author_fallback = "U";
           }
         });
       } catch (e) {

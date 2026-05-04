@@ -28,8 +28,7 @@ export const KanbanActions = {
       const usersRes = await boardsApi.getBoardUsers(boardId);
       const rawUsers: string[] = usersRes.data.user_links;
 
-      const userPromises = rawUsers.map(async (u) => {
-        const link = u;
+      const userPromises = rawUsers.map(async (link) => {
         if (profileCache.has(link)) return profileCache.get(link)!;
 
         try {
