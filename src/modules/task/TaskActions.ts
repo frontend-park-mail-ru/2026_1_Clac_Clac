@@ -48,7 +48,8 @@ export const TaskActions = {
         kanbanApi.getTask(taskId),
         profileApi.getProfile().catch(() => null),
       ]);
-      const taskData = taskRes.data.cards[0];
+      const rawData = taskRes.data as any;
+      let taskData = rawData.card || rawData.cards?.[0] || rawData;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
