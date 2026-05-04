@@ -25,7 +25,8 @@
       <div class="task__board-title">{{board_name}}</div>
 
       <div class="task__title-container">
-        <input type="text" class="task__title-input" id="section-name-input" value="{{section.section_name}}" placeholder="Название секции" maxlength="50">
+        <input type="text" class="task__title-input" id="section-name-input" value="{{section.section_name}}"
+          placeholder="Название секции" maxlength="50">
       </div>
 
       <div class="task__meta-list">
@@ -35,18 +36,20 @@
             <path d="M12 8v8M8 12h8"></path>
           </svg>
           <span class="task__meta-label">Лимит задач:</span>
-          <input type="number" class="task__meta-date-input" id="section-max-tasks-input" value="{{section.max_tasks}}" min="0" max="999">
+          <input type="number" class="task__meta-date-input" id="section-max-tasks-input" value="{{section.max_tasks}}"
+            min="0" max="999">
         </div>
 
         <div class="task__meta-item">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+            </path>
           </svg>
           <span class="task__meta-label">Цвет:</span>
           {{> colorPicker}}
-          </div>
+        </div>
         <div class="task__meta-item">
-          <span class="task__meta-label" style="min-width: 160px;">Обязательная секция</span>
+          <span class="task__meta-label section-mandatory-label">Обязательная секция</span>
           <label class="toggle">
             <input type="checkbox" id="section-mandatory-input" {{#if section.is_mandatory}}checked{{/if}}>
             <span class="slider"></span>
@@ -68,7 +71,8 @@
         </svg>
       </button>
     </div>
-    <p class="modal__text">Вы уверены, что хотите удалить секцию “<span id="delete-section-name" style="font-weight: bold;"></span>”? Все задачи в ней также будут удалены.</p>
+    <p class="modal__text">Вы уверены, что хотите удалить секцию “<span id="delete-section-name"
+        class="fw-bold"></span>”? Все задачи в ней также будут удалены.</p>
     <div class="modal__actions">
       <button class="btn btn--danger" id="btn-confirm-delete-section">Удалить</button>
       <button class="btn btn--cancel modal__close-btn">Отменить</button>

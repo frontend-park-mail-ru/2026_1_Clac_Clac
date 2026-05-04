@@ -1,5 +1,5 @@
 <div class="task__page-container" id="task-overlay">
-  <div class="task__panel" {{#if noAnimation}}style="animation: none;"{{/if}}>
+  <div class="task__panel {{#if noAnimation}}task__panel--no-animation{{/if}}">
     <div class="task__header-bar">
       <div class="task__header-left">
         <button class="icon-btn task__close-btn" id="btn-back" title="Закрыть">
@@ -18,13 +18,13 @@
             <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
-        <button class="icon-btn task__share-btn" id="btn-share" title="Поделиться">
+        {{!-- <button class="icon-btn task__share-btn" id="btn-share" title="Поделиться">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 3h6v6"></path>
             <path d="M10 14L21 3"></path>
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
           </svg>
-        </button>
+        </button> --}}
       </div>
     </div>
 
@@ -43,15 +43,13 @@
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span class="task__meta-label">Исп.:</span>
-          <button class="task__meta-value-btn" id="task-executor-btn" data-id="{{task.executor_id}}"
-            style="display:flex; align-items:center; gap:0.5rem;">
+          <button class="task__meta-value-btn task__meta-value-btn-flex" id="task-executor-btn"
+            data-id="{{task.executor_id}}">
             {{#if task.executor_id}}
             {{#if task.executor_avatar}}
-            <img src="{{task.executor_avatar}}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+            <img src="{{task.executor_avatar}}" class="assignee__avatar-small">
             {{else}}
-            <div
-              style="width:20px;height:20px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;">
-              {{task.executor_fallback}}</div>
+            <div class="assignee__avatar-fallback-small">{{task.executor_fallback}}</div>
             {{/if}}
             {{task.executor}}
             {{else}}
@@ -90,15 +88,15 @@
         <h3 class="task__section-title">Подзадачи</h3>
         <div class="task__subtasks-list">
           {{#each task.subtasks}}
-          <div class="task__subtask-row"
-            style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
-            <label class="custom-checkbox task__subtask-item" style="flex:1; display:flex; align-items:center;">
-              <input type="checkbox" class="subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if is_done}}checked{{/if}}>
+          <div class="task__subtask-row task__subtask-row-flex">
+            <label class="custom-checkbox task__subtask-item task__subtask-item-flex">
+              <input type="checkbox" class="subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if
+                is_done}}checked{{/if}}>
               <span class="checkmark"></span>
-              <input type="text" class="task__subtask-text-input" value="{{description}}" data-id="{{id}}" data-done="{{is_done}}"
-                style="background: transparent; border: none; outline: none; width: 100%; margin-left: 10px; font-size: 0.95rem; {{#if is_done}}color: #666; text-decoration: line-through;{{else}}color: #ccc;{{/if}}">
+              <input type="text" class="task__subtask-text-input {{#if is_done}}task__subtask-text-input--done{{/if}}"
+                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}">
             </label>
-            <button class="icon-btn task__subtask-delete-btn" data-id="{{id}}" style="color: #ff5c5c; padding: 4px;">
+            <button class="icon-btn task__subtask-delete-btn task__subtask-delete-btn-styled" data-id="{{id}}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -119,9 +117,8 @@
           {{#each comments}}
           <div class="task__comment" data-id="{{comment_link}}">
             {{#if author_avatar}}
-            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="task__comment-avatar-fallback" style="display:none;">{{author_fallback}}</div>
+            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar">
+            <div class="task__comment-avatar-fallback hidden">{{author_fallback}}</div>
             {{else}}
             <div class="task__comment-avatar-fallback">{{author_fallback}}</div>
             {{/if}}
@@ -135,7 +132,7 @@
           </div>
           {{/each}}
           {{#if (eq comments.length 0)}}
-          <p style="color: #666; font-size: 0.9rem;">Нет комментариев</p>
+          <p class="task__no-comments">Нет комментариев</p>
           {{/if}}
         </div>
       </div>
@@ -167,7 +164,7 @@
       </button>
     </div>
     <p class="modal__text">Вы уверены, что хотите удалить карточку “<span id="delete-task-name"
-        style="font-weight: bold;"></span>”?</p>
+        class="fw-bold"></span>”?</p>
     <div class="modal__actions">
       <button class="btn btn--danger" id="btn-confirm-delete-task">Удалить</button>
       <button class="btn btn--cancel modal__close-btn">Отменить</button>

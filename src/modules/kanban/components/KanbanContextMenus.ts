@@ -37,6 +37,14 @@ export class KanbanContextMenus {
       cb.addEventListener("change", () => {
         const subtaskId = cb.getAttribute("data-id");
         const desc = cb.getAttribute("data-desc");
+
+        const textSpan = cb.parentElement?.querySelector(".kanban-card__subtask-text");
+        if (cb.checked) {
+          textSpan?.classList.add("kanban-card__subtask-text--done");
+        } else {
+          textSpan?.classList.remove("kanban-card__subtask-text--done");
+        }
+
         if (subtaskId && desc) {
           kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc }).then(() => {
             KanbanActions.fetchKanban(state.boardId!, true);
@@ -81,7 +89,11 @@ export class KanbanContextMenus {
             list.classList.toggle("hidden");
             const svg = subtasksHeader.querySelector("svg");
             if (svg) {
-              svg.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+              if (list.classList.contains("hidden")) {
+                svg.classList.remove("kanban-card__subtasks-icon--expanded");
+              } else {
+                svg.classList.add("kanban-card__subtasks-icon--expanded");
+              }
             }
           }
           return;

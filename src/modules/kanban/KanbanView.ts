@@ -63,7 +63,7 @@ export class KanbanView {
         const list = el.querySelector(".kanban-card__subtasks-list");
         if (list) list.classList.remove("hidden");
         const svg = el.querySelector(".kanban-card__subtasks-header svg") as HTMLElement;
-        if (svg) svg.style.transform = "rotate(180deg)";
+        if (svg) svg.classList.add("kanban-card__subtasks-icon--expanded");
       }
     });
 

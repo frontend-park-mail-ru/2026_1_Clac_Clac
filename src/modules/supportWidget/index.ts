@@ -140,8 +140,8 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
           selectedFile = file;
 
           if (fileName) fileName.textContent = file.name;
-          if (fileHint) (fileHint as HTMLElement).style.display = 'none';
-          if (fileIcon) fileIcon.style.display = 'none';
+          if (fileHint) (fileHint as HTMLElement).classList.add('hidden');
+          if (fileIcon) fileIcon.classList.add('hidden');
           if (removeBtn) removeBtn.classList.remove('hidden');
 
           if (previewContainer && previewImg) {
@@ -164,8 +164,8 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         if (fileInput) fileInput.value = '';
 
         if (fileName) fileName.textContent = 'Прикрепить фото';
-        if (fileHint) (fileHint as HTMLElement).style.display = 'inline';
-        if (fileIcon) fileIcon.style.display = 'inline-block';
+        if (fileHint) (fileHint as HTMLElement).classList.remove('hidden');
+        if (fileIcon) fileIcon.classList.remove('hidden');
         if (removeBtn) removeBtn.classList.add('hidden');
 
         if (previewContainer && previewImg) {

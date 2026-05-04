@@ -20,11 +20,11 @@ export class KanbanDragAndDrop {
           e.dataTransfer.effectAllowed = "move";
           e.dataTransfer.setData("text/plain", draggedTaskId || "");
         }
-        setTimeout(() => (card.style.opacity = "0.5"), 0);
+        setTimeout(() => (card.classList.add("kanban-card--dragging")), 0);
       }, { signal });
 
       card.addEventListener("dragend", () => {
-        if (draggedElement) draggedElement.style.opacity = "1";
+        if (draggedElement) draggedElement.classList.remove("kanban-card--dragging");
         draggedElement = null;
         draggedTaskId = null;
         sourceSectionId = null;
@@ -39,13 +39,19 @@ export class KanbanDragAndDrop {
         if (!draggedElement) return;
 
         const targetCard = (e.target as HTMLElement).closest(".kanban-card") as HTMLElement;
-        if (targetCard && targetCard !== draggedElement) {
+        const isDifferentCard = targetCard && targetCard !== draggedElement;
+        if (isDifferentCard) {
           const rect = targetCard.getBoundingClientRect();
-          const next = e.clientY > rect.top + rect.height / 2;
-          dropZone.insertBefore(draggedElement, next ? targetCard.nextSibling : targetCard);
-        } else if (e.target === dropZone || (e.target as HTMLElement).closest('.kanban__column-cards') === dropZone) {
-          if (!dropZone.contains(draggedElement)) {
-            dropZone.appendChild(draggedElement);
+          const middleY = rect.top + rect.height / 2;
+          const shouldInsertAfter = e.clientY > middleY;
+          dropZone.insertBefore(draggedElement, shouldInsertAfter ? targetCard.nextSibling : targetCard);
+        } else {
+          const targetDropZone = (e.target as HTMLElement).closest('.kanban__column-cards');
+          const isTargetDropZone = e.target === dropZone || targetDropZone === dropZone;
+          if (isTargetDropZone) {
+            if (!dropZone.contains(draggedElement)) {
+              dropZone.appendChild(draggedElement);
+            }
           }
         }
       }, { signal });

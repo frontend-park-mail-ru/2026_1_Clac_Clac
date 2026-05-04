@@ -56,6 +56,11 @@
             border: 1px solid transparent;
             color: #ccc;
         }
+
+        &--disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     }
 
     &__columns-wrapper {
@@ -78,9 +83,19 @@
         border-radius: 12px;
         background: #222224;
 
-        &::-webkit-scrollbar { height: 12px; }
-        &::-webkit-scrollbar-track { background: #1a1a1c; border-radius: 8px; }
-        &::-webkit-scrollbar-thumb { background: #333; border-radius: 8px; }
+        &::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #1a1a1c;
+            border-radius: 8px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 8px;
+        }
     }
 
     &__column {
@@ -96,7 +111,9 @@
         height: 100%;
         padding: 1.5rem;
 
-        &:last-child { margin-right: 0; }
+        &:last-child {
+            margin-right: 0;
+        }
 
         &::after {
             content: "";
@@ -107,6 +124,10 @@
             width: 1px;
             background: repeating-linear-gradient(to bottom, #2a2a2c, #2a2a2c 10px, transparent 10px, transparent 20px);
             pointer-events: none;
+        }
+
+        &--transparent {
+            background: transparent;
         }
     }
 
@@ -135,7 +156,9 @@
         display: inline-block;
     }
 
-    &__btn-col-options { padding: 0; }
+    &__btn-col-options {
+        padding: 0;
+    }
 
     &__column-cards {
         display: flex;
@@ -148,16 +171,28 @@
         scrollbar-width: thin;
         scrollbar-color: #3a3a3c transparent;
 
-        &::-webkit-scrollbar { width: 6px; }
-        &::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 4px;
+        }
+
         &::-webkit-scrollbar-thumb {
             background: #3a3a3c;
             border-radius: 4px;
             transition: background 0.2s;
-            &:hover { background: #4a4a4c; }
+
+            &:hover {
+                background: #4a4a4c;
+            }
         }
 
-        .kanban-card:first-child { margin-top: 15px; }
+        .kanban-card:first-child {
+            margin-top: 15px;
+        }
     }
 
     &__add-card-btn {
@@ -170,8 +205,20 @@
         border-radius: 8px;
         transition: all 0.2s;
         font-size: 0.9rem;
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: left;
 
-        &:hover { background: #2a2a2c; color: white; }
+        &:hover {
+            background: #2a2a2c;
+            color: white;
+        }
+    }
+
+    &__add-card-icon {
+        vertical-align: text-bottom;
+        margin-right: 4px;
     }
 
     &__add-column-btn {
@@ -188,7 +235,10 @@
         transition: all 0.2s;
         background: transparent;
 
-        &:hover { border-color: #888; color: white; }
+        &:hover {
+            border-color: #888;
+            color: white;
+        }
     }
 
     &__add-card-form {
@@ -220,7 +270,9 @@
         outline: none;
     }
 
-    &__add-card-input { min-height: 40px; }
+    &__add-card-input {
+        min-height: 40px;
+    }
 
     &__modal-input {
         width: 100%;
@@ -232,6 +284,10 @@
         font-size: 1rem;
         outline: none;
         margin-bottom: 1rem;
+
+        &--no-margin {
+            margin-bottom: 0;
+        }
     }
 
     &__assignee-block {
@@ -277,7 +333,13 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
-        .kanban-card__options-btn { opacity: 1; }
+        .kanban-card__options-btn {
+            opacity: 1;
+        }
+    }
+
+    &--dragging {
+        opacity: 0.5;
     }
 
     &__header {
@@ -299,7 +361,9 @@
         font-weight: 500;
     }
 
-    &__assignee-text { color: white; }
+    &__assignee-text {
+        color: white;
+    }
 
     &__options-btn {
         opacity: 0;
@@ -314,7 +378,10 @@
         align-items: center;
         justify-content: center;
 
-        &:hover { background-color: #2a2a2c; color: white; }
+        &:hover {
+            background-color: #2a2a2c;
+            color: white;
+        }
     }
 
     &__title {
@@ -358,7 +425,7 @@
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
-        
+
         svg {
             color: #888;
             transition: transform 0.2s;
@@ -369,6 +436,10 @@
         }
     }
 
+    &__subtasks-icon--expanded {
+        transform: rotate(180deg);
+    }
+
     &__subtasks-list {
         display: flex;
         flex-direction: column;
@@ -376,17 +447,18 @@
         margin-top: 0.8rem;
 
         &.hidden {
-            display: none;
+            display: none !important;
         }
     }
 
     &__subtask-item {
         font-size: 0.8rem;
         margin: 0;
+
         .checkmark {
             width: 16px;
             height: 16px;
-            
+
             &:after {
                 left: 4px;
                 top: 1px;
@@ -401,6 +473,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         color: #ccc;
+
+        &--done {
+            text-decoration: line-through;
+            color: #666;
+        }
     }
 
     &__subtasks-more {
@@ -413,6 +490,40 @@
             color: #fff;
             text-decoration: underline;
         }
+    }
+}
+
+.create-column-form__color-btn {
+    &[data-color="white"] {
+        background: #ffffff;
+    }
+
+    &[data-color="grey"] {
+        background: #9ca3af;
+    }
+
+    &[data-color="red"] {
+        background: #f87171;
+    }
+
+    &[data-color="orange"] {
+        background: #fb923c;
+    }
+
+    &[data-color="blue"] {
+        background: #60a5fa;
+    }
+
+    &[data-color="green"] {
+        background: #4ade80;
+    }
+
+    &[data-color="purple"] {
+        background: #a5b4fc;
+    }
+
+    &[data-color="pink"] {
+        background: #f9a8d4;
     }
 }
 
@@ -437,6 +548,7 @@
             &::-webkit-scrollbar {
                 display: none;
             }
+
             scrollbar-width: none;
         }
 
@@ -473,7 +585,7 @@
         &__column-title {
             font-size: 1rem;
         }
-        
+
         &__add-column-btn {
             height: 50px;
             font-size: 0.9rem;

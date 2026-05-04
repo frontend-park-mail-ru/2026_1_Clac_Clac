@@ -289,18 +289,16 @@ export class TaskView {
       dropdown.className = "assignee__dropdown";
 
       const searchContainer = document.createElement("div");
-      searchContainer.style.padding = "0.5rem";
+      searchContainer.className = "assignee__search-container";
       const searchInput = document.createElement("input");
       searchInput.type = "text";
       searchInput.placeholder = "Поиск...";
       searchInput.className = "assignee__search-input";
-      searchInput.style.cssText = "width: 100%; background: #1a1a1c; border: 1px solid #333; color: white; padding: 0.4rem; border-radius: 4px; outline: none; margin-bottom: 0.5rem;";
       searchContainer.appendChild(searchInput);
       dropdown.appendChild(searchContainer);
 
       const listContainer = document.createElement("div");
-      listContainer.style.maxHeight = "200px";
-      listContainer.style.overflowY = "auto";
+      listContainer.className = "assignee__list-container";
       dropdown.appendChild(listContainer);
 
       const renderList = (filter = "") => {
@@ -322,7 +320,7 @@ export class TaskView {
           const item = document.createElement("div");
           item.className = "assignee__dropdown-item";
           item.innerHTML = `
-            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
             <div class="assignee__info">
               <span class="assignee__name">${user.name}</span>
               <span class="assignee__email">${user.email}</span>
@@ -330,7 +328,7 @@ export class TaskView {
           `;
           item.addEventListener("click", () => {
             execBtn.innerHTML = `
-              ${user.avatarUrl ? `<img src="${user.avatarUrl}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<div style="width:20px;height:20px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;">${user.name.charAt(0).toUpperCase()}</div>`}
+              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
               ${user.name}
             `;
             this.currentExecuterId = user.id;
@@ -425,6 +423,14 @@ export class TaskView {
         const target = e.target as HTMLInputElement;
         const id = target.getAttribute("data-id");
         const desc = target.getAttribute("data-desc");
+
+        const textInput = target.parentElement?.querySelector(".task__subtask-text-input");
+        if (target.checked) {
+          textInput?.classList.add("task__subtask-text-input--done");
+        } else {
+          textInput?.classList.remove("task__subtask-text-input--done");
+        }
+
         if (id && desc) {
           TaskActions.toggleSubtask(id, target.checked, desc);
         }
