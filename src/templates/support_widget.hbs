@@ -117,11 +117,11 @@
   <h3 style="margin:0 0 1rem 0;">{{currentTicket.display_name}}</h3>
 
   <div class="support-widget__messages" id="sw-messages">
-    <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
+    <div class="msg msg-user"><strong>Описание:</strong><br>{{#if currentTicket.description}}{{currentTicket.description}}{{else}}<em style="color:#888;">Нет описания</em>{{/if}}</div>
 
-    {{#if currentTicket.attachment_key}}
+    {{#if currentTicket.attachment_url}}
     <div class="msg msg-user" style="padding: 0.5rem; overflow: hidden;">
-      <img src="{{currentTicket.attachment_key}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
+      <img src="{{currentTicket.attachment_url}}" style="max-width: 100%; border-radius: 4px;" alt="Вложение">
     </div>
     {{/if}}
   </div>

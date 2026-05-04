@@ -18,7 +18,12 @@ class SupportWidgetStore extends Store {
         this.state = { ...this.state, ...(action.payload as any) };
         this.emit('change');
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'SUPPORT_WIDGET_STATE', view: this.state.view }, '*');
+          window.parent.postMessage({ 
+            type: 'SUPPORT_WIDGET_STATE', 
+            view: this.state.view,
+            tickets: this.state.tickets,
+            currentTicket: this.state.currentTicket
+          }, '*');
         }
       }
     });
@@ -30,6 +35,18 @@ class SupportWidgetStore extends Store {
 }
 
 const store = new SupportWidgetStore();
+
+if (window.self !== window.parent) {
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'SUPPORT_WIDGET_STATE') {
+      store.state.tickets = e.data.tickets || [];
+      store.state.currentTicket = e.data.currentTicket || null;
+      store.state.view = e.data.view || 'list';
+      store.state.role = e.data.role || 'user';
+      store.emit('change');
+    }
+  });
+}
 
 export const SupportWidgetActions = {
   async fetchTickets() {
@@ -96,7 +113,9 @@ document.addEventListener('click', (e) => {
 
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template({ ...store.getState(), user: currentUser });
+    const state = store.getState();
+    console.log('[SW] Render state:', JSON.stringify({ view: state.view, ticketsCount: state.tickets.length, currentTicket: state.currentTicket }));
+    appDiv.innerHTML = template({ ...state, user: currentUser });
 
     appDiv.querySelector('#sw-btn-create')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'create' } });

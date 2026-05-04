@@ -191,7 +191,6 @@ export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;
   attachment_url: string;
-  attachment_key?: string;
   category: string;
   created_at: string;
   description: string;

@@ -201,6 +201,7 @@ export const TaskActions = {
       if (boardId && taskId) this.loadTaskData(boardId, taskId);
     } catch (e) {
       console.error("Update subtask error", e);
+      Toast.error("Ошибка при обновлении подзадачи");
     }
   },
 
@@ -212,6 +213,7 @@ export const TaskActions = {
       if (boardId && taskId) this.loadTaskData(boardId, taskId);
     } catch (e) {
       console.error("Delete subtask error", e);
+      Toast.error("Ошибка при удалении подзадачи");
     }
   }
 };

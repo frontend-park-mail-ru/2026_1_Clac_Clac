@@ -188,9 +188,13 @@ export class TaskView {
       this.appDiv.appendChild(this.taskNode);
     }
 
-    const formattedSubtasks = taskData.subtasks.map((st: any) => {
-      const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
-      const validDesc = st.description;
+    const formattedSubtasks = taskData.subtasks.filter((st: any) => {
+      const rawId = st.subtask_link || st.link || st.link_subtask || st.id || "";
+      return rawId && rawId !== "00000000-0000-0000-0000-000000000000";
+    }).map((st: any) => {
+      const rawId = st.subtask_link || st.link || st.link_subtask || st.id || "";
+      const validId = (rawId && rawId !== "00000000-0000-0000-0000-000000000000") ? rawId : "";
+      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
       return {
         ...st,
         id: validId,
