@@ -1101,7 +1101,7 @@ a {
     color: #ccc;
     font-size: 1rem;
 
-    input {
+    & > input {
         position: absolute;
         opacity: 0;
         cursor: pointer;
@@ -1118,11 +1118,11 @@ a {
         position: relative;
     }
 
-    &:hover input~.checkmark {
+    &:hover > input ~ .checkmark {
         background-color: #333;
     }
 
-    input:checked~.checkmark {
+    > input:checked ~ .checkmark {
         background-color: var(--primary);
         border-color: var(--primary);
     }
