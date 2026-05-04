@@ -6,17 +6,7 @@ export class Toast {
       return;
     }
     this.container = document.createElement("div");
-    this.container.id = "toast-container";
-    this.container.style.cssText = `
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      pointer-events: none;
-    `;
+    this.container.className = "toast-container";
     document.body.appendChild(this.container);
   }
 
@@ -28,47 +18,21 @@ export class Toast {
     this.initContainer();
     const toast = document.createElement("div");
 
-    const colors = {
-      success: "#10b981",
-      error: "#ef4444",
-      info: "#3b82f6",
-    };
-
-    toast.style.cssText = `
-      background: #1e1e20;
-      color: #fff;
-      padding: 14px 20px;
-      border-radius: 10px;
-      border-left: 4px solid ${colors[type]};
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      font-size: 14px;
-      font-weight: 500;
-      min-width: 280px;
-      max-width: 400px;
-      pointer-events: auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      transform: translateX(120%);
-      opacity: 0;
-    `;
+    toast.className = `toast toast--${type}`;
 
     toast.innerHTML = `
-      <span style="flex: 1; margin-right: 12px; line-height: 1.4;">${message}</span>
-      <button style="background:none; border:none; color:#777; cursor:pointer; font-size: 18px; padding: 0; display: flex; align-items: center;">&times;</button>
+      <span class="toast__msg">${message}</span>
+      <button class="toast__close">&times;</button>
     `;
 
     this.container!.appendChild(toast);
 
     requestAnimationFrame(() => {
-      toast.style.transform = "translateX(0)";
-      toast.style.opacity = "1";
+      toast.classList.add("toast--visible");
     });
 
     const remove = () => {
-      toast.style.transform = "translateX(120%)";
-      toast.style.opacity = "0";
+      toast.classList.remove("toast--visible");
       setTimeout(() => toast.remove(), 300);
     };
 

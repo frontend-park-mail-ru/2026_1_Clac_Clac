@@ -1,8 +1,8 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, authApi } from "../../api";
-import { navigateTo } from "../../router";
+import { navigateTo, setIsAuth } from "../../router";
 import { 
-  RawBoard, BoardsResponse, CreateBoardResponse, ApiError, Board 
+  ApiError, Board 
 } from "./boards.types";
 
 export const BoardsActions = {
@@ -10,23 +10,16 @@ export const BoardsActions = {
     appDispatcher.dispatch({ type: "FETCH_BOARDS_START" });
 
     try {
-      const res = (await boardsApi.getBoards()) as BoardsResponse | RawBoard[];
-      let rawBoards: RawBoard[] =[];
+      const res = await boardsApi.getBoards();
 
-      if ("data" in res && res.data) {
-        rawBoards = Array.isArray(res.data) ? res.data : [res.data];
-      } else if (Array.isArray(res)) {
-        rawBoards = res;
-      }
-
-      const boards: Board[] = rawBoards.map((board) => ({
-        id: board.link || board.id || "",
-        board_name: board.name || board.board_name || board.title || "Без названия",
+      const boards: Board[] = res.data.map((board) => ({
+        id: board.link,
+        board_name: board.name || "Без названия",
         description: board.description || "Без описания",
         background: board.background || "",
-        backlog: board.backlog || 0,
-        hot: board.hot || 0,
-        members: board.members || 0,
+        backlog: 0,
+        hot: 0,
+        members: 0,
       }));
 
       appDispatcher.dispatch({
@@ -41,6 +34,7 @@ export const BoardsActions = {
       });
 
       if (error.status === 401) {
+        setIsAuth(false);
         localStorage.removeItem("isAuth");
         navigateTo("/login");
       }
@@ -49,8 +43,8 @@ export const BoardsActions = {
 
   async createBoard(name: string, description: string, file?: File): Promise<void> {
     try {
-      const res = (await boardsApi.createBoard({ name, description })) as CreateBoardResponse;
-      const newBoardId = res.data?.link;
+      const res = await boardsApi.createBoard({ name, description });
+      const newBoardId = res.data.link;
 
       if (file && newBoardId) {
         const fd = new FormData();
@@ -65,7 +59,7 @@ export const BoardsActions = {
 
   async updateBoard(id: string, name: string, description: string, file?: File): Promise<void> {
     try {
-      await boardsApi.updateBoard(id, { name, description });
+      await boardsApi.updateBoard(id, { name, description, board_link: id });
 
       if (file) {
         const fd = new FormData();
@@ -93,6 +87,8 @@ export const BoardsActions = {
     } catch (err: unknown) {
       console.error("Logout error", err);
     }
+    
+    setIsAuth(false);
     localStorage.removeItem("isAuth");
     navigateTo("/login");
   },

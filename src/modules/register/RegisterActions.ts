@@ -1,7 +1,7 @@
 import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './register.types';
-import { apiClient } from '../../api';
-import { navigateTo } from '../../router';
+import { authApi } from '../../api';
+import { navigateTo, setIsAuth } from '../../router';
 
 export const RegisterActions = {
   resetState() {
@@ -21,14 +21,15 @@ export const RegisterActions = {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
 
     try {
-      await apiClient.post('/register', {
+      await authApi.register({
         display_name: name,
-        email: email,
-        password: password,
+        email,
+        password,
         repeated_password: password
       });
 
       localStorage.setItem('isAuth', 'true');
+      setIsAuth(true);
       navigateTo('/boards');
     } catch (err: any) {
       const errMsg = err.data?.message || err.data?.error;

@@ -32,9 +32,19 @@ export class KanbanView {
     this.abortController = new AbortController();
 
     const scrollMap = new Map<string, number>();
+    const expandedTasks = new Set<string>();
+
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
       if (id) scrollMap.set(id, el.scrollTop);
+    });
+
+    this.appDiv.querySelectorAll<HTMLElement>(".kanban-card").forEach((el) => {
+      const id = el.getAttribute("data-id");
+      const list = el.querySelector(".kanban-card__subtasks-list");
+      if (id && list && !list.classList.contains("hidden")) {
+        expandedTasks.add(id);
+      }
     });
 
     this.appDiv.innerHTML = template({ 
@@ -45,6 +55,16 @@ export class KanbanView {
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
       if (id && scrollMap.has(id)) el.scrollTop = scrollMap.get(id)!;
+    });
+
+    this.appDiv.querySelectorAll<HTMLElement>(".kanban-card").forEach((el) => {
+      const id = el.getAttribute("data-id");
+      if (id && expandedTasks.has(id)) {
+        const list = el.querySelector(".kanban-card__subtasks-list");
+        if (list) list.classList.remove("hidden");
+        const svg = el.querySelector(".kanban-card__subtasks-header svg") as HTMLElement;
+        if (svg) svg.classList.add("kanban-card__subtasks-icon--expanded");
+      }
     });
 
     this.attachEventListeners(state, this.abortController.signal);

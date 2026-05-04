@@ -7,9 +7,15 @@
     <div class="profile__avatar-section">
       <div class="profile__avatar-preview">
         {{#if user.avatar_url}}
-        <img src="{{user.avatar_url}}" alt="Avatar">
+        <img src="{{user.avatar_url}}" alt="Avatar" class="profile__avatar-img">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+          class="hidden profile__avatar-fallback">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
         {{else}}
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+          class="profile__avatar-fallback">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
@@ -18,7 +24,9 @@
       <div class="profile__avatar-actions">
         <label for="avatar-upload" class="profile__action-link cursor-pointer">Изменить фото</label>
         <input type="file" id="avatar-upload" class="hidden" accept="image/*">
-        <span id="btn-delete-avatar" class="profile__action-delete{{#unless user.avatar_url}} profile__action-delete--disabled{{/unless}} cursor-pointer">Удалить фото</span>
+        <span id="btn-delete-avatar"
+          class="profile__action-delete{{#unless user.avatar_url}} profile__action-delete--disabled{{/unless}} cursor-pointer">Удалить
+          фото</span>
       </div>
     </div>
 

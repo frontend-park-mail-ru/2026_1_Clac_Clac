@@ -12,7 +12,7 @@ export class TaskView {
   private appDiv: HTMLElement;
   private taskNode: HTMLElement | null = null;
   private currentExecuterId: string = "";
-  private hasRendered: boolean = false;
+  private isFirstRender: boolean = true;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -24,6 +24,7 @@ export class TaskView {
   }
 
   public render() {
+    this.isFirstRender = true;
     taskStore.on("change", this.onStoreChangeBound);
     taskStore.on("success", this.onStoreSuccessBound);
     taskStore.on("error", this.onStoreErrorBound);
@@ -74,9 +75,9 @@ export class TaskView {
       return;
     }
 
-    if (state.taskData && !this.hasRendered) {
-      this.hasRendered = true;
+    if (state.taskData) {
       this.renderTemplate();
+      this.isFirstRender = false;
     }
   }
 
@@ -107,7 +108,43 @@ export class TaskView {
 
     if (!taskData) return;
 
-    const deadline = taskData.dead_line || taskData.data_dead_line;
+    const currentSubtasks: Record<string, string> = {};
+    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
+      const id = input.getAttribute("data-id");
+      if (id) {
+        currentSubtasks[id] = (input as HTMLInputElement).value;
+      }
+    });
+
+    const currentValues = {
+      title: (this.taskNode?.querySelector("#task-title-input") as HTMLInputElement)?.value,
+      desc: (this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement)?.value,
+      date: (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement)?.value,
+      time: (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement)?.value,
+      subtask: (this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement)?.value,
+      comment: (this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement)?.value,
+    };
+
+    const activeEl = document.activeElement as HTMLElement;
+    const activeId = activeEl?.id;
+    const activeClass = activeEl?.className;
+    let activeSelector = activeId ? `#${activeId}` : null;
+
+    if (!activeSelector && activeClass && activeClass.includes('task__comment-input')) {
+      activeSelector = '.task__comment-input';
+    } else if (!activeSelector && activeClass && activeClass.includes('task__subtask-text-input')) {
+      const id = activeEl.getAttribute('data-id');
+      if (id) activeSelector = `.task__subtask-text-input[data-id="${id}"]`;
+    }
+
+    let selectionStart = 0;
+    let selectionEnd = 0;
+    if (activeEl && (activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement)) {
+      selectionStart = activeEl.selectionStart || 0;
+      selectionEnd = activeEl.selectionEnd || 0;
+    }
+
+    const deadline = taskData.dead_line || taskData.data_dead_line || taskData.deadline;
     let rawDate = "";
     let rawTime = "";
     let formattedDate = "";
@@ -122,6 +159,8 @@ export class TaskView {
     }
 
     let executorName = "Не назначен";
+    let executorAvatar = "";
+    let executorFallback = "";
     let currentExecuterId =
       taskData.link_executer ||
       taskData.executer_link ||
@@ -131,7 +170,14 @@ export class TaskView {
 
     if (currentExecuterId) {
       const found = usersList.find((u) => u.id === currentExecuterId);
-      executorName = found ? found.name : "Пользователь";
+      if (found) {
+        executorName = found.name;
+        executorAvatar = found.avatarUrl || "";
+        executorFallback = found.name.charAt(0).toUpperCase();
+      } else {
+        executorName = "Пользователь";
+        executorFallback = "U";
+      }
     }
 
     this.currentExecuterId = currentExecuterId;
@@ -142,7 +188,21 @@ export class TaskView {
       this.appDiv.appendChild(this.taskNode);
     }
 
+    const formattedSubtasks = taskData.subtasks.map((st: any) => {
+      const validId = st.link || st.subtask_link || st.link_subtask || st.id || "";
+      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+      return {
+        ...st,
+        id: validId,
+        description: validDesc,
+      };
+    }).sort((a: any, b: any) => {
+      if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
+      return String(a.id).localeCompare(String(b.id));
+    });
+
     this.taskNode.innerHTML = template({
+      noAnimation: !this.isFirstRender,
       board_name: state.boardName,
       task: {
         title: taskData.title || "Без названия",
@@ -152,8 +212,32 @@ export class TaskView {
         raw_date: rawDate,
         raw_time: rawTime,
         executor: executorName,
+        executor_avatar: executorAvatar,
+        executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
+        subtasks: formattedSubtasks
       },
+      comments: state.comments,
+    });
+
+    if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
+    if (currentValues.desc !== undefined) (this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement).value = currentValues.desc;
+    if (currentValues.date !== undefined) (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
+    if (currentValues.time !== undefined) (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+    if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
+    if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
+
+    if (activeSelector) {
+      const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
+      if (elToFocus) {
+        elToFocus.focus();
+        if (elToFocus.setSelectionRange) elToFocus.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
+
+    Object.entries(currentSubtasks).forEach(([id, val]) => {
+      const el = this.taskNode?.querySelector(`.task__subtask-text-input[data-id="${id}"]`) as HTMLInputElement;
+      if (el) el.value = val;
     });
 
     this.attachListeners();
@@ -168,7 +252,7 @@ export class TaskView {
       const dateVal = (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement).value;
       const timeVal = (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement).value;
 
-      let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line;
+      let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
       if (dateVal) {
         finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
       }
@@ -177,8 +261,9 @@ export class TaskView {
         link_card: state.taskId,
         title: title || "Без названия",
         description: description,
-        link_executer: this.currentExecuterId || null,
-        data_dead_line: finalDeadline,
+        executor_link: this.currentExecuterId || null,
+        deadline: finalDeadline,
+        max_tasks: state.taskData?.max_tasks || 100,
       };
 
       if (state.taskId) {
@@ -204,29 +289,62 @@ export class TaskView {
       const dropdown = document.createElement("div");
       dropdown.className = "assignee__dropdown";
 
-      state.usersList.forEach((user) => {
-        const item = document.createElement("div");
-        item.className = "assignee__dropdown-item";
-        item.innerHTML = `
-          ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
-          <div class="assignee__info">
-            <span class="assignee__name">${user.name}</span>
-            <span class="assignee__email">${user.email}</span>
-          </div>
-        `;
-        item.addEventListener("click", () => {
-          execBtn.textContent = user.name;
-          this.currentExecuterId = user.id;
-          dropdown.remove();
-        });
-        dropdown.appendChild(item);
-      });
+      const searchContainer = document.createElement("div");
+      searchContainer.className = "assignee__search-container";
+      const searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.placeholder = "Поиск...";
+      searchInput.className = "assignee__search-input";
+      searchContainer.appendChild(searchInput);
+      dropdown.appendChild(searchContainer);
 
-      if (!execBtn.parentElement) {
-        return;
+      const listContainer = document.createElement("div");
+      listContainer.className = "assignee__list-container";
+      dropdown.appendChild(listContainer);
+
+      const renderList = (filter = "") => {
+        listContainer.innerHTML = "";
+
+        if ("Не назначен".toLowerCase().includes(filter.toLowerCase())) {
+          const clearItem = document.createElement("div");
+          clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";
+          clearItem.innerHTML = `<div class="assignee__avatar assignee__avatar--clear">?</div><div class="assignee__info"><span class="assignee__name">Не назначен</span></div>`;
+          clearItem.addEventListener("click", () => {
+            execBtn.innerHTML = `Не назначен`;
+            this.currentExecuterId = "";
+            dropdown.remove();
+          });
+          listContainer.appendChild(clearItem);
+        }
+
+        state.usersList.filter(u => u.name.toLowerCase().includes(filter.toLowerCase())).forEach((user) => {
+          const item = document.createElement("div");
+          item.className = "assignee__dropdown-item";
+          item.innerHTML = `
+            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+            <div class="assignee__info">
+              <span class="assignee__name">${user.name}</span>
+              <span class="assignee__email">${user.email}</span>
+            </div>
+          `;
+          item.addEventListener("click", () => {
+            execBtn.innerHTML = `
+              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
+              ${user.name}
+            `;
+            this.currentExecuterId = user.id;
+            dropdown.remove();
+          });
+          listContainer.appendChild(item);
+        });
       };
-      
-      execBtn.parentElement!.appendChild(dropdown);
+
+      renderList();
+      searchInput.addEventListener("input", (e) => renderList((e.target as HTMLInputElement).value));
+
+      if (!execBtn.parentElement) return;
+      execBtn.parentElement.appendChild(dropdown);
+      searchInput.focus();
     });
 
     const optionsBtn = this.taskNode?.querySelector("#btn-task-options");
@@ -269,5 +387,84 @@ export class TaskView {
         this.taskNode?.querySelector("#modal-delete-task")?.classList.add("hidden");
       }),
     );
+
+    const commentInput = this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement;
+    const commentBtn = this.taskNode?.querySelector(".task__comment-send-btn") as HTMLButtonElement;
+
+    const submitComment = () => {
+      const text = commentInput?.value.trim();
+      if (text && state.taskId) {
+        commentInput.value = "";
+        TaskActions.addComment(state.taskId, text);
+      }
+    };
+
+    commentBtn?.addEventListener("click", submitComment);
+    commentInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        submitComment();
+      }
+    });
+
+    const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
+    subtaskInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const desc = subtaskInput.value.trim();
+        if (desc && state.taskId) {
+          subtaskInput.value = "";
+          TaskActions.createSubtask(state.taskId, desc);
+        }
+      }
+    });
+
+    this.taskNode?.querySelectorAll(".subtask-checkbox").forEach((cb) => {
+      cb.addEventListener("change", (e) => {
+        const target = e.target as HTMLInputElement;
+        const id = target.getAttribute("data-id");
+        const desc = target.getAttribute("data-desc");
+
+        const textInput = target.parentElement?.querySelector(".task__subtask-text-input");
+        if (target.checked) {
+          textInput?.classList.add("task__subtask-text-input--done");
+        } else {
+          textInput?.classList.remove("task__subtask-text-input--done");
+        }
+
+        if (id && desc) {
+          TaskActions.toggleSubtask(id, target.checked, desc);
+        }
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
+      const updateSubtask = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const id = target.getAttribute("data-id");
+        const isDone = target.getAttribute("data-done") === "true";
+        const desc = target.value.trim();
+        if (id && desc) {
+          TaskActions.toggleSubtask(id, isDone, desc);
+        }
+      };
+      input.addEventListener("blur", updateSubtask);
+      input.addEventListener("keydown", (e: Event) => {
+        const keyEvent = e as KeyboardEvent;
+        if (keyEvent.key === "Enter") {
+          keyEvent.preventDefault();
+          (keyEvent.target as HTMLElement).blur();
+        }
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__subtask-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
+        if (id) {
+          TaskActions.deleteSubtask(id);
+        }
+      });
+    });
   }
 }

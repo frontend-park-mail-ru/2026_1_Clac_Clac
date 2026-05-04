@@ -1,14 +1,14 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, profileApi } from "../../api";
+import { boardsApi, kanbanApi, profileApi, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
 import {
-  BoardUser, Section, RawUser, RawSection, RawTask,
+  BoardUser, Section,
   KANBAN_COLORS, ApiError
 } from "./kanban.types";
 
-const profileCache = new Map<string, BoardUser>();
+export const profileCache = new Map<string, BoardUser>();
 
 export const KanbanActions = {
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
@@ -22,25 +22,22 @@ export const KanbanActions = {
     appDispatcher.dispatch({ type: "FETCH_KANBAN_START" });
 
     try {
-      const boardRes = (await boardsApi.getBoard(boardId)) as { data?: { name?: string } };
-      const boardName = boardRes?.data?.name || "Без названия";
+      const boardRes = await boardsApi.getBoard(boardId);
+      const boardName = boardRes.data.name;
 
-      const usersRes = (await boardsApi.getBoardUsers(boardId)) as { data?: RawUser[] } | RawUser[];
-      const rawUsers: RawUser[] = Array.isArray((usersRes as any)?.data)
-        ? (usersRes as any).data
-        : Array.isArray(usersRes) ? usersRes : [];
+      const usersRes = await boardsApi.getBoardUsers(boardId);
+      const rawUsers: string[] = usersRes.data.user_links;
 
-      const userPromises = rawUsers.map(async (u) => {
-        const link = u.user_link || u.id || String(u);
+      const userPromises = rawUsers.map(async (link) => {
         if (profileCache.has(link)) return profileCache.get(link)!;
 
         try {
-          const pRes = (await profileApi.getProfileByLink(link)) as { data?: RawUser } | RawUser;
-          const pData = (pRes as any)?.data || pRes;
+          const pRes = await profileApi.getProfileByLink(link);
+          const pData = pRes.data;
           const userObj: BoardUser = {
             id: link,
-            name: pData.display_name || "Без имени",
-            email: pData.email || "",
+            name: pData.display_name,
+            email: pData.email,
             avatarUrl: pData.avatar_url,
           };
           profileCache.set(link, userObj);
@@ -51,33 +48,33 @@ export const KanbanActions = {
       });
       const users = await Promise.all(userPromises);
 
-      const sectionsRes = (await kanbanApi.getSections(boardId)) as { data?: { sections?: RawSection[] }, sections?: RawSection[] } | RawSection[];
-      let fetchedSections: RawSection[] = (sectionsRes as any).data?.sections || (sectionsRes as any).sections || (sectionsRes as any).data || sectionsRes || [];
-      if (!Array.isArray(fetchedSections)) fetchedSections = [];
+      const sectionsRes = await kanbanApi.getSections(boardId);
+      const fetchedSections = sectionsRes.data;
 
       const colors = Object.keys(KANBAN_COLORS);
       const sectionPromises = fetchedSections.map(async (sec, i) => {
-        const secId = sec.section_link || sec.id || "";
+        const secId = sec.link;
         const secColor = sec.color || colors[i % colors.length];
 
         const section: Section = {
           id: secId,
-          section_name: sec.section_name || "Без названия",
+          section_name: sec.name || "Без названия",
           color: secColor,
           colorHex: KANBAN_COLORS[secColor] || secColor,
           max_tasks: sec.max_tasks,
           is_mandatory: sec.is_mandatory,
+          position: sec.position,
           tasks: [],
         };
 
         try {
-          const tasksRes = (await kanbanApi.getTasks(secId)) as { data?: { cards?: RawTask[] }, cards?: RawTask[] } | RawTask[];
-          const tasksList: RawTask[] = (tasksRes as any)?.data?.cards || (tasksRes as any)?.cards || (tasksRes as any)?.data || tasksRes || [];
+          const tasksRes = await kanbanApi.getTasks(secId);
+          const tasksList = tasksRes.data.cards;
 
           section.tasks = tasksList.map((t) => {
-            const exId = t.link_executer || t.executer_link;
+            const exId = t.executor_link;
             const exUser = users.find((u) => u.id === exId);
-            const dl = t.dead_line || t.data_dead_line;
+            const dl = t.deadline;
 
             let formattedDate = null;
             let formattedTime = null;
@@ -88,17 +85,38 @@ export const KanbanActions = {
               formattedTime = dlDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
+            let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
+            const subtasksCount = subtasks.length;
+            const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
+
+            subtasks = subtasks.map((st: any) => {
+              const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
+              const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+              return {
+                ...st,
+                id: validId,
+                description: validDesc,
+              };
+            }).sort((a: any, b: any) => {
+              if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
+              return String(a.id).localeCompare(String(b.id));
+            });
+
             return {
-              id: t.card_link || t.link_card || t.id || "",
+              id: t.link,
               title: t.title || "Без названия",
               due_date: formattedDate,
               time: formattedTime,
-              executor: exUser ? exUser.name : t.executer_name || t.name_executer || null,
+              executor: exUser ? exUser.name : "",
               executor_id: exId,
+              subtasks,
+              subtasksCount,
+              subtasksDone,
+              position: t.position,
             };
-          });
+          }).sort((a, b) => a.position - b.position);
         } catch {
-          section.tasks = [];
+          section.tasks =[];
         }
         return section;
       });
@@ -123,7 +141,7 @@ export const KanbanActions = {
     try {
       await kanbanApi.createSection({
         board_link: boardId,
-        section_name: name,
+        name: name,
         max_tasks: maxTasks,
         is_mandatory: isMandatory,
         color,
@@ -134,7 +152,7 @@ export const KanbanActions = {
     }
   },
 
-  async updateSection(sectionId: string, data: Partial<RawSection>): Promise<void> {
+  async updateSection(sectionId: string, data: Partial<SectionInfo>): Promise<void> {
     try {
       await kanbanApi.updateSection(sectionId, data);
     } catch {
@@ -153,21 +171,23 @@ export const KanbanActions = {
   },
 
   async reorderSections(boardId: string, newOrder: string[]): Promise<void> {
+    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
+    appDispatcher.dispatch({ type: "KANBAN_REORDER_SECTIONS", payload: { newOrder } });
     try {
       await kanbanApi.reorderSections(boardId, { list_links: newOrder });
     } catch {
+      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       Toast.error("Ошибка при сохранении порядка");
-      await this.fetchKanban(boardId, true);
     }
   },
 
-  async createTask(boardId: string, sectionId: string, title: string, executerId: string | null = null): Promise<void> {
+  async createTask(boardId: string, sectionId: string, title: string, executerId?: string): Promise<void> {
     try {
       await kanbanApi.createTask({
         title,
-        link_section: sectionId,
+        section_link: sectionId,
         description: "",
-        link_executer: executerId,
+        executor_link: executerId,
       });
       await this.fetchKanban(boardId, true);
     } catch {
@@ -184,21 +204,22 @@ export const KanbanActions = {
     }
   },
 
-  async moveTask(boardId: string, taskId: string, targetSectionId: string): Promise<void> {
+  async moveTask(_boardId: string, taskId: string, sourceSectionId: string, targetSectionId: string, position: number): Promise<void> {
+    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
+    appDispatcher.dispatch({ type: "KANBAN_MOVE_TASK", payload: { taskId, sourceSectionId, targetSectionId, position } });
     try {
       await kanbanApi.reorderTask(taskId, {
-        link_card: taskId,
-        link_section: targetSectionId,
-        position: 1,
+        section_link: targetSectionId,
+        position,
       });
     } catch (err: unknown) {
+      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       const error = err as ApiError;
       if (error?.data?.message === "can not skip mandatory section") {
         Toast.error("Нельзя пропускать обязательную секцию");
       } else {
         Toast.error("Ошибка при переносе");
       }
-      await this.fetchKanban(boardId, true);
     }
   }
 };

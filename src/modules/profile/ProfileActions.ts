@@ -1,7 +1,7 @@
 import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './profile.types';
 import { authApi, profileApi } from '../../api';
-import { navigateTo } from '../../router';
+import { navigateTo, setIsAuth } from '../../router';
 
 export const ProfileActions = {
   resetState() {
@@ -11,8 +11,8 @@ export const ProfileActions = {
   async fetchProfile() {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_LOADING, payload: true });
     try {
-      const res = await profileApi.getProfile() as any;
-      const user = res.data || res;
+      const res = await profileApi.getProfile();
+      const user = res.data;
       appDispatcher.dispatch({ type: ActionTypes.SET_USER, payload: user });
     } catch (err: any) {
       console.error('Profile fetch error', err);
@@ -72,14 +72,16 @@ export const ProfileActions = {
     }
   },
 
-  async logout() {
+  async logout(): Promise<void> {
     try {
       await authApi.logout();
-    } catch (err) {
-      console.error('Logout error', err);
+    } catch (err: unknown) {
+      console.error("Logout error", err);
     }
-    localStorage.removeItem('isAuth');
-    navigateTo('/login');
+    
+    setIsAuth(false);
+    localStorage.removeItem("isAuth");
+    navigateTo("/login");
   },
 
   openDeleteModal() {

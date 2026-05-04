@@ -1,3 +1,7 @@
+import { supportApi } from './api';
+import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
+import { navigateTo } from './router';
+
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
  *
@@ -100,39 +104,69 @@ export const validatePassword = (password: string): string | null => {
 };
 
 /**
+ * Определяет логику перехода на основе роли пользователя
+ */
+const routeSupportUser = (role?: string): void => {
+  if (role === 'admin' || role === 'support') {
+    navigateTo('/support-admin');
+  } else {
+    SupportIframeManager.toggle();
+  }
+};
+
+/**
+ * Обрабатывает клик по кнопке поддержки
+ */
+const handleSupportClick = async (): Promise<void> => {
+  try {
+    const res = await supportApi.getTickets();
+    routeSupportUser(res.data.role);
+  } catch (error) {
+    routeSupportUser();
+  }
+};
+
+/**
+ * Обрабатывает переключение видимости пароля
+ */
+const togglePasswordVisibility = (btn: Element): void => {
+  const inputId = btn.getAttribute('data-target');
+  if (!inputId) return;
+
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  if (!input) return;
+
+  const eyeSlash = btn.querySelector('.icon-eye-slash');
+  const eye = btn.querySelector('.icon-eye');
+  const isPassword = input.type === 'password';
+
+  input.type = isPassword ? 'text' : 'password';
+
+  if (isPassword) {
+    eyeSlash?.classList.add('hidden');
+    eye?.classList.remove('hidden');
+  } else {
+    eyeSlash?.classList.remove('hidden');
+    eye?.classList.add('hidden');
+  }
+};
+
+/**
  * Инициализирует глобальные слушатели событий.
  */
 export const initGlobalListeners = (): void => {
   document.body.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
-    const btn = target.closest('.input-group__toggle-btn');
-    if (!btn) {
+    if (target.closest('#nav-support')) {
+      handleSupportClick();
       return;
     }
 
-    const inputId = btn.getAttribute('data-target');
-    if (!inputId) {
+    const toggleBtn = target.closest('.input-group__toggle-btn');
+    if (toggleBtn) {
+      togglePasswordVisibility(toggleBtn);
       return;
-    }
-
-    const input = document.getElementById(inputId) as HTMLInputElement | null;
-
-    if (!input) {
-      return;
-    }
-
-    const eyeSlash = btn.querySelector('.icon-eye-slash');
-    const eye = btn.querySelector('.icon-eye');
-
-    if (input.type === 'password') {
-      input.type = 'text';
-      eyeSlash?.classList.add('hidden');
-      eye?.classList.remove('hidden');
-    } else {
-      input.type = 'password';
-      eyeSlash?.classList.remove('hidden');
-      eye?.classList.add('hidden');
     }
   });
 };

@@ -8,7 +8,7 @@ import {
 
 class BoardsStore extends Store {
   private state: BoardsState = {
-    boards:[],
+    boards: [],
     user: null,
     isLoading: false,
     error: null,

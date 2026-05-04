@@ -11,6 +11,7 @@ export interface TaskState {
   boardName: string;
   usersList: User[];
   taskData: any;
+  comments: any[];
   error: string | null;
   isLoading: boolean;
   isSaving: boolean;
@@ -27,4 +28,5 @@ export const TaskActionTypes = {
   DELETE_TASK_SUCCESS: "TASK_DELETE_TASK_SUCCESS",
   DELETE_TASK_ERROR: "TASK_DELETE_TASK_ERROR",
   CLEAR_STORE: "TASK_CLEAR_STORE",
+  APPEND_COMMENT: "TASK_APPEND_COMMENT",
 };

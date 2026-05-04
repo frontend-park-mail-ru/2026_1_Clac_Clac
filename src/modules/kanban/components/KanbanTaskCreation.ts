@@ -7,8 +7,7 @@ export class KanbanTaskCreation {
     const btnNewTask = appDiv.querySelector<HTMLButtonElement>("#btn-new-task");
     if (btnNewTask && state.sections.length === 0) {
       btnNewTask.disabled = true;
-      btnNewTask.style.opacity = "0.5";
-      btnNewTask.style.cursor = "not-allowed";
+      btnNewTask.classList.add("kanban__action-btn--disabled");
     }
 
     const modalCreateTask = appDiv.querySelector<HTMLElement>("#modal-create-task");
@@ -16,7 +15,7 @@ export class KanbanTaskCreation {
     const taskTitleInput = appDiv.querySelector<HTMLInputElement>("#new-task-title");
     const btnConfirmCreateTask = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-create-task");
     const modalAssigneeBtn = appDiv.querySelector<HTMLElement>("#assignee-select-btn");
-    let selectedAssigneeId: string | null = null;
+    let selectedAssigneeId: string;
 
     btnNewTask?.addEventListener("click", () => {
       if (state.sections.length === 0) return;
@@ -27,7 +26,6 @@ export class KanbanTaskCreation {
         taskTitleInput.value = "";
         taskTitleInput.focus();
       }
-      selectedAssigneeId = null;
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
     }, { signal });
 
@@ -37,13 +35,12 @@ export class KanbanTaskCreation {
       document.querySelectorAll(".assignee-dropdown").forEach((dd) => dd.remove());
 
       const dropdown = document.createElement("div");
-      dropdown.className = "assignee-dropdown";
-      dropdown.style.cssText = `position: absolute; top: 100%; left: 0; width: 220px; background: #2a2a2c; border: 1px solid #444; border-radius: 8px; z-index: 1000;`;
+      dropdown.className = "assignee__dropdown assignee-dropdown";
 
       state.users.forEach((user) => {
         const item = document.createElement("div");
-        item.style.cssText = `padding: 8px; cursor: pointer; border-bottom: 1px solid #333; color: white;`;
-        if (user.id === selectedAssigneeId) item.style.backgroundColor = "#3a3a3c";
+        item.className = "assignee__dropdown-item";
+        if (user.id === selectedAssigneeId) item.classList.add("assignee__dropdown-item--selected");
         item.textContent = user.name;
 
         item.addEventListener("click", () => {
@@ -55,7 +52,7 @@ export class KanbanTaskCreation {
       });
 
       if (modalAssigneeBtn.parentElement) {
-        modalAssigneeBtn.parentElement.style.position = "relative";
+        modalAssigneeBtn.parentElement.classList.add("relative-wrapper");
         modalAssigneeBtn.parentElement.appendChild(dropdown);
       }
     }, { signal });

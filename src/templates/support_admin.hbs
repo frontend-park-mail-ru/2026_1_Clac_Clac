@@ -1,0 +1,78 @@
+<div class="boards__layout">
+  {{> sidebar activeSupport=true}}
+
+  <div class="main-content">
+    <h1 class="boards__title mb-1">Панель управления поддержкой</h1>
+
+    <div class="support-admin__stats mb-1">
+      <div class="stat-card">
+        <h3>Новые</h3>
+        <div class="val">{{statistics.new}}</div>
+      </div>
+      <div class="stat-card">
+        <h3>В работе</h3>
+        <div class="val">{{statistics.in_progress}}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Закрыто</h3>
+        <div class="val">{{statistics.closed}}</div>
+      </div>
+    </div>
+
+    <div class="support-admin__layout">
+      <div class="support-admin__list">
+        <h3 class="sa-title-margin">Список тикетов</h3>
+        {{#each tickets}}
+        <div
+          class="support-widget__ticket sa-ticket-item {{#if (eq ../currentTicket.appeal_link appeal_link)}}sa-ticket-item--active{{/if}}"
+          data-id="{{#if appeal_link}}{{appeal_link}}{{else}}{{id}}{{/if}}">
+          <h4>{{display_name}}</h4>
+          <div class="sa-ticket-flex">
+            <span class="status status-{{status}}">
+              {{#if (eq status 'new')}}Новое{{/if}}{{#if (eq status 'in_progress')}}В работе{{/if}}{{#if (eq status
+              'closed')}}Закрыто{{/if}}
+            </span>
+            <span class="sa-ticket-cat">{{category}}</span>
+          </div>
+        </div>
+        {{/each}}
+
+        {{#if (eq tickets.length 0)}}
+        <p class="sa-empty">Нет обращений</p>
+        {{/if}}
+      </div>
+
+      <div class="support-admin__detail">
+        {{#if currentTicket}}
+        <div class="sa-detail-header">
+          <h2 class="sa-detail-title">{{currentTicket.display_name}}</h2>
+          <div class="sa-detail-actions">
+            <select id="sa-status-select" class="input-group__field sa-status-select">
+              <option value="new" {{#if (eq currentTicket.status 'new' )}}selected{{/if}}>Новое</option>
+              <option value="in_progress" {{#if (eq currentTicket.status 'in_progress' )}}selected{{/if}}>В работе
+              </option>
+              <option value="closed" {{#if (eq currentTicket.status 'closed' )}}selected{{/if}}>Закрыто</option>
+            </select>
+          </div>
+        </div>
+        <p class="sa-meta">Категория: {{currentTicket.category}} | Email: {{currentTicket.email}}</p>
+
+        <div class="support-widget__messages sa-messages" id="sa-messages">
+          <div class="msg msg-user sa-msg-user">
+            <strong>Описание:</strong><br>{{currentTicket.description}}
+          </div>
+          {{#if currentTicket.attachment_key}}
+          <div class="msg msg-user sa-msg-img-wrap">
+            <img src="{{currentTicket.attachment_key}}" class="sa-msg-img" alt="Вложение">
+          </div>
+          {{/if}}
+        </div>
+        {{else}}
+        <div class="sa-empty-detail">
+          Выберите обращение из списка
+        </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</div>

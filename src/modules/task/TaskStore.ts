@@ -7,8 +7,9 @@ class TaskStore extends Store {
     boardId: null,
     taskId: null,
     boardName: "Без названия",
-    usersList:[],
+    usersList: [],
     taskData: null,
+    comments: [],
     error: null,
     isLoading: false,
     isSaving: false,
@@ -37,6 +38,7 @@ class TaskStore extends Store {
         this.state.boardName = action.payload.boardName;
         this.state.usersList = action.payload.usersList;
         this.state.taskData = action.payload.taskData;
+        this.state.comments = action.payload.comments || [];
         this.emit("change");
         break;
       case TaskActionTypes.LOAD_DATA_ERROR:
@@ -65,13 +67,18 @@ class TaskStore extends Store {
         this.emit("error");
         this.emit("change");
         break;
+      case TaskActionTypes.APPEND_COMMENT:
+        this.state.comments = [...this.state.comments, action.payload.comment];
+        this.emit("change");
+        break;
       case TaskActionTypes.CLEAR_STORE:
         this.state = {
           boardId: null,
           taskId: null,
           boardName: "Без названия",
-          usersList:[],
+          usersList: [],
           taskData: null,
+          comments: [],
           error: null,
           isLoading: false,
           isSaving: false,
