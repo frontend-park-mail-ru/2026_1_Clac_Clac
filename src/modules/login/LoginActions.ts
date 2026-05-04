@@ -61,12 +61,9 @@ export const LoginActions = {
       navigateTo("/boards");
     } catch (err: unknown) {
       const error = err as ApiError;
-      const errMsg = error.data.error;
+      const errMsg = error.message;
 
-      if (
-        error.status === 401 ||
-        (errMsg && (errMsg.includes("wrong") || errMsg.includes("exist") || errMsg.includes("invalid")))
-      ) {
+      if (error.code === 404) {
         appDispatcher.dispatch({
           type: "LOGIN_ERROR",
           payload: {
