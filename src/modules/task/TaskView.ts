@@ -374,11 +374,13 @@ export class TaskView {
     picker.className = 'time-picker';
 
     const updateSelectedByScroll = (scroll: HTMLElement) => {
-      const center = scroll.scrollTop + scroll.clientHeight / 2;
+      const scrollRect = scroll.getBoundingClientRect();
+      const center = scrollRect.top + scrollRect.height / 2;
       let closest: HTMLElement | null = null;
       let minDist = Infinity;
       scroll.querySelectorAll<HTMLElement>('.time-picker__num').forEach((el) => {
-        const dist = Math.abs(el.offsetTop + el.offsetHeight / 2 - center);
+        const rect = el.getBoundingClientRect();
+        const dist = Math.abs(rect.top + rect.height / 2 - center);
         if (dist < minDist) { minDist = dist; closest = el; }
       });
       scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
@@ -409,7 +411,7 @@ export class TaskView {
       let scrollTimer: ReturnType<typeof setTimeout>;
       scroll.addEventListener('scroll', () => {
         clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 120);
+        scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 200);
       });
       col.appendChild(scroll);
       return { col, scroll };

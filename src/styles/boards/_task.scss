@@ -94,12 +94,25 @@
   }
 
   &__meta-date-input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
+    background: transparent;
     border: none;
+    border-bottom: 1px solid #555;
+    color: white;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    width: 80px;
+    padding: 0;
+    line-height: 1.4;
+
+    &:focus {
+      border-bottom-color: var(--primary, #8b5cf6);
+    }
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      opacity: 1;
+    }
   }
 
   &__description-box {
