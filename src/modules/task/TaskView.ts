@@ -154,9 +154,9 @@ export class TaskView {
       const d = new Date(deadline);
       if (!isNaN(d.getTime())) {
         const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        rawDate = d.toISOString().split("T")[0];
-        rawTime = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
-        formattedDate = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        rawTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         formattedTime = rawTime;
       }
     }
@@ -256,10 +256,11 @@ export class TaskView {
     const btn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
     if (!btn) return;
     if (dateVal) {
-      const d = new Date(dateVal);
+      // dateVal is YYYY-MM-DD. Parsing as T00:00:00 ensures local date.
+      const d = new Date(`${dateVal}T00:00:00`);
       if (!isNaN(d.getTime())) {
         const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        btn.textContent = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         return;
       }
     }
@@ -277,8 +278,8 @@ export class TaskView {
     const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
 
     const sel = currentDate ? new Date(currentDate + 'T00:00:00Z') : null;
-    let viewYear = sel ? sel.getUTCFullYear() : new Date().getUTCFullYear();
-    let viewMonth = sel ? sel.getUTCMonth() : new Date().getUTCMonth();
+    let viewYear = sel ? sel.getUTCFullYear() : new Date().getFullYear();
+    let viewMonth = sel ? sel.getUTCMonth() : new Date().getMonth();
 
     const todayUtc = new Date();
     const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth()+1).padStart(2,'0')}-${String(todayUtc.getDate()).padStart(2,'0')}`;
