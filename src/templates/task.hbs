@@ -143,6 +143,21 @@
               </div>
               <div class="task__comment-bubble">{{text}}</div>
             </div>
+            {{#if is_mine}}
+            <div class="task__comment-menu-wrap">
+              <button class="task__comment-menu-btn icon-btn" title="Действия">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5" cy="12" r="2"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                  <circle cx="19" cy="12" r="2"></circle>
+                </svg>
+              </button>
+              <div class="task__comment-dropdown hidden">
+                <button class="task__comment-dropdown-item task__comment-edit-btn">Редактировать</button>
+                <button class="task__comment-dropdown-item task__comment-delete-btn">Удалить</button>
+              </div>
+            </div>
+            {{/if}}
           </div>
           {{/each}}
           {{#if (eq comments.length 0)}}

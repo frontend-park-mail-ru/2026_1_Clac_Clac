@@ -313,6 +313,7 @@
     border-top-left-radius: 0;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    word-break: break-word;
     white-space: pre-wrap;
   }
 
@@ -367,6 +368,96 @@
   &__no-comments {
     color: #666;
     font-size: 0.9rem;
+  }
+
+  &__comment-menu-wrap {
+    position: relative;
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: flex-start;
+  }
+
+  &__comment-menu-btn {
+    color: #555;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    opacity: 0;
+
+    &:hover {
+      color: #ccc;
+      background: #2e2e30;
+    }
+  }
+
+  &__comment:hover &__comment-menu-btn {
+    opacity: 1;
+  }
+
+  &__comment-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #2a2a2c;
+    border: 1px solid #3a3a3c;
+    border-radius: 8px;
+    min-width: 160px;
+    z-index: 200;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    &.hidden {
+      display: none;
+    }
+  }
+
+  &__comment-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.65rem 1rem;
+    color: #ccc;
+    font-size: 0.9rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      background: #333335;
+      color: white;
+    }
+  }
+
+  &__comment-edit-input {
+    width: 100%;
+    background: #252527;
+    border: 1px solid #555;
+    border-radius: 8px;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    resize: none;
+    outline: none;
+    min-height: 64px;
+    word-break: break-word;
+
+    &:focus {
+      border-color: var(--primary);
+    }
+  }
+
+  &__comment-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  &__comment-edit-save,
+  &__comment-edit-cancel {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
   }
 }
 

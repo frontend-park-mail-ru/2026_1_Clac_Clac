@@ -14,6 +14,7 @@ export class TaskView {
   private taskNode: HTMLElement | null = null;
   private currentExecuterId: string = "";
   private isFirstRender: boolean = true;
+  private scrollToNewComment: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -45,9 +46,12 @@ export class TaskView {
     }
   }
 
-  private globalClickHandler() {
+  private globalClickHandler(e: MouseEvent) {
     document.querySelector(".context-menu")?.remove();
     document.querySelector(".assignee__dropdown")?.remove();
+    if (!(e.target as HTMLElement).closest(".task__comment-menu-wrap")) {
+      this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => d.classList.add("hidden"));
+    }
   }
 
   private onStoreChange() {
@@ -241,7 +245,14 @@ export class TaskView {
     if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
 
     const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
-    if (newContentEl) newContentEl.scrollTop = currentScrollTop;
+    if (this.scrollToNewComment) {
+      this.scrollToNewComment = false;
+      requestAnimationFrame(() => {
+        if (newContentEl) newContentEl.scrollTo({ top: newContentEl.scrollHeight, behavior: "smooth" });
+      });
+    } else {
+      if (newContentEl) newContentEl.scrollTop = currentScrollTop;
+    }
 
     if (activeSelector) {
       const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
@@ -712,6 +723,7 @@ export class TaskView {
     const submitComment = () => {
       const text = commentInput?.value.trim();
       if (text && state.taskId) {
+        this.scrollToNewComment = true;
         commentInput.value = "";
         TaskActions.addComment(state.taskId, text);
       }
@@ -780,6 +792,93 @@ export class TaskView {
           keyEvent.preventDefault();
           (keyEvent.target as HTMLElement).blur();
         }
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__comment-menu-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const dropdown = (e.currentTarget as HTMLElement)
+          .closest(".task__comment-menu-wrap")
+          ?.querySelector(".task__comment-dropdown");
+        this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => {
+          if (d !== dropdown) d.classList.add("hidden");
+        });
+        dropdown?.classList.toggle("hidden");
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__comment-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment");
+        const commentId = commentEl?.getAttribute("data-id");
+        const taskId = state.taskId;
+        if (!commentId || !taskId) return;
+        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
+        showConfirmModal({
+          title: "Удалить комментарий",
+          text: "Вы уверены, что хотите удалить комментарий?",
+          confirmLabel: "Удалить",
+          onConfirm: () => TaskActions.deleteComment(commentId, taskId),
+        });
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__comment-edit-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment") as HTMLElement;
+        const commentId = commentEl?.getAttribute("data-id");
+        const taskId = state.taskId;
+        const bubble = commentEl?.querySelector(".task__comment-bubble") as HTMLElement;
+        if (!commentId || !taskId || !bubble) return;
+        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
+
+        const originalText = bubble.textContent ?? "";
+
+        const textarea = document.createElement("textarea");
+        textarea.className = "task__comment-edit-input";
+        textarea.value = originalText;
+
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "task__comment-edit-actions";
+
+        const btnSave = document.createElement("button");
+        btnSave.className = "btn btn--primary task__comment-edit-save";
+        btnSave.textContent = "Сохранить";
+
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "btn btn--cancel task__comment-edit-cancel";
+        btnCancel.textContent = "Отмена";
+
+        actionsDiv.appendChild(btnSave);
+        actionsDiv.appendChild(btnCancel);
+        bubble.replaceWith(textarea);
+        textarea.after(actionsDiv);
+        textarea.focus();
+        textarea.selectionStart = textarea.value.length;
+
+        const cancelEdit = () => {
+          textarea.replaceWith(bubble);
+          actionsDiv.remove();
+        };
+
+        const saveEdit = () => {
+          const newText = textarea.value.trim();
+          if (!newText || newText === originalText) {
+            cancelEdit();
+            return;
+          }
+          TaskActions.updateComment(commentId, newText, taskId);
+        };
+
+        btnSave.addEventListener("click", saveEdit);
+        btnCancel.addEventListener("click", cancelEdit);
+        textarea.addEventListener("keydown", (ev) => {
+          if (ev.key === "Escape") { cancelEdit(); }
+          else if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); saveEdit(); }
+        });
       });
     });
 

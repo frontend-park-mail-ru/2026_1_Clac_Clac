@@ -71,6 +71,18 @@ class TaskStore extends Store {
         this.state.comments = [...this.state.comments, action.payload.comment];
         this.emit("change");
         break;
+      case TaskActionTypes.DELETE_COMMENT:
+        this.state.comments = this.state.comments.filter(
+          (c: any) => c.comment_link !== action.payload.commentLink
+        );
+        this.emit("change");
+        break;
+      case TaskActionTypes.UPDATE_COMMENT:
+        this.state.comments = this.state.comments.map((c: any) =>
+          c.comment_link === action.payload.commentLink ? { ...c, text: action.payload.text } : c
+        );
+        this.emit("change");
+        break;
       case TaskActionTypes.ADD_SUBTASK_SUCCESS:
         if (this.state.taskData) {
           const newSt = action.payload.subtask;
