@@ -719,14 +719,21 @@ export class TaskView {
     });
 
     const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
+    const subtaskAddBtn = this.taskNode?.querySelector("#subtask-add-btn") as HTMLButtonElement;
+
+    const submitSubtask = () => {
+      const desc = subtaskInput.value.trim();
+      if (desc && state.taskId) {
+        subtaskInput.value = "";
+        TaskActions.createSubtask(state.taskId, desc);
+      }
+    };
+
+    subtaskAddBtn?.addEventListener("click", submitSubtask);
     subtaskInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const desc = subtaskInput.value.trim();
-        if (desc && state.taskId) {
-          subtaskInput.value = "";
-          TaskActions.createSubtask(state.taskId, desc);
-        }
+        submitSubtask();
       }
     });
 
