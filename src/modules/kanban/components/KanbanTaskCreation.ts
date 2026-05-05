@@ -5,17 +5,9 @@ import { KanbanContextMenus } from "./KanbanContextMenus";
 export class KanbanTaskCreation {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
     const btnNewTask = appDiv.querySelector<HTMLButtonElement>("#btn-new-task");
-    const btnFab = appDiv.querySelector<HTMLButtonElement>("#btn-new-task-fab");
-
-    if (state.sections.length === 0) {
-      if (btnNewTask) {
-        btnNewTask.disabled = true;
-        btnNewTask.classList.add("kanban__action-btn--disabled");
-      }
-      if (btnFab) {
-        btnFab.disabled = true;
-        btnFab.classList.add("kanban__fab--disabled");
-      }
+    if (btnNewTask && state.sections.length === 0) {
+      btnNewTask.disabled = true;
+      btnNewTask.classList.add("kanban__action-btn--disabled");
     }
 
     const modalCreateTask = appDiv.querySelector<HTMLElement>("#modal-create-task");
@@ -24,9 +16,11 @@ export class KanbanTaskCreation {
     const btnConfirmCreateTask = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-create-task");
     const modalAssigneeBtn = appDiv.querySelector<HTMLElement>("#assignee-select-btn");
     let selectedAssigneeId: string;
+    let activeSectionId: string = state.sections[0]?.id ?? "";
 
-    const openCreateModal = () => {
+    const openCreateModal = (sectionId?: string) => {
       if (state.sections.length === 0) return;
+      activeSectionId = sectionId ?? state.sections[0].id;
       closeModals();
       modalOverlay?.classList.remove("hidden");
       modalCreateTask?.classList.remove("hidden");
@@ -35,10 +29,10 @@ export class KanbanTaskCreation {
         taskTitleInput.focus();
       }
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
+      selectedAssigneeId = undefined!;
     };
 
-    btnNewTask?.addEventListener("click", openCreateModal, { signal });
-    btnFab?.addEventListener("click", openCreateModal, { signal });
+    btnNewTask?.addEventListener("click", () => openCreateModal(), { signal });
 
     modalAssigneeBtn?.addEventListener("click", (e: MouseEvent) => {
       e.stopPropagation();
@@ -73,7 +67,7 @@ export class KanbanTaskCreation {
       if (!title || state.sections.length === 0) return;
 
       btnConfirmCreateTask.disabled = true;
-      KanbanActions.createTask(state.boardId!, state.sections[0].id, title, selectedAssigneeId);
+      KanbanActions.createTask(state.boardId!, activeSectionId, title, selectedAssigneeId);
       closeModals();
     }, { signal });
 
@@ -83,6 +77,12 @@ export class KanbanTaskCreation {
         if (!parent) return;
 
         const sectionId = parent.getAttribute("data-section-id")!;
+
+        if (window.innerWidth <= 768) {
+          openCreateModal(sectionId);
+          return;
+        }
+
         parent.innerHTML = `<div class="kanban__add-card-form"><textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea></div>`;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
         input.focus();
