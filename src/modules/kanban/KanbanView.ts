@@ -8,6 +8,7 @@ import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
 import { KanbanTaskCreation } from "./components/KanbanTaskCreation";
 import { KanbanColumnManager } from "./components/KanbanColumnManager";
+import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -79,11 +80,19 @@ export class KanbanView {
     };
 
     document.getElementById("nav-boards")?.addEventListener("click", () => navigateTo("/boards"), { signal });
+    document.getElementById("nav-logo")?.addEventListener("click", () => navigateTo("/boards"), { signal });
     document.getElementById("nav-profile")?.addEventListener("click", () => navigateTo("/profile"), { signal });
-    document.getElementById("logout-btn")?.addEventListener("click", async () => {
-      try { await authApi.logout(); } catch {}
-      localStorage.removeItem("isAuth");
-      navigateTo("/login");
+    document.getElementById("logout-btn")?.addEventListener("click", () => {
+      showConfirmModal({
+        title: "Выход",
+        text: "Вы уверены, что хотите выйти из аккаунта?",
+        confirmLabel: "Выйти",
+        onConfirm: async () => {
+          try { await authApi.logout(); } catch {}
+          localStorage.removeItem("isAuth");
+          navigateTo("/login");
+        },
+      });
     }, { signal });
 
     this.appDiv.querySelector("#modal-overlay")?.addEventListener("click", (e: Event) => {

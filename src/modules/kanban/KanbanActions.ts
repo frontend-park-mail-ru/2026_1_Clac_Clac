@@ -220,8 +220,8 @@ export const KanbanActions = {
     } catch (err: unknown) {
       appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       const error = err as ApiError;
-      if (error?.data?.message === "can not skip mandatory section") {
-        Toast.error("Нельзя пропускать обязательную секцию");
+      if (error?.data?.message === "can not skip mandatory section" || error?.data?.message === "invalid input") {
+        Toast.error("Пропущена обязательная секция");
       } else {
         Toast.error("Ошибка при переносе");
       }

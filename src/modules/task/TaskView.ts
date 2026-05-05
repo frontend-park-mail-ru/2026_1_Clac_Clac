@@ -272,7 +272,7 @@ export class TaskView {
     btn.textContent = timeVal || 'Не задано';
   }
 
-  private buildDatePicker(currentDate: string, onSelect: (dateStr: string) => void): HTMLElement {
+  private buildDatePicker(currentDate: string): HTMLElement {
     const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
 
@@ -286,6 +286,7 @@ export class TaskView {
 
     const picker = document.createElement('div');
     picker.className = 'date-picker';
+    picker.dataset.selectedDate = selectedStr;
 
     const render = () => {
       picker.innerHTML = '';
@@ -297,12 +298,7 @@ export class TaskView {
       prev.className = 'date-picker__nav-btn';
       prev.type = 'button';
       prev.textContent = '‹';
-      prev.addEventListener('click', (e) => {
-        e.stopPropagation();
-        viewMonth--;
-        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-        render();
-      });
+      prev.addEventListener('click', (e) => { e.stopPropagation(); viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
 
       const title = document.createElement('span');
       title.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
@@ -311,12 +307,7 @@ export class TaskView {
       next.className = 'date-picker__nav-btn';
       next.type = 'button';
       next.textContent = '›';
-      next.addEventListener('click', (e) => {
-        e.stopPropagation();
-        viewMonth++;
-        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-        render();
-      });
+      next.addEventListener('click', (e) => { e.stopPropagation(); viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
 
       header.appendChild(prev);
       header.appendChild(title);
@@ -356,8 +347,8 @@ export class TaskView {
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           selectedStr = dateStr;
-          onSelect(dateStr);
-          picker.remove();
+          picker.dataset.selectedDate = dateStr;
+          render();
         });
         grid.appendChild(el);
       }
@@ -382,6 +373,18 @@ export class TaskView {
     const picker = document.createElement('div');
     picker.className = 'time-picker';
 
+    const updateSelectedByScroll = (scroll: HTMLElement) => {
+      const center = scroll.scrollTop + scroll.clientHeight / 2;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+      scroll.querySelectorAll<HTMLElement>('.time-picker__num').forEach((el) => {
+        const dist = Math.abs(el.offsetTop + el.offsetHeight / 2 - center);
+        if (dist < minDist) { minDist = dist; closest = el; }
+      });
+      scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
+      (closest as HTMLElement | null)?.classList.add('time-picker__num--selected');
+    };
+
     const createCol = (label: string, count: number, selected: number) => {
       const col = document.createElement('div');
       col.className = 'time-picker__col';
@@ -403,6 +406,11 @@ export class TaskView {
         });
         scroll.appendChild(num);
       }
+      let scrollTimer: ReturnType<typeof setTimeout>;
+      scroll.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 120);
+      });
       col.appendChild(scroll);
       return { col, scroll };
     };
@@ -455,30 +463,32 @@ export class TaskView {
       const existing = this.taskNode?.querySelector(".date-picker");
       if (existing) { existing.remove(); return; }
 
-      const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
-        dateInput.value = dateStr;
-        this.updateDateBtn(dateStr);
-        document.removeEventListener("click", onOutside);
-        document.removeEventListener("keydown", onEsc);
-      });
+      const picker = this.buildDatePicker(dateInput.value);
       picker.addEventListener("click", (ev) => ev.stopPropagation());
       dateBtn.parentElement?.appendChild(picker);
 
-      const onOutside = () => {
-        picker.remove();
+      const cleanup = () => {
+        document.removeEventListener("keydown", onKey);
         document.removeEventListener("click", onOutside);
-        document.removeEventListener("keydown", onEsc);
       };
-      const onEsc = (ev: KeyboardEvent) => {
-        if (ev.key === "Escape") {
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === "Enter") {
+          const dateStr = picker.dataset.selectedDate;
+          if (dateStr) {
+            dateInput.value = dateStr;
+            this.updateDateBtn(dateStr);
+          }
           picker.remove();
-          document.removeEventListener("click", onOutside);
-          document.removeEventListener("keydown", onEsc);
+          cleanup();
+        } else if (ev.key === "Escape") {
+          picker.remove();
+          cleanup();
         }
       };
+      const onOutside = () => { picker.remove(); cleanup(); };
       setTimeout(() => {
+        document.addEventListener("keydown", onKey);
         document.addEventListener("click", onOutside);
-        document.addEventListener("keydown", onEsc);
       }, 0);
     });
 
@@ -522,6 +532,15 @@ export class TaskView {
         document.addEventListener("keydown", onKey);
       }, 0);
     });
+
+    const saveBtn = this.taskNode?.querySelector("#btn-save-task") as HTMLButtonElement;
+    const titleInput = this.taskNode?.querySelector("#task-title-input") as HTMLInputElement;
+    if (saveBtn && titleInput) {
+      saveBtn.disabled = !titleInput.value.trim();
+      titleInput.addEventListener("input", () => {
+        saveBtn.disabled = !titleInput.value.trim();
+      });
+    }
 
     this.taskNode?.querySelector("#btn-back")?.addEventListener("click", () => {
       navigateTo(`/board?id=${state.boardId}`);

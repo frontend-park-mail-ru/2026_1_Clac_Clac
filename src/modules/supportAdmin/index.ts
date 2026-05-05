@@ -1,6 +1,7 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { supportApi, authApi } from "../../api";
 import Handlebars from "handlebars";
+import { showConfirmModal } from "../../utils/confirmModal";
 import adminTpl from "../../templates/support_admin.hbs?raw";
 import { Store } from "../../core/Store";
 import { navigateTo, setIsAuth } from "../../router";
@@ -95,14 +96,20 @@ export const renderSupportAdminModule = (appDiv: HTMLElement): void => {
     }
 
     appDiv.querySelector('#nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
+    appDiv.querySelector('#nav-logo')?.addEventListener('click', () => navigateTo('/boards'));
     appDiv.querySelector('#nav-profile')?.addEventListener('click', () => navigateTo('/profile'));
-    appDiv.querySelector('#logout-btn')?.addEventListener('click', async () => {
-      try {
-        await authApi.logout();
-      } catch { }
-      setIsAuth(false);
-      localStorage.removeItem('isAuth');
-      navigateTo('/login');
+    appDiv.querySelector('#logout-btn')?.addEventListener('click', () => {
+      showConfirmModal({
+        title: "Выход",
+        text: "Вы уверены, что хотите выйти из аккаунта?",
+        confirmLabel: "Выйти",
+        onConfirm: async () => {
+          try { await authApi.logout(); } catch {}
+          setIsAuth(false);
+          localStorage.removeItem('isAuth');
+          navigateTo('/login');
+        },
+      });
     });
   };
 

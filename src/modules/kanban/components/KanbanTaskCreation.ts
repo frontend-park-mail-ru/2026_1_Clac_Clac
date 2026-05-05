@@ -18,6 +18,11 @@ export class KanbanTaskCreation {
     let selectedAssigneeId: string;
     let activeSectionId: string = state.sections[0]?.id ?? "";
 
+    const setConfirmDisabled = (disabled: boolean) => {
+      if (!btnConfirmCreateTask) return;
+      btnConfirmCreateTask.disabled = disabled;
+    };
+
     const openCreateModal = (sectionId?: string) => {
       if (state.sections.length === 0) return;
       activeSectionId = sectionId ?? state.sections[0].id;
@@ -30,7 +35,12 @@ export class KanbanTaskCreation {
       }
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
       selectedAssigneeId = undefined!;
+      setConfirmDisabled(true);
     };
+
+    taskTitleInput?.addEventListener("input", () => {
+      setConfirmDisabled(!taskTitleInput.value.trim());
+    }, { signal });
 
     btnNewTask?.addEventListener("click", () => openCreateModal(), { signal });
 

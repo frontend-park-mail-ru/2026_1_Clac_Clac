@@ -3,6 +3,7 @@ import boardsTpl from "../../templates/boards.hbs?raw";
 import { BoardsState } from "./boards.types";
 import { navigateTo } from "../../router";
 import { BoardsActions } from "./BoardsActions";
+import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(boardsTpl);
 
@@ -50,7 +51,14 @@ export class BoardsView {
     };
 
     document.getElementById("nav-profile")?.addEventListener("click", () => navigateTo("/profile"), { signal });
-    document.getElementById("logout-btn")?.addEventListener("click", () => BoardsActions.logout(), { signal });
+    document.getElementById("logout-btn")?.addEventListener("click", () => {
+      showConfirmModal({
+        title: "Выход",
+        text: "Вы уверены, что хотите выйти из аккаунта?",
+        confirmLabel: "Выйти",
+        onConfirm: () => BoardsActions.logout(),
+      });
+    }, { signal });
 
     this.appDiv.querySelectorAll(".modal__close-btn").forEach((btn) =>
       btn.addEventListener("click", (e: Event) => {
