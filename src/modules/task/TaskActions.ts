@@ -198,10 +198,17 @@ export const TaskActions = {
 
   async toggleSubtask(subtaskId: string, isDone: boolean, description: string) {
     try {
-      const res = await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
+      await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
       appDispatcher.dispatch({
         type: TaskActionTypes.UPDATE_SUBTASK_SUCCESS,
-        payload: { id: subtaskId, subtask: res.data }
+        payload: { 
+          id: subtaskId, 
+          subtask: { 
+            id: subtaskId, 
+            description, 
+            is_done: isDone 
+          } 
+        }
       });
     } catch (e) {
       console.error("Update subtask error", e);
