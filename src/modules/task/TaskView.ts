@@ -281,7 +281,7 @@ export class TaskView {
     let viewMonth = sel ? sel.getUTCMonth() : new Date().getUTCMonth();
 
     const todayUtc = new Date();
-    const todayStr = `${todayUtc.getUTCFullYear()}-${String(todayUtc.getUTCMonth()+1).padStart(2,'0')}-${String(todayUtc.getUTCDate()).padStart(2,'0')}`;
+    const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth()+1).padStart(2,'0')}-${String(todayUtc.getDate()).padStart(2,'0')}`;
     let selectedStr = currentDate || '';
 
     const picker = document.createElement('div');
@@ -442,7 +442,8 @@ export class TaskView {
 
       let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
       if (dateVal) {
-        finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
+        const d = new Date(`${dateVal}T${timeVal || "00:00"}`);
+        finalDeadline = d.toISOString();
       }
 
       const payload = {
@@ -474,16 +475,16 @@ export class TaskView {
 
         if (!timeInput.value) {
           const now = new Date();
-          const target = new Date(Date.UTC(
+          const target = new Date(
             parseInt(dateStr.split('-')[0]),
             parseInt(dateStr.split('-')[1]) - 1,
             parseInt(dateStr.split('-')[2]),
-            now.getUTCHours() + 1,
-            now.getUTCMinutes()
-          ));
+            now.getHours() + 1,
+            now.getMinutes()
+          );
 
-          const finalDate = `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(target.getUTCDate()).padStart(2, '0')}`;
-          const finalTime = `${String(target.getUTCHours()).padStart(2, '0')}:${String(target.getUTCMinutes()).padStart(2, '0')}`;
+          const finalDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+          const finalTime = `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
 
           dateInput.value = finalDate;
           this.updateDateBtn(finalDate);
@@ -532,7 +533,7 @@ export class TaskView {
 
       if (!dateInput.value) {
         const now = new Date();
-        const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         dateInput.value = todayStr;
         this.updateDateBtn(todayStr);
       }
