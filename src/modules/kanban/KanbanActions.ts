@@ -190,8 +190,13 @@ export const KanbanActions = {
         executor_link: executerId,
       });
       await this.fetchKanban(boardId, true);
-    } catch {
-      Toast.error("Ошибка создания карточки");
+    } catch (err) {
+      const error = err as ApiError;
+      if (error?.data?.message === "task limit reached") {
+        Toast.error("Достигнуто максимальное количество задач");
+      } else {
+        Toast.error("Ошибка создания карточки");
+      }
     }
   },
 

@@ -5,9 +5,17 @@ import { KanbanContextMenus } from "./KanbanContextMenus";
 export class KanbanTaskCreation {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
     const btnNewTask = appDiv.querySelector<HTMLButtonElement>("#btn-new-task");
-    if (btnNewTask && state.sections.length === 0) {
-      btnNewTask.disabled = true;
-      btnNewTask.classList.add("kanban__action-btn--disabled");
+    const btnFab = appDiv.querySelector<HTMLButtonElement>("#btn-new-task-fab");
+
+    if (state.sections.length === 0) {
+      if (btnNewTask) {
+        btnNewTask.disabled = true;
+        btnNewTask.classList.add("kanban__action-btn--disabled");
+      }
+      if (btnFab) {
+        btnFab.disabled = true;
+        btnFab.classList.add("kanban__fab--disabled");
+      }
     }
 
     const modalCreateTask = appDiv.querySelector<HTMLElement>("#modal-create-task");
@@ -17,7 +25,7 @@ export class KanbanTaskCreation {
     const modalAssigneeBtn = appDiv.querySelector<HTMLElement>("#assignee-select-btn");
     let selectedAssigneeId: string;
 
-    btnNewTask?.addEventListener("click", () => {
+    const openCreateModal = () => {
       if (state.sections.length === 0) return;
       closeModals();
       modalOverlay?.classList.remove("hidden");
@@ -27,7 +35,10 @@ export class KanbanTaskCreation {
         taskTitleInput.focus();
       }
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
-    }, { signal });
+    };
+
+    btnNewTask?.addEventListener("click", openCreateModal, { signal });
+    btnFab?.addEventListener("click", openCreateModal, { signal });
 
     modalAssigneeBtn?.addEventListener("click", (e: MouseEvent) => {
       e.stopPropagation();
