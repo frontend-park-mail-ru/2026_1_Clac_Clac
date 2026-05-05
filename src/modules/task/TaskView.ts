@@ -108,6 +108,9 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const contentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    const currentScrollTop = contentEl ? contentEl.scrollTop : 0;
+
     const currentSubtasks: Record<string, string> = {};
     this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
       const id = input.getAttribute("data-id");
@@ -235,6 +238,9 @@ export class TaskView {
     }
     if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
     if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
+
+    const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    if (newContentEl) newContentEl.scrollTop = currentScrollTop;
 
     if (activeSelector) {
       const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
