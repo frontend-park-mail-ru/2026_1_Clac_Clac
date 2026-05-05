@@ -186,9 +186,11 @@ export const TaskActions = {
 
   async createSubtask(taskId: string, description: string) {
     try {
-      await kanbanApi.createSubtask(taskId, { description });
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId) this.loadTaskData(boardId, taskId);
+      const res = await kanbanApi.createSubtask(taskId, { description });
+      appDispatcher.dispatch({
+        type: TaskActionTypes.ADD_SUBTASK_SUCCESS,
+        payload: { subtask: res.data }
+      });
     } catch (e) {
       console.error("Create subtask error", e);
     }
@@ -197,9 +199,17 @@ export const TaskActions = {
   async toggleSubtask(subtaskId: string, isDone: boolean, description: string) {
     try {
       await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
-      const taskId = new URLSearchParams(window.location.search).get("taskId");
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.UPDATE_SUBTASK_SUCCESS,
+        payload: { 
+          id: subtaskId, 
+          subtask: { 
+            id: subtaskId, 
+            description, 
+            is_done: isDone 
+          } 
+        }
+      });
     } catch (e) {
       console.error("Update subtask error", e);
     }
@@ -208,9 +218,10 @@ export const TaskActions = {
   async deleteSubtask(subtaskId: string) {
     try {
       await kanbanApi.deleteSubtask(subtaskId);
-      const taskId = new URLSearchParams(window.location.search).get("taskId");
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.DELETE_SUBTASK_SUCCESS,
+        payload: { id: subtaskId }
+      });
     } catch (e) {
       console.error("Delete subtask error", e);
     }

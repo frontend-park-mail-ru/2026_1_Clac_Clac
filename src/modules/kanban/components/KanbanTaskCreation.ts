@@ -1,5 +1,6 @@
 import { KanbanActions } from "../KanbanActions";
 import { KanbanState } from "../kanban.types";
+import { kanbanStore } from "../KanbanStore";
 import { KanbanContextMenus } from "./KanbanContextMenus";
 
 export class KanbanTaskCreation {
@@ -145,7 +146,7 @@ export class KanbanTaskCreation {
         const saveTask = () => {
           const val = input.value.trim();
           if (val) KanbanActions.createTask(state.boardId!, sectionId, val);
-          else KanbanActions.fetchKanban(state.boardId!, true);
+          else kanbanStore.emit("change");
         };
 
         input.addEventListener("blur", saveTask, { signal });

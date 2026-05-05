@@ -108,6 +108,9 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const contentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    const currentScrollTop = contentEl ? contentEl.scrollTop : 0;
+
     const currentSubtasks: Record<string, string> = {};
     this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
       const id = input.getAttribute("data-id");
@@ -154,9 +157,9 @@ export class TaskView {
       const d = new Date(deadline);
       if (!isNaN(d.getTime())) {
         const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        rawDate = d.toISOString().split("T")[0];
-        rawTime = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
-        formattedDate = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        rawTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         formattedTime = rawTime;
       }
     }
@@ -236,6 +239,9 @@ export class TaskView {
     if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
     if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
 
+    const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    if (newContentEl) newContentEl.scrollTop = currentScrollTop;
+
     if (activeSelector) {
       const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
       if (elToFocus) {
@@ -256,10 +262,11 @@ export class TaskView {
     const btn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
     if (!btn) return;
     if (dateVal) {
-      const d = new Date(dateVal);
+      // dateVal is YYYY-MM-DD. Parsing as T00:00:00 ensures local date.
+      const d = new Date(`${dateVal}T00:00:00`);
       if (!isNaN(d.getTime())) {
         const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        btn.textContent = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         return;
       }
     }
@@ -272,16 +279,16 @@ export class TaskView {
     btn.textContent = timeVal || 'Не задано';
   }
 
-  private buildDatePicker(currentDate: string): HTMLElement {
+  private buildDatePicker(currentDate: string, onSelect?: (dateStr: string) => void): HTMLElement {
     const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
 
     const sel = currentDate ? new Date(currentDate + 'T00:00:00Z') : null;
-    let viewYear = sel ? sel.getUTCFullYear() : new Date().getUTCFullYear();
-    let viewMonth = sel ? sel.getUTCMonth() : new Date().getUTCMonth();
+    let viewYear = sel ? sel.getUTCFullYear() : new Date().getFullYear();
+    let viewMonth = sel ? sel.getUTCMonth() : new Date().getMonth();
 
     const todayUtc = new Date();
-    const todayStr = `${todayUtc.getUTCFullYear()}-${String(todayUtc.getUTCMonth()+1).padStart(2,'0')}-${String(todayUtc.getUTCDate()).padStart(2,'0')}`;
+    const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth()+1).padStart(2,'0')}-${String(todayUtc.getDate()).padStart(2,'0')}`;
     let selectedStr = currentDate || '';
 
     const picker = document.createElement('div');
@@ -349,6 +356,7 @@ export class TaskView {
           selectedStr = dateStr;
           picker.dataset.selectedDate = dateStr;
           render();
+          if (onSelect) onSelect(dateStr);
         });
         grid.appendChild(el);
       }
@@ -441,7 +449,8 @@ export class TaskView {
 
       let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
       if (dateVal) {
-        finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
+        const d = new Date(`${dateVal}T${timeVal || "00:00"}`);
+        finalDeadline = d.toISOString();
       }
 
       const payload = {
@@ -465,7 +474,34 @@ export class TaskView {
       const existing = this.taskNode?.querySelector(".date-picker");
       if (existing) { existing.remove(); return; }
 
-      const picker = this.buildDatePicker(dateInput.value);
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+
+      const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
+        dateInput.value = dateStr;
+        this.updateDateBtn(dateStr);
+
+        if (!timeInput.value) {
+          const now = new Date();
+          const target = new Date(
+            parseInt(dateStr.split('-')[0]),
+            parseInt(dateStr.split('-')[1]) - 1,
+            parseInt(dateStr.split('-')[2]),
+            now.getHours() + 1,
+            now.getMinutes()
+          );
+
+          const finalDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+          const finalTime = `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
+
+          dateInput.value = finalDate;
+          this.updateDateBtn(finalDate);
+          timeInput.value = finalTime;
+          this.updateTimeBtn(finalTime);
+        }
+
+        picker.remove();
+        cleanup();
+      });
       picker.addEventListener("click", (ev) => ev.stopPropagation());
       dateBtn.parentElement?.appendChild(picker);
 
@@ -501,6 +537,14 @@ export class TaskView {
       const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
       timeInput.value = val;
       this.updateTimeBtn(val);
+
+      if (!dateInput.value) {
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        dateInput.value = todayStr;
+        this.updateDateBtn(todayStr);
+      }
+
       picker.remove();
     };
 
@@ -681,14 +725,21 @@ export class TaskView {
     });
 
     const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
+    const subtaskAddBtn = this.taskNode?.querySelector("#subtask-add-btn") as HTMLButtonElement;
+
+    const submitSubtask = () => {
+      const desc = subtaskInput.value.trim();
+      if (desc && state.taskId) {
+        subtaskInput.value = "";
+        TaskActions.createSubtask(state.taskId, desc);
+      }
+    };
+
+    subtaskAddBtn?.addEventListener("click", submitSubtask);
     subtaskInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const desc = subtaskInput.value.trim();
-        if (desc && state.taskId) {
-          subtaskInput.value = "";
-          TaskActions.createSubtask(state.taskId, desc);
-        }
+        submitSubtask();
       }
     });
 

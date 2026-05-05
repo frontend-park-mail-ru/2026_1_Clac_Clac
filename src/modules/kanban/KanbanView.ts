@@ -35,6 +35,9 @@ export class KanbanView {
     const scrollMap = new Map<string, number>();
     const expandedTasks = new Set<string>();
 
+    const wrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    const wrapperScrollLeft = wrapper ? wrapper.scrollLeft : 0;
+
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
       if (id) scrollMap.set(id, el.scrollTop);
@@ -52,6 +55,9 @@ export class KanbanView {
       board_name: state.boardName, 
       sections: state.sections 
     });
+
+    const newWrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    if (newWrapper) newWrapper.scrollLeft = wrapperScrollLeft;
 
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
