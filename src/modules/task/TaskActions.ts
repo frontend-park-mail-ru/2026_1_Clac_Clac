@@ -81,7 +81,7 @@ export const TaskActions = {
             }
           }
           c.created_time = (date && !isNaN(date.getTime()))
-            ? `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+            ? `${date.getUTCHours().toString().padStart(2, '0')}:${date.getUTCMinutes().toString().padStart(2, '0')}`
             : '';
         } catch {
           c.created_time = '';
@@ -160,7 +160,7 @@ export const TaskActions = {
       const me = usersList.find(u => u.id === currentUserLink);
 
       const now = new Date();
-      const created_time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const created_time = `${now.getUTCHours().toString().padStart(2, '0')}:${now.getUTCMinutes().toString().padStart(2, '0')}`;
 
       const comment: ExtendedCommentResponse = {
         comment_link: commentLink,

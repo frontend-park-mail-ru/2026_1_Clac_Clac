@@ -81,8 +81,9 @@ export const KanbanActions = {
 
             if (dl) {
               const dlDate = new Date(dl);
-              formattedDate = `${dlDate.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}, ${dlDate.getFullYear()}`;
-              formattedTime = dlDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+              formattedDate = `${dlDate.getUTCDate()} ${months[dlDate.getUTCMonth()]}, ${dlDate.getUTCFullYear()}`;
+              formattedTime = `${String(dlDate.getUTCHours()).padStart(2, '0')}:${String(dlDate.getUTCMinutes()).padStart(2, '0')}`;
             }
 
             let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
