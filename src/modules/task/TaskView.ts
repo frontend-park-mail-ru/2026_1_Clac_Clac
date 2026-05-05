@@ -154,7 +154,8 @@ export class TaskView {
       const d = new Date(deadline);
       rawDate = d.toISOString().split("T")[0];
       rawTime = d.toTimeString().split(" ")[0].substring(0, 5);
-      formattedDate = d.toLocaleDateString();
+      const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+      formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
       formattedTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
@@ -222,8 +223,14 @@ export class TaskView {
 
     if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
     if (currentValues.desc !== undefined) (this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement).value = currentValues.desc;
-    if (currentValues.date !== undefined) (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
-    if (currentValues.time !== undefined) (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+    if (currentValues.date !== undefined) {
+      (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
+      this.updateDateBtn(currentValues.date);
+    }
+    if (currentValues.time !== undefined) {
+      (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+      this.updateTimeBtn(currentValues.time);
+    }
     if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
     if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
 
@@ -241,6 +248,67 @@ export class TaskView {
     });
 
     this.attachListeners();
+  }
+
+  private updateDateBtn(dateVal: string) {
+    const btn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    if (!btn) return;
+    if (dateVal) {
+      const d = new Date(dateVal);
+      const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+      btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+    } else {
+      btn.textContent = 'Не задана';
+    }
+  }
+
+  private updateTimeBtn(timeVal: string) {
+    const btn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.textContent = timeVal || 'Не задано';
+  }
+
+  private buildTimePicker(currentTime: string): HTMLElement {
+    const [h, m] = currentTime ? currentTime.split(':').map(Number) : [0, 0];
+    const picker = document.createElement('div');
+    picker.className = 'time-picker';
+
+    const createCol = (label: string, count: number, selected: number) => {
+      const col = document.createElement('div');
+      col.className = 'time-picker__col';
+      const labelEl = document.createElement('div');
+      labelEl.className = 'time-picker__col-label';
+      labelEl.textContent = label;
+      col.appendChild(labelEl);
+      const scroll = document.createElement('div');
+      scroll.className = 'time-picker__scroll';
+      for (let i = 0; i < count; i++) {
+        const num = document.createElement('div');
+        num.className = 'time-picker__num' + (i === selected ? ' time-picker__num--selected' : '');
+        num.textContent = String(i).padStart(2, '0');
+        num.dataset.value = String(i);
+        num.addEventListener('click', () => {
+          scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
+          num.classList.add('time-picker__num--selected');
+          num.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+        scroll.appendChild(num);
+      }
+      col.appendChild(scroll);
+      return { col, scroll };
+    };
+
+    const { col: hourCol, scroll: hourScroll } = createCol('Часы', 24, h);
+    const { col: minCol, scroll: minScroll } = createCol('Минуты', 60, m);
+    picker.appendChild(hourCol);
+    picker.appendChild(minCol);
+
+    setTimeout(() => {
+      hourScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
+      minScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
+    }, 0);
+
+    return picker;
   }
 
   private attachListeners() {
@@ -269,6 +337,44 @@ export class TaskView {
       if (state.taskId) {
         TaskActions.saveTask(state.taskId, payload);
       }
+    });
+
+    const dateInput = this.taskNode?.querySelector("#task-date-input") as HTMLInputElement;
+    dateInput?.addEventListener("change", () => {
+      this.updateDateBtn(dateInput.value);
+    });
+
+    const timeBtn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    timeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = this.taskNode?.querySelector(".time-picker");
+      if (existing) {
+        const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+        const selected = existing.querySelectorAll(".time-picker__num--selected");
+        const h = (selected[0] as HTMLElement)?.dataset.value ?? "0";
+        const m = (selected[1] as HTMLElement)?.dataset.value ?? "0";
+        const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+        timeInput.value = val;
+        this.updateTimeBtn(val);
+        existing.remove();
+        return;
+      }
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+      const picker = this.buildTimePicker(timeInput.value);
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      timeBtn.parentElement?.appendChild(picker);
+
+      const closePicker = () => {
+        const sel = picker.querySelectorAll(".time-picker__num--selected");
+        const h = (sel[0] as HTMLElement)?.dataset.value ?? "0";
+        const m = (sel[1] as HTMLElement)?.dataset.value ?? "0";
+        const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+        timeInput.value = val;
+        this.updateTimeBtn(val);
+        picker.remove();
+        document.removeEventListener("click", closePicker);
+      };
+      setTimeout(() => document.addEventListener("click", closePicker), 0);
     });
 
     this.taskNode?.querySelector("#btn-back")?.addEventListener("click", () => {

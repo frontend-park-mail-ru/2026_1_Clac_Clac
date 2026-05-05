@@ -42,7 +42,7 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span class="task__meta-label">Исп.:</span>
+          <span class="task__meta-label">Исполнитель:</span>
           <button class="task__meta-value-btn task__meta-value-btn-flex" id="task-executor-btn"
             data-id="{{task.executor_id}}">
             {{#if task.executor_id}}
@@ -65,15 +65,25 @@
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <input type="date" class="task__meta-date-input" id="task-date-input" value="{{task.raw_date}}">
+          <span class="task__meta-label">Дата:</span>
+          <div class="task__meta-date-wrapper">
+            <button class="task__meta-value-btn" id="task-date-btn">
+              {{#if task.due_date}}{{task.due_date}}{{else}}Не задана{{/if}}
+            </button>
+            <input type="date" class="task__meta-date-input" id="task-date-input" value="{{task.raw_date}}">
+          </div>
         </div>
 
-        <div class="task__meta-item">
+        <div class="task__meta-item relative-wrapper">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <input type="time" class="task__meta-time-input" id="task-time-input" value="{{task.raw_time}}">
+          <span class="task__meta-label">Время:</span>
+          <button class="task__meta-value-btn" id="task-time-btn">
+            {{#if task.time}}{{task.time}}{{else}}Не задано{{/if}}
+          </button>
+          <input type="hidden" id="task-time-input" value="{{task.raw_time}}">
         </div>
       </div>
 
