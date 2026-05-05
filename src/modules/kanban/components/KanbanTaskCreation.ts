@@ -42,24 +42,69 @@ export class KanbanTaskCreation {
       const dropdown = document.createElement("div");
       dropdown.className = "assignee__dropdown assignee-dropdown";
 
-      state.users.forEach((user) => {
-        const item = document.createElement("div");
-        item.className = "assignee__dropdown-item";
-        if (user.id === selectedAssigneeId) item.classList.add("assignee__dropdown-item--selected");
-        item.textContent = user.name;
+      const searchContainer = document.createElement("div");
+      searchContainer.className = "assignee__search-container";
+      const searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.placeholder = "Поиск...";
+      searchInput.className = "assignee__search-input";
+      searchContainer.appendChild(searchInput);
+      dropdown.appendChild(searchContainer);
 
-        item.addEventListener("click", () => {
-          selectedAssigneeId = user.id;
-          modalAssigneeBtn.textContent = user.name;
-          dropdown.remove();
-        });
-        dropdown.appendChild(item);
-      });
+      const listContainer = document.createElement("div");
+      listContainer.className = "assignee__list-container";
+      dropdown.appendChild(listContainer);
+
+      const renderList = (filter = "") => {
+        listContainer.innerHTML = "";
+
+        if ("Не назначен".toLowerCase().includes(filter.toLowerCase())) {
+          const clearItem = document.createElement("div");
+          clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";
+          clearItem.innerHTML = `<div class="assignee__avatar assignee__avatar--clear">?</div><div class="assignee__info"><span class="assignee__name">Не назначен</span></div>`;
+          clearItem.addEventListener("click", () => {
+            selectedAssigneeId = undefined!;
+            if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
+            dropdown.remove();
+          });
+          listContainer.appendChild(clearItem);
+        }
+
+        state.users
+          .filter((u) => u.name.toLowerCase().includes(filter.toLowerCase()))
+          .forEach((user) => {
+            const item = document.createElement("div");
+            item.className = "assignee__dropdown-item";
+            if (user.id === selectedAssigneeId) item.classList.add("assignee__dropdown-item--selected");
+            item.innerHTML = `
+              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+              <div class="assignee__info">
+                <span class="assignee__name">${user.name}</span>
+                <span class="assignee__email">${user.email}</span>
+              </div>
+            `;
+            item.addEventListener("click", () => {
+              selectedAssigneeId = user.id;
+              if (modalAssigneeBtn) {
+                modalAssigneeBtn.innerHTML = `
+                  ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
+                  ${user.name}
+                `;
+              }
+              dropdown.remove();
+            });
+            listContainer.appendChild(item);
+          });
+      };
+
+      renderList();
+      searchInput.addEventListener("input", (e) => renderList((e.target as HTMLInputElement).value));
 
       if (modalAssigneeBtn.parentElement) {
         modalAssigneeBtn.parentElement.classList.add("relative-wrapper");
         modalAssigneeBtn.parentElement.appendChild(dropdown);
       }
+      searchInput.focus();
     }, { signal });
 
     btnConfirmCreateTask?.addEventListener("click", () => {
