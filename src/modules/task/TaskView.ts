@@ -272,7 +272,7 @@ export class TaskView {
     btn.textContent = timeVal || 'Не задано';
   }
 
-  private buildDatePicker(currentDate: string): HTMLElement {
+  private buildDatePicker(currentDate: string, onSelect?: (dateStr: string) => void): HTMLElement {
     const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
 
@@ -349,6 +349,7 @@ export class TaskView {
           selectedStr = dateStr;
           picker.dataset.selectedDate = dateStr;
           render();
+          if (onSelect) onSelect(dateStr);
         });
         grid.appendChild(el);
       }
@@ -465,7 +466,34 @@ export class TaskView {
       const existing = this.taskNode?.querySelector(".date-picker");
       if (existing) { existing.remove(); return; }
 
-      const picker = this.buildDatePicker(dateInput.value);
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+
+      const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
+        dateInput.value = dateStr;
+        this.updateDateBtn(dateStr);
+
+        if (!timeInput.value) {
+          const now = new Date();
+          const target = new Date(Date.UTC(
+            parseInt(dateStr.split('-')[0]),
+            parseInt(dateStr.split('-')[1]) - 1,
+            parseInt(dateStr.split('-')[2]),
+            now.getUTCHours() + 1,
+            now.getUTCMinutes()
+          ));
+
+          const finalDate = `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(target.getUTCDate()).padStart(2, '0')}`;
+          const finalTime = `${String(target.getUTCHours()).padStart(2, '0')}:${String(target.getUTCMinutes()).padStart(2, '0')}`;
+
+          dateInput.value = finalDate;
+          this.updateDateBtn(finalDate);
+          timeInput.value = finalTime;
+          this.updateTimeBtn(finalTime);
+        }
+
+        picker.remove();
+        cleanup();
+      });
       picker.addEventListener("click", (ev) => ev.stopPropagation());
       dateBtn.parentElement?.appendChild(picker);
 
@@ -501,6 +529,14 @@ export class TaskView {
       const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
       timeInput.value = val;
       this.updateTimeBtn(val);
+
+      if (!dateInput.value) {
+        const now = new Date();
+        const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+        dateInput.value = todayStr;
+        this.updateDateBtn(todayStr);
+      }
+
       picker.remove();
     };
 
