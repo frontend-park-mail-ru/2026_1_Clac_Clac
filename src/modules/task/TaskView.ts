@@ -152,11 +152,13 @@ export class TaskView {
 
     if (deadline) {
       const d = new Date(deadline);
-      rawDate = d.toISOString().split("T")[0];
-      rawTime = d.toTimeString().split(" ")[0].substring(0, 5);
-      const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-      formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
-      formattedTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (!isNaN(d.getTime())) {
+        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        rawDate = d.toISOString().split("T")[0];
+        rawTime = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+        formattedDate = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        formattedTime = rawTime;
+      }
     }
 
     let executorName = "Не назначен";
@@ -255,17 +257,124 @@ export class TaskView {
     if (!btn) return;
     if (dateVal) {
       const d = new Date(dateVal);
-      const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-      btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
-    } else {
-      btn.textContent = 'Не задана';
+      if (!isNaN(d.getTime())) {
+        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        btn.textContent = `${d.getUTCDate()} ${months[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+        return;
+      }
     }
+    btn.textContent = 'Не задана';
   }
 
   private updateTimeBtn(timeVal: string) {
     const btn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
     if (!btn) return;
     btn.textContent = timeVal || 'Не задано';
+  }
+
+  private buildDatePicker(currentDate: string, onSelect: (dateStr: string) => void): HTMLElement {
+    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+
+    const sel = currentDate ? new Date(currentDate + 'T00:00:00Z') : null;
+    let viewYear = sel ? sel.getUTCFullYear() : new Date().getUTCFullYear();
+    let viewMonth = sel ? sel.getUTCMonth() : new Date().getUTCMonth();
+
+    const todayUtc = new Date();
+    const todayStr = `${todayUtc.getUTCFullYear()}-${String(todayUtc.getUTCMonth()+1).padStart(2,'0')}-${String(todayUtc.getUTCDate()).padStart(2,'0')}`;
+    let selectedStr = currentDate || '';
+
+    const picker = document.createElement('div');
+    picker.className = 'date-picker';
+
+    const render = () => {
+      picker.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'date-picker__header';
+
+      const prev = document.createElement('button');
+      prev.className = 'date-picker__nav-btn';
+      prev.type = 'button';
+      prev.textContent = '‹';
+      prev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewMonth--;
+        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        render();
+      });
+
+      const title = document.createElement('span');
+      title.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const next = document.createElement('button');
+      next.className = 'date-picker__nav-btn';
+      next.type = 'button';
+      next.textContent = '›';
+      next.addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewMonth++;
+        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        render();
+      });
+
+      header.appendChild(prev);
+      header.appendChild(title);
+      header.appendChild(next);
+      picker.appendChild(header);
+
+      const grid = document.createElement('div');
+      grid.className = 'date-picker__grid';
+
+      DAYS.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day-name';
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      let dow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
+      if (dow === 0) dow = 7;
+      dow--;
+
+      const prevLast = new Date(Date.UTC(viewYear, viewMonth, 0)).getUTCDate();
+      for (let i = dow - 1; i >= 0; i--) {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day date-picker__day--other-month';
+        el.textContent = String(prevLast - i);
+        grid.appendChild(el);
+      }
+
+      const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const el = document.createElement('div');
+        el.className = 'date-picker__day';
+        if (dateStr === todayStr) el.classList.add('date-picker__day--today');
+        if (dateStr === selectedStr) el.classList.add('date-picker__day--selected');
+        el.textContent = String(d);
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedStr = dateStr;
+          onSelect(dateStr);
+          picker.remove();
+        });
+        grid.appendChild(el);
+      }
+
+      const total = Math.ceil((dow + daysInMonth) / 7) * 7;
+      for (let d = 1; d <= total - dow - daysInMonth; d++) {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day date-picker__day--other-month';
+        el.textContent = String(d);
+        grid.appendChild(el);
+      }
+
+      picker.appendChild(grid);
+    };
+
+    render();
+    return picker;
   }
 
   private buildTimePicker(currentTime: string): HTMLElement {
@@ -340,41 +449,78 @@ export class TaskView {
     });
 
     const dateInput = this.taskNode?.querySelector("#task-date-input") as HTMLInputElement;
-    dateInput?.addEventListener("change", () => {
-      this.updateDateBtn(dateInput.value);
+    const dateBtn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    dateBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = this.taskNode?.querySelector(".date-picker");
+      if (existing) { existing.remove(); return; }
+
+      const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
+        dateInput.value = dateStr;
+        this.updateDateBtn(dateStr);
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onEsc);
+      });
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      dateBtn.parentElement?.appendChild(picker);
+
+      const onOutside = () => {
+        picker.remove();
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onEsc);
+      };
+      const onEsc = (ev: KeyboardEvent) => {
+        if (ev.key === "Escape") {
+          picker.remove();
+          document.removeEventListener("click", onOutside);
+          document.removeEventListener("keydown", onEsc);
+        }
+      };
+      setTimeout(() => {
+        document.addEventListener("click", onOutside);
+        document.addEventListener("keydown", onEsc);
+      }, 0);
     });
+
+    const commitTimePicker = (picker: Element, timeInput: HTMLInputElement) => {
+      const sel = picker.querySelectorAll(".time-picker__num--selected");
+      const h = (sel[0] as HTMLElement)?.dataset.value ?? "0";
+      const m = (sel[1] as HTMLElement)?.dataset.value ?? "0";
+      const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+      timeInput.value = val;
+      this.updateTimeBtn(val);
+      picker.remove();
+    };
 
     const timeBtn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
     timeBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
       const existing = this.taskNode?.querySelector(".time-picker");
       if (existing) {
-        const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
-        const selected = existing.querySelectorAll(".time-picker__num--selected");
-        const h = (selected[0] as HTMLElement)?.dataset.value ?? "0";
-        const m = (selected[1] as HTMLElement)?.dataset.value ?? "0";
-        const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-        timeInput.value = val;
-        this.updateTimeBtn(val);
-        existing.remove();
+        commitTimePicker(existing, timeInput);
         return;
       }
-      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
       const picker = this.buildTimePicker(timeInput.value);
       picker.addEventListener("click", (ev) => ev.stopPropagation());
       timeBtn.parentElement?.appendChild(picker);
 
-      const closePicker = () => {
-        const sel = picker.querySelectorAll(".time-picker__num--selected");
-        const h = (sel[0] as HTMLElement)?.dataset.value ?? "0";
-        const m = (sel[1] as HTMLElement)?.dataset.value ?? "0";
-        const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-        timeInput.value = val;
-        this.updateTimeBtn(val);
-        picker.remove();
-        document.removeEventListener("click", closePicker);
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+          commitTimePicker(picker, timeInput);
+          document.removeEventListener("keydown", onKey);
+          document.removeEventListener("click", onOutside);
+        }
       };
-      setTimeout(() => document.addEventListener("click", closePicker), 0);
+      const onOutside = () => {
+        commitTimePicker(picker, timeInput);
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onKey);
+      };
+      setTimeout(() => {
+        document.addEventListener("click", onOutside);
+        document.addEventListener("keydown", onKey);
+      }, 0);
     });
 
     this.taskNode?.querySelector("#btn-back")?.addEventListener("click", () => {

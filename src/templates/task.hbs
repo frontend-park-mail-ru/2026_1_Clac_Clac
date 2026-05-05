@@ -58,7 +58,7 @@
           </button>
         </div>
 
-        <div class="task__meta-item">
+        <div class="task__meta-item relative-wrapper">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -66,12 +66,10 @@
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
           <span class="task__meta-label">Дата:</span>
-          <div class="task__meta-date-wrapper">
-            <button class="task__meta-value-btn" id="task-date-btn">
-              {{#if task.due_date}}{{task.due_date}}{{else}}Не задана{{/if}}
-            </button>
-            <input type="date" class="task__meta-date-input" id="task-date-input" value="{{task.raw_date}}">
-          </div>
+          <button class="task__meta-value-btn" id="task-date-btn" type="button">
+            {{#if task.due_date}}{{task.due_date}}{{else}}Не задана{{/if}}
+          </button>
+          <input type="hidden" id="task-date-input" value="{{task.raw_date}}">
         </div>
 
         <div class="task__meta-item relative-wrapper">
