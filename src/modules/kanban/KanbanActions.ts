@@ -4,7 +4,7 @@ import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
 import {
-  BoardUser, Section,
+  BoardUser, Section, Task,
   KANBAN_COLORS, ApiError
 } from "./kanban.types";
 
@@ -140,14 +140,25 @@ export const KanbanActions = {
 
   async createSection(boardId: string, name: string, maxTasks: number, isMandatory: boolean, color: string): Promise<void> {
     try {
-      await kanbanApi.createSection({
+      const res = await kanbanApi.createSection({
         board_link: boardId,
         name: name,
         max_tasks: maxTasks,
         is_mandatory: isMandatory,
         color,
       });
-      await this.fetchKanban(boardId, true);
+      const secData = res.data;
+      const newSection: Section = {
+        id: secData.link,
+        section_name: secData.name,
+        color: secData.color || color,
+        colorHex: KANBAN_COLORS[secData.color || color] || secData.color || color,
+        max_tasks: secData.max_tasks,
+        is_mandatory: secData.is_mandatory,
+        position: secData.position,
+        tasks: [],
+      };
+      appDispatcher.dispatch({ type: "KANBAN_ADD_SECTION_SUCCESS", payload: { section: newSection } });
     } catch {
       Toast.error("Ошибка при создании колонки");
     }
@@ -156,16 +167,17 @@ export const KanbanActions = {
   async updateSection(sectionId: string, data: Partial<SectionInfo>): Promise<void> {
     try {
       await kanbanApi.updateSection(sectionId, data);
+      appDispatcher.dispatch({ type: "KANBAN_UPDATE_SECTION_SUCCESS", payload: { sectionId, data } });
     } catch {
       Toast.error("Ошибка при обновлении колонки");
       throw new Error("Update section failed");
     }
   },
 
-  async deleteSection(boardId: string, sectionId: string): Promise<void> {
+  async deleteSection(_boardId: string, sectionId: string): Promise<void> {
     try {
       await kanbanApi.deleteSection(sectionId);
-      await this.fetchKanban(boardId, true);
+      appDispatcher.dispatch({ type: "KANBAN_DELETE_SECTION_SUCCESS", payload: { sectionId } });
     } catch {
       Toast.error("Ошибка при удалении колонки");
     }
@@ -182,15 +194,36 @@ export const KanbanActions = {
     }
   },
 
-  async createTask(boardId: string, sectionId: string, title: string, executerId?: string): Promise<void> {
+  async createTask(_boardId: string, sectionId: string, title: string, executerId?: string): Promise<void> {
     try {
-      await kanbanApi.createTask({
+      const res = await kanbanApi.createTask({
         title,
         section_link: sectionId,
         description: "",
         executor_link: executerId,
       });
-      await this.fetchKanban(boardId, true);
+      const t = res.data;
+      
+      let executorName: string | null = null;
+      if (executerId) {
+        const found = profileCache.get(executerId);
+        executorName = found ? found.name : "Пользователь";
+      }
+
+      const newTask: Task = {
+        id: t.card_link,
+        title: title,
+        executor: executorName,
+        executor_id: executerId || null,
+        due_date: null,
+        time: null,
+        position: t.position,
+        subtasks: [],
+        subtasksCount: 0,
+        subtasksDone: 0
+      };
+
+      appDispatcher.dispatch({ type: "KANBAN_ADD_TASK_SUCCESS", payload: { sectionId, task: newTask } });
     } catch (err) {
       const error = err as ApiError;
       if (error?.data?.message === "task limit reached") {
@@ -201,10 +234,10 @@ export const KanbanActions = {
     }
   },
 
-  async deleteTask(boardId: string, taskId: string): Promise<void> {
+  async deleteTask(_boardId: string, taskId: string): Promise<void> {
     try {
       await kanbanApi.deleteTask(taskId);
-      await this.fetchKanban(boardId, true);
+      appDispatcher.dispatch({ type: "KANBAN_DELETE_TASK_SUCCESS", payload: { taskId } });
     } catch {
       Toast.error("Ошибка при удалении");
     }
