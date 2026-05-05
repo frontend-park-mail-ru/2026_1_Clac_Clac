@@ -1,9 +1,16 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
-import { 
-  ApiError, Board 
+import {
+  ApiError, Board
 } from "./boards.types";
+import { Toast } from "../../utils/toast";
+
+const bgUploadErrorMessage = (status: number): string => {
+  if (status === 413) return "Изображение слишком большое";
+  if (status === 415) return "Неверный формат файла";
+  return "Неверный формат изображения";
+};
 
 export const BoardsActions = {
   async fetchBoards(): Promise<void> {
@@ -49,7 +56,13 @@ export const BoardsActions = {
       if (file && newBoardId) {
         const fd = new FormData();
         fd.append("background", file);
-        await boardsApi.updateBoardBackground(newBoardId, fd);
+        try {
+          await boardsApi.updateBoardBackground(newBoardId, fd);
+        } catch (bgErr: unknown) {
+          Toast.error(bgUploadErrorMessage((bgErr as ApiError).status));
+          await this.fetchBoards();
+          return;
+        }
       }
       await this.fetchBoards();
     } catch (err: unknown) {
@@ -64,7 +77,13 @@ export const BoardsActions = {
       if (file) {
         const fd = new FormData();
         fd.append("background", file);
-        await boardsApi.updateBoardBackground(id, fd);
+        try {
+          await boardsApi.updateBoardBackground(id, fd);
+        } catch (bgErr: unknown) {
+          Toast.error(bgUploadErrorMessage((bgErr as ApiError).status));
+          await this.fetchBoards();
+          return;
+        }
       }
       await this.fetchBoards();
     } catch (err: unknown) {
