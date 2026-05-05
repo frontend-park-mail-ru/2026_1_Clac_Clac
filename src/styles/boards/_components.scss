@@ -173,7 +173,15 @@
     margin-bottom: 1.5rem;
     font-size: 0.95rem;
     cursor: pointer;
-    width: max-content;
+    width: 100%;
+    overflow: hidden;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
   }
 
   &__input-group {

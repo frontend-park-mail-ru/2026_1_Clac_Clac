@@ -177,12 +177,17 @@
   }
 
   &__subtask-add-btn {
+    display: none;
     color: #888;
     padding: 4px;
     transition: color 0.2s;
 
     &:hover {
       color: white;
+    }
+
+    @media (max-width: 768px) {
+      display: flex;
     }
   }
 

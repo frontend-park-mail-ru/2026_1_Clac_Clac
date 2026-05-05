@@ -8,7 +8,7 @@ import { Toast } from "../../utils/toast";
 
 const bgUploadErrorMessage = (status: number): string => {
   if (status === 413) return "Изображение слишком большое";
-  if (status === 415) return "Неверный формат файла";
+  if (status === 415) return "Неверный формат изображения";
   return "Неверный формат изображения";
 };
 

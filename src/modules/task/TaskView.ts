@@ -5,6 +5,7 @@ import { TaskActions } from "./TaskActions";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { clearKanbanCache } from "../../modules/kanban";
+import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -786,7 +787,12 @@ export class TaskView {
       btn.addEventListener("click", (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
         if (id) {
-          TaskActions.deleteSubtask(id);
+          showConfirmModal({
+            title: "Удалить подзадачу",
+            text: "Вы уверены, что хотите удалить подзадачу?",
+            confirmLabel: "Удалить",
+            onConfirm: () => TaskActions.deleteSubtask(id),
+          });
         }
       });
     });
