@@ -49,15 +49,11 @@ export class LoginView {
     if (hasFieldErrors) {
       setGlobalError(null);
       setInputError("email", state.globalError ?? null);
-      if (state.globalError) {
-        this.passwordInput?.classList.add("input-group__field--error");
-      } else {
-        this.passwordInput?.classList.remove("input-group__field--error");
-      }
+      setInputError("password", state.globalError ?? null);
     } else {
       setGlobalError(state.globalError);
       setInputError("email", null);
-      this.passwordInput?.classList.remove("input-group__field--error");
+      setInputError("password", null);
     }
   }
 

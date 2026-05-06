@@ -254,10 +254,13 @@ export const KanbanActions = {
     } catch (err: unknown) {
       appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       const error = err as ApiError;
-      if (
-        error?.data?.message === "can not skip mandatory section" ||
-        error?.data?.message === "miss mandatory section" ||
-        error?.data?.message === "invalid input"
+      const msg = error?.data?.message;
+      if (msg === "task limit reached") {
+        Toast.error("Превышен лимит задач");
+      } else if (
+        msg === "can not skip mandatory section" ||
+        msg === "miss mandatory section" ||
+        msg === "invalid input"
       ) {
         Toast.error("Пропущена обязательная секция");
       } else {
