@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import loginTpl from "../../templates/login.hbs?raw";
 import config from "../../config";
-import { setGlobalError, validateEmail, setInputError } from "../../utils";
+import { setGlobalError, validateEmail, setInputError, } from "../../utils";
 import { FormValidator, ValidationSchema } from "../../utils/validator";
 import { navigateTo } from "../../router";
 import { LoginActions } from "./LoginActions";
@@ -44,14 +44,20 @@ export class LoginView {
       this.submitBtn.textContent = state.isLoading ? "Вход..." : "Войти";
     }
 
-    setGlobalError(state.globalError);
+    const hasFieldErrors = state.fieldErrors.email || state.fieldErrors.password;
 
-    if (state.fieldErrors.email) {
-      this.emailInput?.classList.add("input-group__field--error");
-    }
-
-    if (state.fieldErrors.password) {
-      this.passwordInput?.classList.add("input-group__field--error");
+    if (hasFieldErrors) {
+      setGlobalError(null);
+      setInputError("email", state.globalError ?? null);
+      if (state.globalError) {
+        this.passwordInput?.classList.add("input-group__field--error");
+      } else {
+        this.passwordInput?.classList.remove("input-group__field--error");
+      }
+    } else {
+      setGlobalError(state.globalError);
+      setInputError("email", null);
+      this.passwordInput?.classList.remove("input-group__field--error");
     }
   }
 

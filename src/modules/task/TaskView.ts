@@ -247,6 +247,7 @@ export class TaskView {
     const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
     if (this.scrollToNewComment) {
       this.scrollToNewComment = false;
+      if (newContentEl) newContentEl.scrollTop = currentScrollTop;
       requestAnimationFrame(() => {
         if (newContentEl) newContentEl.scrollTo({ top: newContentEl.scrollHeight, behavior: "smooth" });
       });

@@ -3,6 +3,7 @@ import { KanbanState } from "../kanban.types";
 import { navigateTo } from "../../../router";
 import { Toast } from "../../../utils/toast";
 import { kanbanApi } from "../../../api";
+import { showConfirmModal } from "../../../utils/confirmModal";
 
 export class KanbanContextMenus {
   private static activeMenu: HTMLElement | null = null;
@@ -71,7 +72,13 @@ export class KanbanContextMenus {
         });
 
         menu.querySelector("#ctx-delete-card")?.addEventListener("click", () => {
-          KanbanActions.deleteTask(state.boardId!, taskId);
+          this.closeMenu();
+          showConfirmModal({
+            title: "Удалить карточку",
+            text: `Вы уверены, что хотите удалить карточку "${title}"?`,
+            confirmLabel: "Удалить",
+            onConfirm: () => KanbanActions.deleteTask(state.boardId!, taskId),
+          });
         });
       }, { signal });
     });

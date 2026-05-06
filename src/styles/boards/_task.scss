@@ -388,6 +388,10 @@
       color: #ccc;
       background: #2e2e30;
     }
+
+    @media (max-width: 768px) {
+      opacity: 1;
+    }
   }
 
   &__comment:hover &__comment-menu-btn {
