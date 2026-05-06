@@ -7,10 +7,9 @@ export interface LoginState {
   };
 }
 
-export interface ApiError extends Error {
-  status: "error";
-  code: number;
-  message: string;
+export interface ApiError {
+  status: number;
+  data: any;
 }
 
 export interface LoginErrorPayload {

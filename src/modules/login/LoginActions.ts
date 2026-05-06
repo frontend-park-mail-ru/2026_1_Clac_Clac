@@ -61,20 +61,14 @@ export const LoginActions = {
       navigateTo("/boards");
     } catch (err: unknown) {
       const error = err as ApiError;
-      const errMsg = error.message;
 
-      if (error.code === 404) {
+      if (error.status === 404) {
         appDispatcher.dispatch({
           type: "LOGIN_ERROR",
           payload: {
             globalError: "Неверный email или пароль",
             fieldErrors: { email: true, password: true },
           },
-        });
-      } else if (errMsg) {
-        appDispatcher.dispatch({
-          type: "LOGIN_ERROR",
-          payload: { globalError: errMsg },
         });
       } else {
         appDispatcher.dispatch({
