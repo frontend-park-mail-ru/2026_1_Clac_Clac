@@ -203,7 +203,7 @@ export const KanbanActions = {
         executor_link: executerId,
       });
       const t = res.data;
-      
+
       let executorName: string | null = null;
       if (executerId) {
         const found = profileCache.get(executerId);
@@ -254,7 +254,11 @@ export const KanbanActions = {
     } catch (err: unknown) {
       appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
       const error = err as ApiError;
-      if (error?.data?.message === "can not skip mandatory section" || error?.data?.message === "invalid input") {
+      if (
+        error?.data?.message === "can not skip mandatory section" ||
+        error?.data?.message === "miss mandatory section" ||
+        error?.data?.message === "invalid input"
+      ) {
         Toast.error("Пропущена обязательная секция");
       } else {
         Toast.error("Ошибка при переносе");
