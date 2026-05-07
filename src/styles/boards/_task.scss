@@ -382,20 +382,11 @@
     padding: 4px 6px;
     border-radius: 6px;
     transition: color 0.15s, background 0.15s;
-    opacity: 0;
 
     &:hover {
       color: #ccc;
       background: #2e2e30;
     }
-
-    @media (max-width: 768px) {
-      opacity: 1;
-    }
-  }
-
-  &__comment:hover &__comment-menu-btn {
-    opacity: 1;
   }
 
   &__comment-dropdown {

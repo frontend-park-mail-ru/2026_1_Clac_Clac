@@ -94,9 +94,14 @@ export class KanbanView {
         text: "Вы уверены, что хотите выйти из аккаунта?",
         confirmLabel: "Выйти",
         onConfirm: async () => {
-          try { await authApi.logout(); } catch {}
-          localStorage.removeItem("isAuth");
-          navigateTo("/login");
+          try {
+            await authApi.logout();
+          } catch (err) {
+            console.error("Logout error", err);
+          } finally {
+            localStorage.removeItem("isAuth");
+            navigateTo("/login");
+          }
         },
       });
     }, { signal });

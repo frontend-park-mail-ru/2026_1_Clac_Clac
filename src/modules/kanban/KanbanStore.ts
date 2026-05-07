@@ -138,8 +138,8 @@ class KanbanStore extends Store {
             section.color = data.color;
             section.colorHex = KANBAN_COLORS[data.color] || data.color;
           }
-          if (data.max_tasks !== undefined) section.max_tasks = data.max_tasks;
-          if (data.is_mandatory !== undefined) section.is_mandatory = data.is_mandatory;
+          if (data.max_tasks) section.max_tasks = data.max_tasks;
+          if (data.is_mandatory) section.is_mandatory = data.is_mandatory;
           this.emit("change");
         }
         break;

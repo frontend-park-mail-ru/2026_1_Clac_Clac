@@ -202,7 +202,7 @@ export const KanbanActions = {
         description: "",
         executor_link: executerId,
       });
-      const t = res.data;
+      const taskResponse = res.data;
 
       let executorName: string | null = null;
       if (executerId) {
@@ -211,13 +211,13 @@ export const KanbanActions = {
       }
 
       const newTask: Task = {
-        id: t.card_link,
+        id: taskResponse.card_link,
         title: title,
         executor: executorName,
         executor_id: executerId || null,
         due_date: null,
         time: null,
-        position: t.position,
+        position: taskResponse.position,
         subtasks: [],
         subtasksCount: 0,
         subtasksDone: 0
