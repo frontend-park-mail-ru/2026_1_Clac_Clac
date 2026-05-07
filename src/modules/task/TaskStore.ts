@@ -71,6 +71,42 @@ class TaskStore extends Store {
         this.state.comments = [...this.state.comments, action.payload.comment];
         this.emit("change");
         break;
+      case TaskActionTypes.DELETE_COMMENT:
+        this.state.comments = this.state.comments.filter(
+          (c: any) => c.comment_link !== action.payload.commentLink
+        );
+        this.emit("change");
+        break;
+      case TaskActionTypes.UPDATE_COMMENT:
+        this.state.comments = this.state.comments.map((c: any) =>
+          c.comment_link === action.payload.commentLink ? { ...c, text: action.payload.text } : c
+        );
+        this.emit("change");
+        break;
+      case TaskActionTypes.ADD_SUBTASK_SUCCESS:
+        if (this.state.taskData) {
+          const newSt = action.payload.subtask;
+          this.state.taskData.subtasks = [...(this.state.taskData.subtasks || []), newSt];
+          this.emit("change");
+        }
+        break;
+      case TaskActionTypes.UPDATE_SUBTASK_SUCCESS:
+        if (this.state.taskData) {
+          const updated = action.payload.subtask;
+          this.state.taskData.subtasks = (this.state.taskData.subtasks || []).map((st: any) => 
+            (st.link || st.subtask_link || st.link_subtask || st.id) === action.payload.id ? updated : st
+          );
+          this.emit("change");
+        }
+        break;
+      case TaskActionTypes.DELETE_SUBTASK_SUCCESS:
+        if (this.state.taskData) {
+          this.state.taskData.subtasks = (this.state.taskData.subtasks || []).filter((st: any) => 
+            (st.link || st.subtask_link || st.link_subtask || st.id) !== action.payload.id
+          );
+          this.emit("change");
+        }
+        break;
       case TaskActionTypes.CLEAR_STORE:
         this.state = {
           boardId: null,

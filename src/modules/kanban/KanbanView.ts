@@ -8,6 +8,7 @@ import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
 import { KanbanTaskCreation } from "./components/KanbanTaskCreation";
 import { KanbanColumnManager } from "./components/KanbanColumnManager";
+import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -34,6 +35,9 @@ export class KanbanView {
     const scrollMap = new Map<string, number>();
     const expandedTasks = new Set<string>();
 
+    const wrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    const wrapperScrollLeft = wrapper ? wrapper.scrollLeft : 0;
+
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
       if (id) scrollMap.set(id, el.scrollTop);
@@ -51,6 +55,9 @@ export class KanbanView {
       board_name: state.boardName, 
       sections: state.sections 
     });
+
+    const newWrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    if (newWrapper) newWrapper.scrollLeft = wrapperScrollLeft;
 
     this.appDiv.querySelectorAll<HTMLElement>(".kanban__column-cards").forEach((el) => {
       const id = el.getAttribute("data-section-id");
@@ -79,11 +86,24 @@ export class KanbanView {
     };
 
     document.getElementById("nav-boards")?.addEventListener("click", () => navigateTo("/boards"), { signal });
+    document.getElementById("nav-logo")?.addEventListener("click", () => navigateTo("/boards"), { signal });
     document.getElementById("nav-profile")?.addEventListener("click", () => navigateTo("/profile"), { signal });
-    document.getElementById("logout-btn")?.addEventListener("click", async () => {
-      try { await authApi.logout(); } catch {}
-      localStorage.removeItem("isAuth");
-      navigateTo("/login");
+    document.getElementById("logout-btn")?.addEventListener("click", () => {
+      showConfirmModal({
+        title: "Выход",
+        text: "Вы уверены, что хотите выйти из аккаунта?",
+        confirmLabel: "Выйти",
+        onConfirm: async () => {
+          try {
+            await authApi.logout();
+          } catch (err) {
+            console.error("Logout error", err);
+          } finally {
+            localStorage.removeItem("isAuth");
+            navigateTo("/login");
+          }
+        },
+      });
     }, { signal });
 
     this.appDiv.querySelector("#modal-overlay")?.addEventListener("click", (e: Event) => {

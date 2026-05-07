@@ -2,7 +2,6 @@ import { appDispatcher } from "../../core/Dispatcher";
 import { authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
 import { Toast } from "../../utils/toast";
-import { ApiError } from "./login.types";
 
 export const LoginActions = {
 
@@ -60,21 +59,18 @@ export const LoginActions = {
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
     } catch (err: unknown) {
-      const error = err as ApiError;
-      const errMsg = error.message;
+      const e = err as any;
+      const httpStatus = e?.status;
+      const bodyCode = e?.data?.code;
+      const isCredentialsError = httpStatus === 404 || bodyCode === 404;
 
-      if (error.code === 404) {
+      if (isCredentialsError) {
         appDispatcher.dispatch({
           type: "LOGIN_ERROR",
           payload: {
             globalError: "Неверный email или пароль",
             fieldErrors: { email: true, password: true },
           },
-        });
-      } else if (errMsg) {
-        appDispatcher.dispatch({
-          type: "LOGIN_ERROR",
-          payload: { globalError: errMsg },
         });
       } else {
         appDispatcher.dispatch({

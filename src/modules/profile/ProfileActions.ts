@@ -2,6 +2,7 @@ import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './profile.types';
 import { authApi, profileApi } from '../../api';
 import { navigateTo, setIsAuth } from '../../router';
+import { Toast } from '../../utils/toast';
 
 export const ProfileActions = {
   resetState() {
@@ -50,9 +51,16 @@ export const ProfileActions = {
     try {
       await profileApi.updateAvatar(fd);
       await ProfileActions.fetchProfile();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Avatar upload error', err);
-      appDispatcher.dispatch({ type: ActionTypes.SET_ERROR, payload: 'Не удалось загрузить аватар' });
+      const status = err?.status;
+      if (status === 413) {
+        Toast.error('Изображение слишком большое');
+      } else if (status === 415) {
+        Toast.error('Неверный формат изображения');
+      } else {
+        Toast.error('Не удалось загрузить аватар');
+      }
     } finally {
       appDispatcher.dispatch({ type: ActionTypes.SET_IS_SAVING, payload: false });
     }

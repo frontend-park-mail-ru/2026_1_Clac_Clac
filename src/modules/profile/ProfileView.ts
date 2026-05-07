@@ -3,6 +3,7 @@ import profileTpl from '../../templates/profile.hbs?raw';
 import { profileStore } from './ProfileStore';
 import { ProfileActions } from './ProfileActions';
 import { navigateTo } from '../../router';
+import { showConfirmModal } from '../../utils/confirmModal';
 import { UserProfile } from './profile.types';
 
 const template = Handlebars.compile(profileTpl);
@@ -49,7 +50,15 @@ export class ProfileView {
 
   private attachListeners() {
     document.getElementById('nav-boards')?.addEventListener('click', () => navigateTo('/boards'));
-    document.getElementById('logout-btn')?.addEventListener('click', () => ProfileActions.logout());
+    document.getElementById('nav-logo')?.addEventListener('click', () => navigateTo('/boards'));
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      showConfirmModal({
+        title: "Выход",
+        text: "Вы уверены, что хотите выйти из аккаунта?",
+        confirmLabel: "Выйти",
+        onConfirm: () => ProfileActions.logout(),
+      });
+    });
 
     const form = document.getElementById('profile-form');
     const nameInput = document.getElementById('profile-name') as HTMLInputElement;

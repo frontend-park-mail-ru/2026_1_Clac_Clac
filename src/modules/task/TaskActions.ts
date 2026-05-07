@@ -10,6 +10,7 @@ interface ExtendedCommentResponse extends CommentResponse {
   author_avatar?: string;
   author_fallback?: string;
   created_time?: string;
+  is_mine?: boolean;
 };
 
 let currentUserLink: string | null = null;
@@ -86,6 +87,7 @@ export const TaskActions = {
         } catch {
           c.created_time = '';
         }
+        c.is_mine = c.author_link === currentUserLink;
         return c;
       };
 
@@ -172,6 +174,7 @@ export const TaskActions = {
         author_avatar: me?.avatarUrl,
         author_fallback: (me?.name ?? "U").charAt(0).toUpperCase(),
         created_time,
+        is_mine: true,
       };
 
       const cached = commentsCache.get(taskId) ?? [];
@@ -184,11 +187,37 @@ export const TaskActions = {
     }
   },
 
+  async deleteComment(commentLink: string, taskId: string) {
+    try {
+      await kanbanApi.deleteComment(commentLink);
+      const cached = commentsCache.get(taskId) ?? [];
+      commentsCache.set(taskId, cached.filter(c => c.comment_link !== commentLink));
+      appDispatcher.dispatch({ type: TaskActionTypes.DELETE_COMMENT, payload: { commentLink } });
+    } catch (e) {
+      console.error("Delete comment error", e);
+      Toast.error("Ошибка при удалении комментария");
+    }
+  },
+
+  async updateComment(commentLink: string, text: string, taskId: string) {
+    try {
+      await kanbanApi.updateComment(commentLink, { text });
+      const cached = commentsCache.get(taskId) ?? [];
+      commentsCache.set(taskId, cached.map(c => c.comment_link === commentLink ? { ...c, text } : c));
+      appDispatcher.dispatch({ type: TaskActionTypes.UPDATE_COMMENT, payload: { commentLink, text } });
+    } catch (e) {
+      console.error("Update comment error", e);
+      Toast.error("Ошибка при редактировании комментария");
+    }
+  },
+
   async createSubtask(taskId: string, description: string) {
     try {
-      await kanbanApi.createSubtask(taskId, { description });
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId) this.loadTaskData(boardId, taskId);
+      const res = await kanbanApi.createSubtask(taskId, { description });
+      appDispatcher.dispatch({
+        type: TaskActionTypes.ADD_SUBTASK_SUCCESS,
+        payload: { subtask: res.data }
+      });
     } catch (e) {
       console.error("Create subtask error", e);
     }
@@ -197,9 +226,17 @@ export const TaskActions = {
   async toggleSubtask(subtaskId: string, isDone: boolean, description: string) {
     try {
       await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
-      const taskId = new URLSearchParams(window.location.search).get("taskId");
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.UPDATE_SUBTASK_SUCCESS,
+        payload: { 
+          id: subtaskId, 
+          subtask: { 
+            id: subtaskId, 
+            description, 
+            is_done: isDone 
+          } 
+        }
+      });
     } catch (e) {
       console.error("Update subtask error", e);
     }
@@ -208,9 +245,10 @@ export const TaskActions = {
   async deleteSubtask(subtaskId: string) {
     try {
       await kanbanApi.deleteSubtask(subtaskId);
-      const taskId = new URLSearchParams(window.location.search).get("taskId");
-      const boardId = new URLSearchParams(window.location.search).get("boardId");
-      if (boardId && taskId) this.loadTaskData(boardId, taskId);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.DELETE_SUBTASK_SUCCESS,
+        payload: { id: subtaskId }
+      });
     } catch (e) {
       console.error("Delete subtask error", e);
     }

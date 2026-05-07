@@ -5,6 +5,7 @@ import { TaskActions } from "./TaskActions";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { clearKanbanCache } from "../../modules/kanban";
+import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -13,6 +14,7 @@ export class TaskView {
   private taskNode: HTMLElement | null = null;
   private currentExecuterId: string = "";
   private isFirstRender: boolean = true;
+  private scrollToNewComment: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -44,9 +46,12 @@ export class TaskView {
     }
   }
 
-  private globalClickHandler() {
+  private globalClickHandler(e: MouseEvent) {
     document.querySelector(".context-menu")?.remove();
     document.querySelector(".assignee__dropdown")?.remove();
+    if (!(e.target as HTMLElement).closest(".task__comment-menu-wrap")) {
+      this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => d.classList.add("hidden"));
+    }
   }
 
   private onStoreChange() {
@@ -108,6 +113,9 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const contentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    const currentScrollTop = contentEl ? contentEl.scrollTop : 0;
+
     const currentSubtasks: Record<string, string> = {};
     this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
       const id = input.getAttribute("data-id");
@@ -152,10 +160,13 @@ export class TaskView {
 
     if (deadline) {
       const d = new Date(deadline);
-      rawDate = d.toISOString().split("T")[0];
-      rawTime = d.toTimeString().split(" ")[0].substring(0, 5);
-      formattedDate = d.toLocaleDateString();
-      formattedTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (!isNaN(d.getTime())) {
+        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        rawTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+        formattedTime = rawTime;
+      }
     }
 
     let executorName = "Не назначен";
@@ -222,10 +233,27 @@ export class TaskView {
 
     if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
     if (currentValues.desc !== undefined) (this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement).value = currentValues.desc;
-    if (currentValues.date !== undefined) (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
-    if (currentValues.time !== undefined) (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+    if (currentValues.date !== undefined) {
+      (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
+      this.updateDateBtn(currentValues.date);
+    }
+    if (currentValues.time !== undefined) {
+      (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+      this.updateTimeBtn(currentValues.time);
+    }
     if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
     if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
+
+    const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    if (this.scrollToNewComment) {
+      this.scrollToNewComment = false;
+      if (newContentEl) newContentEl.scrollTop = currentScrollTop;
+      requestAnimationFrame(() => {
+        if (newContentEl) newContentEl.scrollTo({ top: newContentEl.scrollHeight, behavior: "smooth" });
+      });
+    } else {
+      if (newContentEl) newContentEl.scrollTop = currentScrollTop;
+    }
 
     if (activeSelector) {
       const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
@@ -243,6 +271,186 @@ export class TaskView {
     this.attachListeners();
   }
 
+  private updateDateBtn(dateVal: string) {
+    const btn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    if (!btn) return;
+    if (dateVal) {
+      // dateVal is YYYY-MM-DD. Parsing as T00:00:00 ensures local date.
+      const d = new Date(`${dateVal}T00:00:00`);
+      if (!isNaN(d.getTime())) {
+        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+        return;
+      }
+    }
+    btn.textContent = 'Не задана';
+  }
+
+  private updateTimeBtn(timeVal: string) {
+    const btn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.textContent = timeVal || 'Не задано';
+  }
+
+  private buildDatePicker(currentDate: string, onSelect?: (dateStr: string) => void): HTMLElement {
+    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+
+    const sel = currentDate ? new Date(currentDate + 'T00:00:00Z') : null;
+    let viewYear = sel ? sel.getUTCFullYear() : new Date().getFullYear();
+    let viewMonth = sel ? sel.getUTCMonth() : new Date().getMonth();
+
+    const todayUtc = new Date();
+    const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth()+1).padStart(2,'0')}-${String(todayUtc.getDate()).padStart(2,'0')}`;
+    let selectedStr = currentDate || '';
+
+    const picker = document.createElement('div');
+    picker.className = 'date-picker';
+    picker.dataset.selectedDate = selectedStr;
+
+    const render = () => {
+      picker.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'date-picker__header';
+
+      const prev = document.createElement('button');
+      prev.className = 'date-picker__nav-btn';
+      prev.type = 'button';
+      prev.textContent = '‹';
+      prev.addEventListener('click', (e) => { e.stopPropagation(); viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
+
+      const title = document.createElement('span');
+      title.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const next = document.createElement('button');
+      next.className = 'date-picker__nav-btn';
+      next.type = 'button';
+      next.textContent = '›';
+      next.addEventListener('click', (e) => { e.stopPropagation(); viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
+
+      header.appendChild(prev);
+      header.appendChild(title);
+      header.appendChild(next);
+      picker.appendChild(header);
+
+      const grid = document.createElement('div');
+      grid.className = 'date-picker__grid';
+
+      DAYS.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day-name';
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      let dow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
+      if (dow === 0) dow = 7;
+      dow--;
+
+      const prevLast = new Date(Date.UTC(viewYear, viewMonth, 0)).getUTCDate();
+      for (let i = dow - 1; i >= 0; i--) {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day date-picker__day--other-month';
+        el.textContent = String(prevLast - i);
+        grid.appendChild(el);
+      }
+
+      const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const el = document.createElement('div');
+        el.className = 'date-picker__day';
+        if (dateStr === todayStr) el.classList.add('date-picker__day--today');
+        if (dateStr === selectedStr) el.classList.add('date-picker__day--selected');
+        el.textContent = String(d);
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedStr = dateStr;
+          picker.dataset.selectedDate = dateStr;
+          render();
+          if (onSelect) onSelect(dateStr);
+        });
+        grid.appendChild(el);
+      }
+
+      const total = Math.ceil((dow + daysInMonth) / 7) * 7;
+      for (let d = 1; d <= total - dow - daysInMonth; d++) {
+        const el = document.createElement('div');
+        el.className = 'date-picker__day date-picker__day--other-month';
+        el.textContent = String(d);
+        grid.appendChild(el);
+      }
+
+      picker.appendChild(grid);
+    };
+
+    render();
+    return picker;
+  }
+
+  private buildTimePicker(currentTime: string): HTMLElement {
+    const [h, m] = currentTime ? currentTime.split(':').map(Number) : [0, 0];
+    const picker = document.createElement('div');
+    picker.className = 'time-picker';
+
+    const updateSelectedByScroll = (scroll: HTMLElement) => {
+      const scrollRect = scroll.getBoundingClientRect();
+      const center = scrollRect.top + scrollRect.height / 2;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+      scroll.querySelectorAll<HTMLElement>('.time-picker__num').forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const dist = Math.abs(rect.top + rect.height / 2 - center);
+        if (dist < minDist) { minDist = dist; closest = el; }
+      });
+      scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
+      (closest as HTMLElement | null)?.classList.add('time-picker__num--selected');
+    };
+
+    const createCol = (label: string, count: number, selected: number) => {
+      const col = document.createElement('div');
+      col.className = 'time-picker__col';
+      const labelEl = document.createElement('div');
+      labelEl.className = 'time-picker__col-label';
+      labelEl.textContent = label;
+      col.appendChild(labelEl);
+      const scroll = document.createElement('div');
+      scroll.className = 'time-picker__scroll';
+      for (let i = 0; i < count; i++) {
+        const num = document.createElement('div');
+        num.className = 'time-picker__num' + (i === selected ? ' time-picker__num--selected' : '');
+        num.textContent = String(i).padStart(2, '0');
+        num.dataset.value = String(i);
+        num.addEventListener('click', () => {
+          scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
+          num.classList.add('time-picker__num--selected');
+          num.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+        scroll.appendChild(num);
+      }
+      let scrollTimer: ReturnType<typeof setTimeout>;
+      scroll.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 200);
+      });
+      col.appendChild(scroll);
+      return { col, scroll };
+    };
+
+    const { col: hourCol, scroll: hourScroll } = createCol('Часы', 24, h);
+    const { col: minCol, scroll: minScroll } = createCol('Минуты', 60, m);
+    picker.appendChild(hourCol);
+    picker.appendChild(minCol);
+
+    setTimeout(() => {
+      hourScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
+      minScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
+    }, 0);
+
+    return picker;
+  }
+
   private attachListeners() {
     const state = taskStore.getState();
 
@@ -254,7 +462,8 @@ export class TaskView {
 
       let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
       if (dateVal) {
-        finalDeadline = `${dateVal}T${timeVal || "00:00"}:00Z`;
+        const d = new Date(`${dateVal}T${timeVal || "00:00"}`);
+        finalDeadline = d.toISOString();
       }
 
       const payload = {
@@ -270,6 +479,127 @@ export class TaskView {
         TaskActions.saveTask(state.taskId, payload);
       }
     });
+
+    const dateInput = this.taskNode?.querySelector("#task-date-input") as HTMLInputElement;
+    const dateBtn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    dateBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = this.taskNode?.querySelector(".date-picker");
+      if (existing) { existing.remove(); return; }
+
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+
+      const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
+        dateInput.value = dateStr;
+        this.updateDateBtn(dateStr);
+
+        if (!timeInput.value) {
+          const now = new Date();
+          const target = new Date(
+            parseInt(dateStr.split('-')[0]),
+            parseInt(dateStr.split('-')[1]) - 1,
+            parseInt(dateStr.split('-')[2]),
+            now.getHours() + 1,
+            now.getMinutes()
+          );
+
+          const finalDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+          const finalTime = `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
+
+          dateInput.value = finalDate;
+          this.updateDateBtn(finalDate);
+          timeInput.value = finalTime;
+          this.updateTimeBtn(finalTime);
+        }
+
+        picker.remove();
+        cleanup();
+      });
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      dateBtn.parentElement?.appendChild(picker);
+
+      const cleanup = () => {
+        document.removeEventListener("keydown", onKey);
+        document.removeEventListener("click", onOutside);
+      };
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === "Enter") {
+          const dateStr = picker.dataset.selectedDate;
+          if (dateStr) {
+            dateInput.value = dateStr;
+            this.updateDateBtn(dateStr);
+          }
+          picker.remove();
+          cleanup();
+        } else if (ev.key === "Escape") {
+          picker.remove();
+          cleanup();
+        }
+      };
+      const onOutside = () => { picker.remove(); cleanup(); };
+      setTimeout(() => {
+        document.addEventListener("keydown", onKey);
+        document.addEventListener("click", onOutside);
+      }, 0);
+    });
+
+    const commitTimePicker = (picker: Element, timeInput: HTMLInputElement) => {
+      const sel = picker.querySelectorAll(".time-picker__num--selected");
+      const h = (sel[0] as HTMLElement)?.dataset.value ?? "0";
+      const m = (sel[1] as HTMLElement)?.dataset.value ?? "0";
+      const val = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+      timeInput.value = val;
+      this.updateTimeBtn(val);
+
+      if (!dateInput.value) {
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        dateInput.value = todayStr;
+        this.updateDateBtn(todayStr);
+      }
+
+      picker.remove();
+    };
+
+    const timeBtn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    timeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+      const existing = this.taskNode?.querySelector(".time-picker");
+      if (existing) {
+        commitTimePicker(existing, timeInput);
+        return;
+      }
+      const picker = this.buildTimePicker(timeInput.value);
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      timeBtn.parentElement?.appendChild(picker);
+
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+          commitTimePicker(picker, timeInput);
+          document.removeEventListener("keydown", onKey);
+          document.removeEventListener("click", onOutside);
+        }
+      };
+      const onOutside = () => {
+        commitTimePicker(picker, timeInput);
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onKey);
+      };
+      setTimeout(() => {
+        document.addEventListener("click", onOutside);
+        document.addEventListener("keydown", onKey);
+      }, 0);
+    });
+
+    const saveBtn = this.taskNode?.querySelector("#btn-save-task") as HTMLButtonElement;
+    const titleInput = this.taskNode?.querySelector("#task-title-input") as HTMLInputElement;
+    if (saveBtn && titleInput) {
+      saveBtn.disabled = !titleInput.value.trim();
+      titleInput.addEventListener("input", () => {
+        saveBtn.disabled = !titleInput.value.trim();
+      });
+    }
 
     this.taskNode?.querySelector("#btn-back")?.addEventListener("click", () => {
       navigateTo(`/board?id=${state.boardId}`);
@@ -394,6 +724,7 @@ export class TaskView {
     const submitComment = () => {
       const text = commentInput?.value.trim();
       if (text && state.taskId) {
+        this.scrollToNewComment = true;
         commentInput.value = "";
         TaskActions.addComment(state.taskId, text);
       }
@@ -408,14 +739,21 @@ export class TaskView {
     });
 
     const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
+    const subtaskAddBtn = this.taskNode?.querySelector("#subtask-add-btn") as HTMLButtonElement;
+
+    const submitSubtask = () => {
+      const desc = subtaskInput.value.trim();
+      if (desc && state.taskId) {
+        subtaskInput.value = "";
+        TaskActions.createSubtask(state.taskId, desc);
+      }
+    };
+
+    subtaskAddBtn?.addEventListener("click", submitSubtask);
     subtaskInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const desc = subtaskInput.value.trim();
-        if (desc && state.taskId) {
-          subtaskInput.value = "";
-          TaskActions.createSubtask(state.taskId, desc);
-        }
+        submitSubtask();
       }
     });
 
@@ -458,11 +796,103 @@ export class TaskView {
       });
     });
 
+    this.taskNode?.querySelectorAll(".task__comment-menu-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const dropdown = (e.currentTarget as HTMLElement)
+          .closest(".task__comment-menu-wrap")
+          ?.querySelector(".task__comment-dropdown");
+        this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => {
+          if (d !== dropdown) d.classList.add("hidden");
+        });
+        dropdown?.classList.toggle("hidden");
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__comment-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment");
+        const commentId = commentEl?.getAttribute("data-id");
+        const taskId = state.taskId;
+        if (!commentId || !taskId) return;
+        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
+        showConfirmModal({
+          title: "Удалить комментарий",
+          text: "Вы уверены, что хотите удалить комментарий?",
+          confirmLabel: "Удалить",
+          onConfirm: () => TaskActions.deleteComment(commentId, taskId),
+        });
+      });
+    });
+
+    this.taskNode?.querySelectorAll(".task__comment-edit-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment") as HTMLElement;
+        const commentId = commentEl?.getAttribute("data-id");
+        const taskId = state.taskId;
+        const bubble = commentEl?.querySelector(".task__comment-bubble") as HTMLElement;
+        if (!commentId || !taskId || !bubble) return;
+        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
+
+        const originalText = bubble.textContent ?? "";
+
+        const textarea = document.createElement("textarea");
+        textarea.className = "task__comment-edit-input";
+        textarea.value = originalText;
+
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "task__comment-edit-actions";
+
+        const btnSave = document.createElement("button");
+        btnSave.className = "btn btn--primary task__comment-edit-save";
+        btnSave.textContent = "Сохранить";
+
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "btn btn--cancel task__comment-edit-cancel";
+        btnCancel.textContent = "Отмена";
+
+        actionsDiv.appendChild(btnSave);
+        actionsDiv.appendChild(btnCancel);
+        bubble.replaceWith(textarea);
+        textarea.after(actionsDiv);
+        textarea.focus();
+        textarea.selectionStart = textarea.value.length;
+
+        const cancelEdit = () => {
+          textarea.replaceWith(bubble);
+          actionsDiv.remove();
+        };
+
+        const saveEdit = () => {
+          const newText = textarea.value.trim();
+          if (!newText || newText === originalText) {
+            cancelEdit();
+            return;
+          }
+          TaskActions.updateComment(commentId, newText, taskId);
+        };
+
+        btnSave.addEventListener("click", saveEdit);
+        btnCancel.addEventListener("click", cancelEdit);
+        textarea.addEventListener("keydown", (ev) => {
+          if (ev.key === "Escape") { cancelEdit(); }
+          else if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); saveEdit(); }
+        });
+      });
+    });
+
     this.taskNode?.querySelectorAll(".task__subtask-delete-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
         if (id) {
-          TaskActions.deleteSubtask(id);
+          showConfirmModal({
+            title: "Удалить подзадачу",
+            text: "Вы уверены, что хотите удалить подзадачу?",
+            confirmLabel: "Удалить",
+            onConfirm: () => TaskActions.deleteSubtask(id),
+          });
         }
       });
     });

@@ -19,9 +19,7 @@ export class KanbanColumnManager {
     }, { signal });
 
     appDiv.querySelector("#btn-close-manage")?.addEventListener("click", () => {
-      if (state.boardId) {
-        KanbanActions.fetchKanban(state.boardId, true);
-      }
+      closeModals();
     });
   }
 
