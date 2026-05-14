@@ -1,4 +1,4 @@
-const API_URL = "https://clac-clac.mooo.com/api";
+const API_URL = "https://clac-clac.ru/api";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
