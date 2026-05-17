@@ -1,5 +1,5 @@
 const CACHE_NAME = "clac-clac-__CACHE_VERSION__";
-const API_CACHE_NAME = "clac-clac-api";
+const API_CACHE_NAME = "clac-clac-api-v2";
 
 // eslint-disable-next-line no-undef
 const staticAssets = __PRECACHE_MANIFEST__;
