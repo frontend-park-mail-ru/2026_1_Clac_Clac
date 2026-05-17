@@ -31,7 +31,7 @@ runs:
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
         AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
       run: |
-        ENDPOINT="${{ inputs.endpoint-url }}"
+        ENDPOINT="https://${{ inputs.endpoint-url }}"
         BUCKET="s3://${{ inputs.bucket-name }}"
         SOURCE="${{ inputs.source-dir }}"
 
