@@ -1,0 +1,15 @@
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    uses: ./.github/workflows/build-and-deploy.yaml
+    with:
+      endpoint-url: hb.ru-msk.vkcloud-storage.ru
+      aws-region: ru-msk
+      bucket-name: nexus-frontend
+    secrets:
+      S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+      S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
