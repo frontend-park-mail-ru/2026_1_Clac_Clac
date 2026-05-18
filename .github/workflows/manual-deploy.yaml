@@ -1,4 +1,4 @@
-name: Manual Deploy (deprecated)
+name: Manual Deploy
 
 on:
   workflow_dispatch:
