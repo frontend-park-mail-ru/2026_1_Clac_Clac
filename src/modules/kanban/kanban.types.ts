@@ -19,6 +19,8 @@ export interface Task {
   subtasksDone?: number;
   progressPercent?: number;
   subtasksProgressText?: string;
+  progressPercentStyle?: string;
+  hasSubtasks?: boolean;
   position: number;
 }
 

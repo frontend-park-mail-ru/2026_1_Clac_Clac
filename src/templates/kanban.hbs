@@ -79,10 +79,10 @@
               </div>
               <div class="kanban-card__title">{{title}}</div>
 
-              {{#if subtasksCount}}
+              {{#if hasSubtasks}}
               <div class="kanban-card__subtasks">
                 <div class="kanban-card__progress-bar">
-                  <div class="kanban-card__progress-fill" style="width: {{progressPercent}}%"></div>
+                  <div class="kanban-card__progress-fill" style="{{progressPercentStyle}}"></div>
                 </div>
                 <div class="kanban-card__subtasks-header">
                   <span class="kanban-card__subtasks-title">{{subtasksProgressText}}</span>

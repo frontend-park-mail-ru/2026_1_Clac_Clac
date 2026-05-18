@@ -47,8 +47,12 @@ class KanbanStore extends Store {
 
       const done = task.subtasks.filter((st: any) => st.is_done).length;
       task.subtasksDone = done;
-      task.progressPercent = task.subtasksCount && task.subtasksCount > 0
-        ? Math.round((done / task.subtasksCount) * 100) : 0;
+      const count = task.subtasksCount || 0;
+      const pct = count > 0 ? Math.round((done / count) * 100) : 0;
+      task.progressPercent = pct;
+      task.subtasksProgressText = count > 0 ? `Подзадачи ${done}/${count}` : '';
+      task.progressPercentStyle = count > 0 ? `width: ${pct}%` : 'width: 0%';
+      task.hasSubtasks = count > 0;
       return;
     }
   }
