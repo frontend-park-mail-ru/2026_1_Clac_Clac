@@ -24,9 +24,6 @@ export const BoardsActions = {
         board_name: board.name || "Без названия",
         description: board.description || "Без описания",
         background: board.background || "",
-        backlog: 0,
-        hot: 0,
-        members: 0,
       }));
 
       appDispatcher.dispatch({

@@ -89,6 +89,7 @@ export const KanbanActions = {
             let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
+            const progressPercent = subtasksCount > 0 ? Math.round((subtasksDone / subtasksCount) * 100) : 0;
 
             subtasks = subtasks.map((st: any) => {
               const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
@@ -113,6 +114,7 @@ export const KanbanActions = {
               subtasks,
               subtasksCount,
               subtasksDone,
+              progressPercent,
               position: t.position,
             };
           }).sort((a, b) => a.position - b.position);
@@ -249,7 +251,7 @@ export const KanbanActions = {
     try {
       await kanbanApi.reorderTask(taskId, {
         section_link: targetSectionId,
-        position,
+        position: position + 1,
       });
     } catch (err: unknown) {
       appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });

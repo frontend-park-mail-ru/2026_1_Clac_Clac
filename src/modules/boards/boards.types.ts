@@ -3,9 +3,6 @@ export interface Board {
   board_name: string;
   description: string;
   background: string;
-  backlog: number;
-  hot: number;
-  members: number;
 }
 
 export interface User {
