@@ -90,6 +90,7 @@ export const KanbanActions = {
             const subtasksCount = subtasks.length;
             const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
             const progressPercent = subtasksCount > 0 ? Math.round((subtasksDone / subtasksCount) * 100) : 0;
+            const subtasksProgressText = subtasksCount > 0 ? `Подзадачи ${subtasksDone}/${subtasksCount}` : '';
 
             subtasks = subtasks.map((st: any) => {
               const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
@@ -115,6 +116,7 @@ export const KanbanActions = {
               subtasksCount,
               subtasksDone,
               progressPercent,
+              subtasksProgressText,
               position: t.position,
             };
           }).sort((a, b) => a.position - b.position);
