@@ -4,6 +4,7 @@ import { navigateTo } from "../../../router";
 import { Toast } from "../../../utils/toast";
 import { kanbanApi } from "../../../api";
 import { showConfirmModal } from "../../../utils/confirmModal";
+import { kanbanStore } from "../KanbanStore";
 
 export class KanbanContextMenus {
   private static activeMenu: HTMLElement | null = null;
@@ -61,6 +62,11 @@ export class KanbanContextMenus {
           const subtasksTitle = card.querySelector(".kanban-card__subtasks-title");
           if (subtasksTitle) {
             subtasksTitle.textContent = `Подзадачи ${done}/${total}`;
+          }
+
+          const taskId = card.getAttribute("data-id");
+          if (taskId && subtaskId && desc) {
+            kanbanStore.updateSubtaskSilently(taskId, subtaskId, cb.checked, desc);
           }
         }
 
