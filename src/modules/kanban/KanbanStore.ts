@@ -30,6 +30,33 @@ class KanbanStore extends Store {
     this.state.users =[];
   }
 
+  public updateSubtaskSilently(taskId: string, subtaskId: string, isDone: boolean, description: string): void {
+    for (const section of this.state.sections) {
+      const task = section.tasks.find(t => t.id === taskId);
+      if (!task || !task.subtasks) continue;
+
+      const subtask = task.subtasks.find(st => {
+        const id = (st as any).id || (st as any).subtask_link || (st as any).link || "";
+        return String(id) === String(subtaskId);
+      });
+
+      if (!subtask) continue;
+
+      (subtask as any).is_done = isDone;
+      (subtask as any).description = description;
+
+      const done = task.subtasks.filter((st: any) => st.is_done).length;
+      task.subtasksDone = done;
+      const count = task.subtasksCount || 0;
+      const pct = count > 0 ? Math.round((done / count) * 100) : 0;
+      task.progressPercent = pct;
+      task.subtasksProgressText = count > 0 ? `Подзадачи ${done}/${count}` : '';
+      task.progressPercentStyle = count > 0 ? `width: ${pct}%` : 'width: 0%';
+      task.hasSubtasks = count > 0;
+      return;
+    }
+  }
+
   private handleAction(action: Action): void {
     switch (action.type) {
       case "FETCH_KANBAN_START":

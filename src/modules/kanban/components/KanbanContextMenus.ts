@@ -4,6 +4,7 @@ import { navigateTo } from "../../../router";
 import { Toast } from "../../../utils/toast";
 import { kanbanApi } from "../../../api";
 import { showConfirmModal } from "../../../utils/confirmModal";
+import { kanbanStore } from "../KanbanStore";
 
 export class KanbanContextMenus {
   private static activeMenu: HTMLElement | null = null;
@@ -38,6 +39,7 @@ export class KanbanContextMenus {
       cb.addEventListener("change", () => {
         const subtaskId = cb.getAttribute("data-id");
         const desc = cb.getAttribute("data-desc");
+        const card = cb.closest(".kanban-card") as HTMLElement | null;
 
         const textSpan = cb.parentElement?.querySelector(".kanban-card__subtask-text");
         if (cb.checked) {
@@ -46,10 +48,30 @@ export class KanbanContextMenus {
           textSpan?.classList.remove("kanban-card__subtask-text--done");
         }
 
+        if (card) {
+          const checkboxes = card.querySelectorAll<HTMLInputElement>(".kanban-subtask-checkbox");
+          const total = checkboxes.length;
+          const done = Array.from(checkboxes).filter(c => c.checked).length;
+          const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+          const progressFill = card.querySelector(".kanban-card__progress-fill") as HTMLElement | null;
+          if (progressFill) {
+            progressFill.style.width = `${percent}%`;
+          }
+
+          const subtasksTitle = card.querySelector(".kanban-card__subtasks-title");
+          if (subtasksTitle) {
+            subtasksTitle.textContent = `Подзадачи ${done}/${total}`;
+          }
+
+          const taskId = card.getAttribute("data-id");
+          if (taskId && subtaskId && desc) {
+            kanbanStore.updateSubtaskSilently(taskId, subtaskId, cb.checked, desc);
+          }
+        }
+
         if (subtaskId && desc) {
-          kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc }).then(() => {
-            KanbanActions.fetchKanban(state.boardId!, true);
-          });
+          kanbanApi.updateSubtask(subtaskId, { is_done: cb.checked, description: desc });
         }
       });
     });
