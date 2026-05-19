@@ -252,5 +252,42 @@ export const TaskActions = {
     } catch (e) {
       console.error("Delete subtask error", e);
     }
-  }
+  },
+
+
+  async uploadAttachment(taskId: string, file: File): Promise<boolean> {
+    try {
+      const formData = new FormData();
+      formData.append("file", file); 
+
+      const res = await kanbanApi.uploadAttachment(taskId, formData);
+      
+      appDispatcher.dispatch({
+        type: TaskActionTypes.ADD_ATTACHMENT_SUCCESS,
+        payload: { attachment: res.data }
+      });
+      Toast.success(`Файл ${file.name} загружен`);
+      return true;
+    } catch (e) {
+      console.error("Upload attachment error", e);
+      Toast.error(`Ошибка при загрузке ${file.name}`);
+      return false;
+    }
+  },
+
+  async deleteAttachment(attachmentLink: string) {
+    try {
+      await kanbanApi.deleteAttachment(attachmentLink);
+      
+      appDispatcher.dispatch({
+        type: TaskActionTypes.DELETE_ATTACHMENT_SUCCESS,
+        payload: { link: attachmentLink }
+      });
+      Toast.success("Файл удален");
+    } catch (e) {
+      console.error("Delete attachment error", e);
+      Toast.error("Ошибка при удалении файла");
+    }
+  },
+
 };

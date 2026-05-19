@@ -15,6 +15,7 @@ export interface TaskState {
   error: string | null;
   isLoading: boolean;
   isSaving: boolean;
+  attachments: any[];
 }
 
 export const TaskActionTypes = {
@@ -34,4 +35,6 @@ export const TaskActionTypes = {
   ADD_SUBTASK_SUCCESS: "TASK_ADD_SUBTASK_SUCCESS",
   UPDATE_SUBTASK_SUCCESS: "TASK_UPDATE_SUBTASK_SUCCESS",
   DELETE_SUBTASK_SUCCESS: "TASK_DELETE_SUBTASK_SUCCESS",
+  ADD_ATTACHMENT_SUCCESS: "TASK_ADD_ATTACHMENT_SUCCESS",
+  DELETE_ATTACHMENT_SUCCESS: "TASK_DELETE_ATTACHMENT_SUCCESS",
 };

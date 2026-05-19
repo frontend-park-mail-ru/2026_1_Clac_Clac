@@ -140,6 +140,11 @@ export interface CardResponse {
   title: string;
   position: number;
 }
+export interface AttachmentResponse {
+  attachment_link: string;
+  name: string;
+  url: string;
+}
 export interface CardsResponse {
   cards: Card[];
 }
@@ -426,6 +431,9 @@ export const kanbanApi = {
   createSubtask: (taskLink: string, data: CreateSubtaskRequest) => apiClient.post<ApiResponse<SubtaskResponse>, CreateSubtaskRequest>(`/cards/${taskLink}/subtasks`, data),
   updateSubtask: (subtaskLink: string, data: UpdateSubtaskRequest) => apiClient.put<BaseResponse, UpdateSubtaskRequest>(`/subtasks/${subtaskLink}`, data),
   deleteSubtask: (subtaskLink: string) => apiClient.delete<BaseResponse>(`/subtasks/${subtaskLink}`),
+
+  uploadAttachment: (taskLink: string, formData: FormData) => apiClient.post<ApiResponse<AttachmentResponse>, FormData>(`/cards/${taskLink}/attachments`, formData),
+  deleteAttachment: (attachmentLink: string) => apiClient.delete<BaseResponse>(`/attachments/${attachmentLink}`),
 };
 
 const categoryMap: Record<string, string> = {
