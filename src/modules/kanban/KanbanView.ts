@@ -9,6 +9,7 @@ import { KanbanContextMenus } from "./components/KanbanContextMenus";
 import { KanbanTaskCreation } from "./components/KanbanTaskCreation";
 import { KanbanColumnManager } from "./components/KanbanColumnManager";
 import { showConfirmModal } from "../../utils/confirmModal";
+import { Toast } from "../../utils/toast";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -79,7 +80,7 @@ export class KanbanView {
 
   private attachEventListeners(state: KanbanState, signal: AbortSignal): void {
     const closeModals = (): void => {
-      this.appDiv.querySelectorAll(".modal, .manage-columns").forEach((m) => m.classList.add("hidden"));
+      this.appDiv.querySelectorAll(".modal, .manage-columns, .share-modal").forEach((m) => m.classList.add("hidden"));
       this.appDiv.querySelector("#modal-overlay")?.classList.add("hidden");
       document.querySelectorAll(".assignee-dropdown").forEach(dd => dd.remove());
       KanbanContextMenus.closeMenu();
@@ -104,6 +105,80 @@ export class KanbanView {
           }
         },
       });
+    }, { signal });
+
+    document.getElementById("btn-share-board")?.addEventListener("click", () => {
+      const shareModal = this.appDiv.querySelector("#modal-share") as HTMLElement;
+      const overlay = this.appDiv.querySelector("#modal-overlay") as HTMLElement;
+      const linkInput = this.appDiv.querySelector("#share-link-input") as HTMLInputElement;
+
+      const boardUrl = window.location.href;
+      if (linkInput) linkInput.value = boardUrl;
+
+      overlay?.classList.remove("hidden");
+      shareModal?.classList.remove("hidden");
+    }, { signal });
+
+    const shareModal = this.appDiv.querySelector("#modal-share") as HTMLElement;
+    const shareOverlay = this.appDiv.querySelector("#modal-overlay") as HTMLElement;
+
+    const closeShareModal = (): void => {
+      shareModal?.classList.add("hidden");
+      const anyOtherModal = this.appDiv.querySelector(".modal:not(.hidden), .manage-columns:not(.hidden)");
+      if (!anyOtherModal) {
+        shareOverlay?.classList.add("hidden");
+      }
+    };
+
+    this.appDiv.querySelector("#share-close-btn")?.addEventListener("click", closeShareModal, { signal });
+    this.appDiv.querySelector("#share-cancel-btn")?.addEventListener("click", closeShareModal, { signal });
+
+    this.appDiv.querySelectorAll<HTMLElement>(".share-modal__toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.appDiv.querySelectorAll<HTMLElement>(".share-modal__toggle-btn").forEach((b) =>
+          b.classList.remove("share-modal__toggle-btn--active")
+        );
+        btn.classList.add("share-modal__toggle-btn--active");
+
+        const roleWrapper = this.appDiv.querySelector("#share-role-wrapper") as HTMLElement;
+        if (btn.getAttribute("data-role") === "member") {
+          roleWrapper?.classList.remove("hidden");
+        } else {
+          roleWrapper?.classList.add("hidden");
+        }
+      }, { signal });
+    });
+
+    const roleSelect = this.appDiv.querySelector("#share-role-select") as HTMLElement;
+    const roleDropdown = this.appDiv.querySelector("#share-role-dropdown") as HTMLElement;
+    const roleText = this.appDiv.querySelector("#share-role-text") as HTMLElement;
+
+    roleSelect?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      roleDropdown?.classList.toggle("hidden");
+    }, { signal });
+
+    this.appDiv.querySelectorAll<HTMLElement>(".share-modal__role-option").forEach((option) => {
+      option.addEventListener("click", () => {
+        const label = option.textContent || "Участник";
+        if (roleText) roleText.textContent = label;
+        roleDropdown?.classList.add("hidden");
+      }, { signal });
+    });
+
+    this.appDiv.querySelector("#share-copy-link-btn")?.addEventListener("click", () => {
+      const linkInput = this.appDiv.querySelector("#share-link-input") as HTMLInputElement;
+      if (linkInput) {
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+          Toast.success("Ссылка скопирована");
+        });
+      }
+    }, { signal });
+
+    document.addEventListener("click", (e) => {
+      if (roleSelect && !roleSelect.contains(e.target as Node) && roleDropdown && !roleDropdown.contains(e.target as Node)) {
+        roleDropdown?.classList.add("hidden");
+      }
     }, { signal });
 
     this.appDiv.querySelector("#modal-overlay")?.addEventListener("click", (e: Event) => {
