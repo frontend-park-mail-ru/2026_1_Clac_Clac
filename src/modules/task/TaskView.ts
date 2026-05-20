@@ -15,8 +15,6 @@ export class TaskView {
   private currentExecuterId: string = "";
   private isFirstRender: boolean = true;
   private scrollToNewComment: boolean = false;
-    private pendingFiles: File[] = [];
-  private isUploadingFiles: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -38,8 +36,6 @@ export class TaskView {
   }
 
   public destroy() {
-    this.pendingFiles = [];
-    this.isUploadingFiles = false;
     taskStore.off("change", this.onStoreChangeBound);
     taskStore.off("success", this.onStoreSuccessBound);
     taskStore.off("error", this.onStoreErrorBound);
@@ -461,20 +457,16 @@ export class TaskView {
 
     const fileInput = this.taskNode?.querySelector("#task-file-input") as HTMLInputElement;
     if (fileInput) {
-      fileInput.addEventListener("change", (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.files && target.files.length > 0) {
-          const newFiles = Array.from(target.files);
-          if (this.pendingFiles.length + newFiles.length > 10) {
-            Toast.error("Максимум можно прикрепить 10 файлов за раз");
-          } else {
-            this.pendingFiles.push(...newFiles);
+      fileInput.addEventListener("change", async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const state = taskStore.getState();
+          if (state.taskId) {
+            await TaskActions.uploadAttachment(state.taskId, file);
           }
-          this.renderPendingFiles();
         }
-        target.value = "";
+        fileInput.value = "";
       });
-      this.renderPendingFiles();
     }
 
     this.taskNode?.querySelectorAll(".task__attachment-delete-btn").forEach((btn) => {
@@ -933,102 +925,5 @@ export class TaskView {
         }
       });
     });
-  }
-
-
-private renderPendingFiles() {
-    const container = this.taskNode?.querySelector("#task-pending-files-container") as HTMLElement;
-    const fileNameSpan = this.taskNode?.querySelector("#task-file-name") as HTMLElement;
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    if (this.pendingFiles.length === 0) {
-      if (fileNameSpan) fileNameSpan.textContent = "Добавить файл";
-      return;
-    }
-
-    if (fileNameSpan) {
-      fileNameSpan.textContent = this.pendingFiles.length === 1 
-        ? this.pendingFiles[0].name 
-        : `Выбрано файлов: ${this.pendingFiles.length}`;
-    }
-
-    const list = document.createElement("div");
-    list.style.display = "flex";
-    list.style.flexDirection = "column";
-    list.style.gap = "8px";
-    list.style.marginBottom = "12px";
-
-    this.pendingFiles.forEach((file, index) => {
-      const item = document.createElement("div");
-      item.style.display = "flex";
-      item.style.alignItems = "center";
-      item.style.justifyContent = "space-between";
-      item.style.padding = "6px 12px";
-      item.style.fontSize = "14px";
-      item.style.border = "none";
-      item.style.outline = "none";
-
-      const name = document.createElement("span");
-      name.textContent = file.name;
-      name.style.overflow = "hidden";
-      name.style.textOverflow = "ellipsis";
-      name.style.whiteSpace = "nowrap";
-
-      const removeBtn = document.createElement("button");
-      removeBtn.innerHTML = "&times;";
-      removeBtn.style.border = "none";
-      removeBtn.style.background = "transparent";
-      removeBtn.style.color = "red";
-      removeBtn.style.cursor = "pointer";
-      removeBtn.style.fontSize = "18px";
-      
-      if (this.isUploadingFiles) {
-        removeBtn.disabled = true;
-        removeBtn.style.opacity = "0.5";
-        item.style.background = "transparent";
-      } else {
-        removeBtn.onclick = () => {
-          this.pendingFiles.splice(index, 1);
-          this.renderPendingFiles();
-        };
-      }
-
-      item.appendChild(name);
-      item.appendChild(removeBtn);
-      list.appendChild(item);
-    });
-
-    const uploadBtn = document.createElement("button");
-    uploadBtn.className = "btn btn--primary";
-    uploadBtn.style.width = "100%";
-    uploadBtn.textContent = this.isUploadingFiles ? "Загрузка..." : `Загрузить файлы (${this.pendingFiles.length})`;
-    uploadBtn.disabled = this.isUploadingFiles;
-
-    uploadBtn.onclick = async () => {
-      const state = taskStore.getState();
-      if (!state.taskId) return;
-
-      this.isUploadingFiles = true;
-      this.renderPendingFiles();
-
-      const filesToUpload = [...this.pendingFiles];
-
-      for (const file of filesToUpload) {
-        const success = await TaskActions.uploadAttachment(state.taskId, file);
-        if (success) {
-          this.pendingFiles = this.pendingFiles.filter(f => f !== file);
-        }
-        this.renderPendingFiles();
-      }
-
-      this.isUploadingFiles = false;
-      this.renderPendingFiles();
-    };
-
-    container.appendChild(list);
-    container.appendChild(uploadBtn);
   }
 }

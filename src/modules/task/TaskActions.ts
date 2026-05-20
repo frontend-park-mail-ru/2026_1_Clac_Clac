@@ -255,23 +255,21 @@ export const TaskActions = {
   },
 
 
-  async uploadAttachment(taskId: string, file: File): Promise<boolean> {
+  async uploadAttachment(taskId: string, file: File) {
     try {
       const formData = new FormData();
-      formData.append("file", file); 
+      formData.append("attachment", file);
 
       const res = await kanbanApi.uploadAttachment(taskId, formData);
-      
+
       appDispatcher.dispatch({
         type: TaskActionTypes.ADD_ATTACHMENT_SUCCESS,
         payload: { attachment: res.data }
       });
       Toast.success(`Файл ${file.name} загружен`);
-      return true;
     } catch (e) {
       console.error("Upload attachment error", e);
       Toast.error(`Ошибка при загрузке ${file.name}`);
-      return false;
     }
   },
 
