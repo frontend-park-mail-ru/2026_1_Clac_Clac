@@ -230,6 +230,8 @@ export class TaskView {
       },
       comments: state.comments,
       attachments: state.attachments,
+      attachmentsCount: state.attachments.length,
+      isAttachmentsFull: state.attachments.length >= 5,
     });
 
     if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
@@ -461,6 +463,11 @@ export class TaskView {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           const state = taskStore.getState();
+          if (state.attachments.length >= 5) {
+            Toast.error("Максимум 5 файлов на задачу");
+            fileInput.value = "";
+            return;
+          }
           if (state.taskId) {
             await TaskActions.uploadAttachment(state.taskId, file);
           }

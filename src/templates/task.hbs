@@ -152,7 +152,7 @@
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span id="task-file-name">Добавить файл</span>
+        <span id="task-file-name">{{#if isAttachmentsFull}}Лимит файлов (5/5){{else}}{{#if (eq attachmentsCount 0)}}Добавить файл{{else}}Добавить файл ({{attachmentsCount}}/5){{/if}}{{/if}}</span>
         <input type="file" id="task-file-input" class="hidden" />
       </label>
     </div>
