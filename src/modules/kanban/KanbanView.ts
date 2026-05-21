@@ -42,7 +42,7 @@ export class KanbanView {
     const scrollMap = new Map<string, number>();
     const expandedTasks = new Set<string>();
 
-    const wrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    const wrapper = this.appDiv.querySelector(".kanban__columns-container");
     const wrapperScrollLeft = wrapper ? wrapper.scrollLeft : 0;
 
     this.appDiv
@@ -104,7 +104,7 @@ export class KanbanView {
       this.renderGanttChart(state);
     });
 
-    const newWrapper = this.appDiv.querySelector(".kanban__columns-wrapper");
+    const newWrapper = this.appDiv.querySelector(".kanban__columns-container");
     if (newWrapper) newWrapper.scrollLeft = wrapperScrollLeft;
 
     this.appDiv
@@ -386,7 +386,7 @@ export class KanbanView {
         const cb = leftRow.querySelector(
           ".gantt-subtask-cb",
         ) as HTMLInputElement;
-        cb?.addEventListener("click", (e) => e.stopPropagation());
+        cb?.addEventListener("click", (ev) => ev.stopPropagation());
         cb?.addEventListener("change", async () => {
           try {
             await kanbanApi.updateSubtask(item.id, {
