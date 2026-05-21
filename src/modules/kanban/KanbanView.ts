@@ -14,6 +14,35 @@ import { KanbanActions } from "./KanbanActions";
 
 const template = Handlebars.compile(kanbanTpl);
 
+/*
+const openLightbox = (url: string, name: string) => {
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox-overlay";
+  overlay.innerHTML = `
+    <div class="lightbox-container">
+      <button class="lightbox-close">&times;</button>
+      <img src="${url}" alt="${name}" class="lightbox-img">
+      <div class="lightbox-caption">${name}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("lightbox-overlay--visible");
+  });
+
+  const close = () => {
+    overlay.classList.remove("lightbox-overlay--visible");
+    setTimeout(() => overlay.remove(), 250);
+  };
+
+  overlay.querySelector(".lightbox-close")?.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+};
+*/
+
 export class KanbanView {
   private appDiv: HTMLElement;
   private abortController: AbortController | null = null;
@@ -22,6 +51,12 @@ export class KanbanView {
 
   private collapsedSections = new Set<string>();
   private collapsedTasks = new Set<string>();
+
+  private ganttFilterEnabled = false;
+  private ganttFilterStartDate: Date | null = null;
+  private ganttFilterEndDate: Date | null = null;
+  private ganttFilterWithTime = false;
+  private ganttFilterWithStart = false;
 
   constructor(appDiv: HTMLElement) {
     this.appDiv = appDiv;
@@ -73,16 +108,21 @@ export class KanbanView {
     const ganttContainer = this.appDiv.querySelector(
       "#gantt-chart-container",
     ) as HTMLElement;
+    const filterContainer = this.appDiv.querySelector(
+      "#gantt-filter-container",
+    ) as HTMLElement;
 
     if (this.currentView === "gantt") {
       kanbanWrapper?.classList.add("hidden");
       ganttContainer?.classList.remove("hidden");
+      filterContainer?.classList.remove("hidden");
       tabGantt?.classList.add("active");
       tabKanban?.classList.remove("active");
       this.renderGanttChart(state);
     } else {
       kanbanWrapper?.classList.remove("hidden");
       ganttContainer?.classList.add("hidden");
+      filterContainer?.classList.add("hidden");
       tabKanban?.classList.add("active");
       tabGantt?.classList.remove("active");
     }
@@ -91,6 +131,7 @@ export class KanbanView {
       this.currentView = "kanban";
       kanbanWrapper?.classList.remove("hidden");
       ganttContainer?.classList.add("hidden");
+      filterContainer?.classList.add("hidden");
       tabKanban.classList.add("active");
       tabGantt?.classList.remove("active");
     });
@@ -99,6 +140,7 @@ export class KanbanView {
       this.currentView = "gantt";
       kanbanWrapper?.classList.add("hidden");
       ganttContainer?.classList.remove("hidden");
+      filterContainer?.classList.remove("hidden");
       tabGantt.classList.add("active");
       tabKanban?.classList.remove("active");
       this.renderGanttChart(state);
@@ -127,6 +169,306 @@ export class KanbanView {
     });
 
     this.attachEventListeners(state, this.abortController.signal);
+  }
+
+  private buildFilterCalendar(
+    currentDate: Date | null,
+    onSelect: (d: Date) => void,
+  ): HTMLElement {
+    const MONTHS = [
+      "Январь",
+      "Февраль",
+      "Март",
+      "Апрель",
+      "Май",
+      "Июнь",
+      "Июль",
+      "Август",
+      "Сентябрь",
+      "Октябрь",
+      "Ноябрь",
+      "Декабрь",
+    ];
+    const DAYS = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
+
+    let viewYear = currentDate
+      ? currentDate.getFullYear()
+      : new Date().getFullYear();
+    let viewMonth = currentDate
+      ? currentDate.getMonth()
+      : new Date().getMonth();
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+    const selectedStr = currentDate
+      ? `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`
+      : "";
+
+    const cal = document.createElement("div");
+    cal.className = "gantt-filter-calendar";
+
+    const render = () => {
+      cal.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.className = "date-picker__header";
+
+      const prev = document.createElement("button");
+      prev.className = "date-picker__nav-btn";
+      prev.textContent = "‹";
+      prev.type = "button";
+      prev.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewMonth--;
+        if (viewMonth < 0) {
+          viewMonth = 11;
+          viewYear--;
+        }
+        render();
+      });
+
+      const title = document.createElement("span");
+      title.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const next = document.createElement("button");
+      next.className = "date-picker__nav-btn";
+      next.textContent = "›";
+      next.type = "button";
+      next.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewMonth++;
+        if (viewMonth > 11) {
+          viewMonth = 0;
+          viewYear++;
+        }
+        render();
+      });
+
+      header.appendChild(prev);
+      header.appendChild(title);
+      header.appendChild(next);
+      cal.appendChild(header);
+
+      const grid = document.createElement("div");
+      grid.className = "date-picker__grid";
+
+      DAYS.forEach((d) => {
+        const el = document.createElement("div");
+        el.className = "date-picker__day-name";
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      let dow = new Date(viewYear, viewMonth, 1).getDay();
+      if (dow === 0) dow = 7;
+      dow--;
+
+      const prevLast = new Date(viewYear, viewMonth, 0).getDate();
+      for (let i = dow - 1; i >= 0; i--) {
+        const el = document.createElement("div");
+        el.className = "date-picker__day date-picker__day--other-month";
+        el.textContent = String(prevLast - i);
+        grid.appendChild(el);
+      }
+
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${viewYear}-${viewMonth}-${d}`;
+        const el = document.createElement("div");
+        el.className = "date-picker__day";
+        if (dateStr === todayStr) el.classList.add("date-picker__day--today");
+        if (dateStr === selectedStr)
+          el.classList.add("date-picker__day--selected");
+        el.textContent = String(d);
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          onSelect(new Date(viewYear, viewMonth, d));
+        });
+        grid.appendChild(el);
+      }
+
+      const total = Math.ceil((dow + daysInMonth) / 7) * 7;
+      for (let d = 1; d <= total - dow - daysInMonth; d++) {
+        const el = document.createElement("div");
+        el.className = "date-picker__day date-picker__day--other-month";
+        el.textContent = String(d);
+        grid.appendChild(el);
+      }
+
+      cal.appendChild(grid);
+    };
+
+    render();
+    return cal;
+  }
+
+  private renderGanttFilterPopover(state: KanbanState) {
+    const popover = this.appDiv.querySelector(
+      "#gantt-filter-popover",
+    ) as HTMLElement;
+    if (!popover) return;
+
+    popover.innerHTML = "";
+
+    if (this.ganttFilterWithStart) {
+      popover.className = "gantt-filter-popover gantt-filter-popover--double";
+    } else {
+      popover.className = "gantt-filter-popover";
+    }
+
+    let tempStartDate = this.ganttFilterStartDate
+      ? new Date(this.ganttFilterStartDate)
+      : new Date(Date.now() - 3 * 86400000);
+    let tempEndDate = this.ganttFilterEndDate
+      ? new Date(this.ganttFilterEndDate)
+      : new Date(Date.now() + 3 * 86400000);
+
+    const formatDateToInput = (d: Date | null): string => {
+      if (!d) return "";
+      return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+    };
+
+    const formatTimeToInput = (d: Date | null): string => {
+      if (!d) return "00:00";
+      return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    };
+
+    const buildInputsRow = () => {
+      const row = document.createElement("div");
+      row.className = "gantt-filter-inputs-row";
+
+      if (this.ganttFilterWithStart) {
+        row.innerHTML = `
+          <div class="gantt-filter-input-group">
+            <span>с</span>
+            <input type="text" id="gantt-val-date-from" class="gantt-filter-field" value="${formatDateToInput(tempStartDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempStartDate)}" readonly>` : ""}
+          </div>
+          <div class="gantt-filter-input-group">
+            <span>до</span>
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(tempEndDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempEndDate)}" readonly>` : ""}
+          </div>
+        `;
+      } else {
+        row.innerHTML = `
+          <div class="gantt-filter-input-group">
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(tempEndDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempEndDate)}" readonly>` : ""}
+          </div>
+        `;
+      }
+      return row;
+    };
+
+    popover.appendChild(buildInputsRow());
+
+    const calendarsContainer = document.createElement("div");
+    calendarsContainer.className = "gantt-filter-calendars";
+
+    if (this.ganttFilterWithStart) {
+      const calFrom = this.buildFilterCalendar(tempStartDate, (d) => {
+        tempStartDate = d;
+        refreshPopover();
+      });
+      calendarsContainer.appendChild(calFrom);
+    }
+
+    const calTo = this.buildFilterCalendar(tempEndDate, (d) => {
+      tempEndDate = d;
+      refreshPopover();
+    });
+    calendarsContainer.appendChild(calTo);
+
+    popover.appendChild(calendarsContainer);
+
+    const togglesContainer = document.createElement("div");
+    togglesContainer.className = "gantt-filter-toggles";
+
+    togglesContainer.innerHTML = `
+      <div class="gantt-filter-toggle-item">
+        <span>Добавить время</span>
+        <label class="toggle">
+          <input type="checkbox" id="gantt-toggle-time" ${this.ganttFilterWithTime ? "checked" : ""}>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="gantt-filter-toggle-item">
+        <span>Добавить дату начала</span>
+        <label class="toggle">
+          <input type="checkbox" id="gantt-toggle-start" ${this.ganttFilterWithStart ? "checked" : ""}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
+
+    popover.appendChild(togglesContainer);
+
+    const actionsContainer = document.createElement("div");
+    actionsContainer.className = "gantt-filter-actions";
+
+    const btnReset = document.createElement("button");
+    btnReset.className = "gantt-filter-btn gantt-filter-btn--cancel";
+    btnReset.textContent = "Сбросить";
+    btnReset.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      this.ganttFilterEnabled = false;
+      this.ganttFilterStartDate = null;
+      this.ganttFilterEndDate = null;
+      popover.classList.add("hidden");
+      const label = this.appDiv.querySelector(
+        "#gantt-filter-label",
+      ) as HTMLElement;
+      if (label) label.textContent = "Период: Все";
+      this.renderGanttChart(state);
+    });
+
+    const btnApply = document.createElement("button");
+    btnApply.className = "gantt-filter-btn gantt-filter-btn--apply";
+    btnApply.textContent = "Применить";
+    btnApply.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      this.ganttFilterEnabled = true;
+      this.ganttFilterStartDate = this.ganttFilterWithStart
+        ? tempStartDate
+        : null;
+      this.ganttFilterEndDate = tempEndDate;
+
+      popover.classList.add("hidden");
+      const label = this.appDiv.querySelector(
+        "#gantt-filter-label",
+      ) as HTMLElement;
+      if (label) {
+        if (this.ganttFilterWithStart) {
+          label.textContent = `Период: ${formatDateToInput(tempStartDate)} - ${formatDateToInput(tempEndDate)}`;
+        } else {
+          label.textContent = `День: ${formatDateToInput(tempEndDate)}`;
+        }
+      }
+      this.renderGanttChart(state);
+    });
+
+    actionsContainer.appendChild(btnReset);
+    actionsContainer.appendChild(btnApply);
+    popover.appendChild(actionsContainer);
+
+    popover
+      .querySelector("#gantt-toggle-time")
+      ?.addEventListener("change", (ev) => {
+        this.ganttFilterWithTime = (ev.target as HTMLInputElement).checked;
+        refreshPopover();
+      });
+
+    popover
+      .querySelector("#gantt-toggle-start")
+      ?.addEventListener("change", (ev) => {
+        this.ganttFilterWithStart = (ev.target as HTMLInputElement).checked;
+        refreshPopover();
+      });
+
+    const refreshPopover = () => {
+      this.renderGanttFilterPopover(state);
+    };
   }
 
   private renderGanttChart(state: KanbanState) {
@@ -166,23 +508,54 @@ export class KanbanView {
       return null;
     };
 
+    const filterActive = this.ganttFilterEnabled;
+    const tStart = this.ganttFilterStartDate
+      ? this.ganttFilterStartDate.getTime()
+      : this.ganttFilterEndDate
+        ? this.ganttFilterEndDate.getTime() - 86400000
+        : 0;
+    const tEnd = this.ganttFilterEndDate
+      ? this.ganttFilterEndDate.getTime() + 86400000
+      : 0;
+
     state.sections.forEach((sec) => {
-      flatItems.push({
-        type: "section",
-        id: sec.id,
-        name: sec.section_name,
-        color: sec.color,
-        isExpanded: !this.collapsedSections.has(sec.id),
-      });
+      const matchingTasks: any[] = [];
 
-      if (!this.collapsedSections.has(sec.id)) {
-        sec.tasks.forEach((task) => {
-          const end =
-            parseDueDate(task.due_date || "") ||
-            new Date(Date.now() + (task.id.charCodeAt(0) % 5) * 86400000);
-          const start = new Date(end.getTime() - 4 * 86400000);
+      sec.tasks.forEach((task) => {
+        const end =
+          parseDueDate(task.due_date || "") ||
+          new Date(Date.now() + (task.id.charCodeAt(0) % 5) * 86400000);
+        const start = new Date(end.getTime() - 4 * 86400000);
 
-          flatItems.push({
+        const subtasks = task.subtasks || [];
+        const N = subtasks.length;
+        const formattedSubs: any[] = [];
+
+        subtasks.forEach((sub, i) => {
+          const step = N > 0 ? (end.getTime() - start.getTime()) / N : 0;
+          const subStart = new Date(start.getTime() + i * step);
+          const subEnd = new Date(start.getTime() + (i + 1) * step);
+
+          const overlaps =
+            !filterActive ||
+            (subStart.getTime() < tEnd && subEnd.getTime() > tStart);
+          if (overlaps) {
+            formattedSubs.push({
+              type: "subtask",
+              id: sub.link || (sub as any).id,
+              taskId: task.id,
+              name: sub.description,
+              start: subStart,
+              end: subEnd,
+              is_done: sub.is_done,
+            });
+          }
+        });
+
+        const taskOverlaps =
+          !filterActive || (start.getTime() < tEnd && end.getTime() > tStart);
+        if (taskOverlaps || formattedSubs.length > 0) {
+          matchingTasks.push({
             type: "task",
             id: task.id,
             sectionId: sec.id,
@@ -192,28 +565,30 @@ export class KanbanView {
             due_date: task.due_date,
             isExpanded: !this.collapsedTasks.has(task.id),
             subtasks: task.subtasks || [],
+            subsRenderList: formattedSubs,
           });
+        }
+      });
 
-          if (!this.collapsedTasks.has(task.id)) {
-            const subtasks = task.subtasks || [];
-            const N = subtasks.length;
-            subtasks.forEach((sub, i) => {
-              const step = N > 0 ? (end.getTime() - start.getTime()) / N : 0;
-              const subStart = new Date(start.getTime() + i * step);
-              const subEnd = new Date(start.getTime() + (i + 1) * step);
-
-              flatItems.push({
-                type: "subtask",
-                id: sub.link || (sub as any).id,
-                taskId: task.id,
-                name: sub.description,
-                start: subStart,
-                end: subEnd,
-                is_done: sub.is_done,
-              });
-            });
-          }
+      if (!filterActive || matchingTasks.length > 0) {
+        flatItems.push({
+          type: "section",
+          id: sec.id,
+          name: sec.section_name,
+          color: sec.color,
+          isExpanded: !this.collapsedSections.has(sec.id),
         });
+
+        if (!this.collapsedSections.has(sec.id)) {
+          matchingTasks.forEach((task) => {
+            flatItems.push(task);
+            if (!this.collapsedTasks.has(task.id)) {
+              task.subsRenderList.forEach((sub: any) => {
+                flatItems.push(sub);
+              });
+            }
+          });
+        }
       }
     });
 
@@ -231,8 +606,19 @@ export class KanbanView {
       maxTime = Date.now() + 3 * 86400000;
     }
 
-    const timelineStart = minTime - 3 * 86400000;
-    const timelineEnd = maxTime + 3 * 86400000;
+    let timelineStart = minTime - 3 * 86400000;
+    let timelineEnd = maxTime + 3 * 86400000;
+
+    if (this.ganttFilterEnabled) {
+      if (this.ganttFilterStartDate) {
+        timelineStart = this.ganttFilterStartDate.getTime();
+        timelineEnd = this.ganttFilterEndDate?.getTime() || Infinity;
+      } else if (this.ganttFilterEndDate) {
+        timelineStart = this.ganttFilterEndDate.getTime() - 2 * 86400000;
+        timelineEnd = this.ganttFilterEndDate.getTime() + 2 * 86400000;
+      }
+    }
+
     const timelineDuration = timelineEnd - timelineStart;
     const totalDays = Math.round(timelineDuration / 86400000);
 
@@ -455,6 +841,9 @@ export class KanbanView {
         .querySelectorAll(".modal, .manage-columns")
         .forEach((m) => m.classList.add("hidden"));
       this.appDiv.querySelector("#modal-overlay")?.classList.add("hidden");
+      this.appDiv
+        .querySelector("#gantt-filter-popover")
+        ?.classList.add("hidden");
       document
         .querySelectorAll(".assignee-dropdown")
         .forEach((dd) => dd.remove());
@@ -664,6 +1053,28 @@ export class KanbanView {
       },
       { signal },
     );
+
+    this.appDiv
+      .querySelector("#btn-gantt-filter")
+      ?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const popover = this.appDiv.querySelector(
+          "#gantt-filter-popover",
+        ) as HTMLElement;
+        if (popover) {
+          const wasHidden = popover.classList.contains("hidden");
+          closeModals();
+          if (wasHidden) {
+            popover.classList.remove("hidden");
+            this.renderGanttFilterPopover(state);
+          }
+        }
+      });
+
+    const filterPopover = this.appDiv.querySelector("#gantt-filter-popover");
+    filterPopover?.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
 
     if (state.boardId) {
       KanbanColumnManager.bind(this.appDiv, state, closeModals, signal);

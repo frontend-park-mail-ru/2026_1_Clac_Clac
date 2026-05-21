@@ -48,6 +48,19 @@
     <div class="kanban__view-tabs">
       <button class="kanban__view-tab active" id="tab-view-kanban">Канбан</button>
       <button class="kanban__view-tab" id="tab-view-gantt">Диаграмма Ганта</button>
+
+      <div class="gantt-filter hidden" id="gantt-filter-container">
+        <button class="kanban__view-tab" id="btn-gantt-filter" style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span id="gantt-filter-label">Период: Все</span>
+        </button>
+        <div id="gantt-filter-popover" class="gantt-filter-popover hidden"></div>
+      </div>
     </div>
 
     <div class="kanban__columns-wrapper">
