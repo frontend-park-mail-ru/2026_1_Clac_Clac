@@ -13,7 +13,7 @@ interface ExtendedCommentResponse extends CommentResponse {
   is_mine?: boolean;
   show_date_header?: boolean;
   date_header?: string;
-};
+}
 
 const months = [
   "января",
@@ -66,8 +66,7 @@ export const TaskActions = {
         kanbanApi.getTask(taskId),
         profileApi.getProfile().catch(() => null),
       ]);
-      const rawData = taskRes.data as any;
-      let taskData = rawData.card || rawData.cards?.[0] || rawData;
+      const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
@@ -327,22 +326,24 @@ export const TaskActions = {
   },
 
   async uploadAttachment(taskId: string, file: File) {
-    const fd = new FormData();
-    fd.append("attachment", file);
     try {
-      const res = await kanbanApi.uploadAttachment(taskId, fd);
+      const formData = new FormData();
+      formData.append("attachment", file);
+
+      const res = await kanbanApi.uploadAttachment(taskId, formData);
+
       appDispatcher.dispatch({
         type: TaskActionTypes.ADD_ATTACHMENT_SUCCESS,
         payload: { attachment: res.data },
       });
-      Toast.success("Файл успешно загружен");
+      Toast.success(`Файл ${file.name} загружен`);
     } catch (e: any) {
       console.error("Upload attachment error", e);
       const status = e?.status;
       if (status === 413) {
         Toast.error("Файл слишком большой");
       } else {
-        Toast.error("Не удалось загрузить файл");
+        Toast.error(`Ошибка при загрузке ${file.name}`);
       }
     }
   },
@@ -352,12 +353,12 @@ export const TaskActions = {
       await kanbanApi.deleteAttachment(attachmentLink);
       appDispatcher.dispatch({
         type: TaskActionTypes.DELETE_ATTACHMENT_SUCCESS,
-        payload: { id: attachmentLink },
+        payload: { link: attachmentLink },
       });
-      Toast.success("Вложение удалено");
+      Toast.success("Файл удален");
     } catch (e) {
       console.error("Delete attachment error", e);
-      Toast.error("Не удалось удалить вложение");
+      Toast.error("Ошибка при удалении файла");
     }
   },
 };

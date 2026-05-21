@@ -212,7 +212,7 @@ export class TaskView {
         ];
         rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         rawTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-        formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+        formattedDate = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
         formattedTime = rawTime;
       }
     }
@@ -283,6 +283,9 @@ export class TaskView {
         attachments: taskData.attachments || [],
       },
       comments: state.comments,
+      attachments: state.attachments,
+      attachmentsCount: state.attachments.length,
+      isAttachmentsFull: state.attachments.length >= 5,
     });
 
     if (currentValues.title !== undefined)
@@ -602,6 +605,45 @@ export class TaskView {
 
   private attachListeners() {
     const state = taskStore.getState();
+
+    const fileInput = this.taskNode?.querySelector(
+      "#task-file-input",
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.addEventListener("change", async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const state = taskStore.getState();
+          if (state.attachments.length >= 5) {
+            Toast.error("Максимум 5 файлов на задачу");
+            fileInput.value = "";
+            return;
+          }
+          if (state.taskId) {
+            await TaskActions.uploadAttachment(state.taskId, file);
+          }
+        }
+        fileInput.value = "";
+      });
+    }
+
+    this.taskNode
+      ?.querySelectorAll(".task__attachment-delete-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const link = (e.currentTarget as HTMLElement).getAttribute(
+            "data-link",
+          );
+          if (link) {
+            showConfirmModal({
+              title: "Удалить файл",
+              text: "Вы уверены, что хотите удалить этот файл?",
+              confirmLabel: "Удалить",
+              onConfirm: () => TaskActions.deleteAttachment(link),
+            });
+          }
+        });
+      });
 
     this.taskNode
       ?.querySelector("#btn-save-task")
@@ -1140,32 +1182,6 @@ export class TaskView {
               text: "Вы уверены, что хотите удалить подзадачу?",
               confirmLabel: "Удалить",
               onConfirm: () => TaskActions.deleteSubtask(id),
-            });
-          }
-        });
-      });
-
-    const attachmentInput = this.taskNode?.querySelector(
-      "#task-attachment-input",
-    ) as HTMLInputElement;
-    attachmentInput?.addEventListener("change", (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file && state.taskId) {
-        TaskActions.uploadAttachment(state.taskId, file);
-      }
-    });
-
-    this.taskNode
-      ?.querySelectorAll(".task__attachment-delete-btn")
-      .forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
-          if (id) {
-            showConfirmModal({
-              title: "Удалить вложение",
-              text: "Вы уверены, что хотите удалить вложение?",
-              confirmLabel: "Удалить",
-              onConfirm: () => TaskActions.deleteAttachment(id),
             });
           }
         });

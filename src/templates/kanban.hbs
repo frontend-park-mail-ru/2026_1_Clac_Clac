@@ -34,14 +34,12 @@
           </svg>
           Управление колонками
         </button>
-        {{!-- <button class="btn btn--secondary kanban__action-btn kanban__action-btn--share">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-            <polyline points="16 6 12 2 8 6"></polyline>
-            <line x1="12" y1="2" x2="12" y2="15"></line>
+        <button class="btn kanban__action-btn kanban__action-btn--share" id="btn-share-board">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.707 2.29297L15.293 3.70703L17.5859 6H17C10.9366 6 6 10.9366 6 17V18H8V17C8 12.0174 12.0174 8 17 8H17.5859L15.293 10.293L16.707 11.707L21.4141 7L16.707 2.29297ZM2 8V9V22H22V18V17H20V18V20H4V9V8H2Z" fill="white" />
           </svg>
           Поделиться
-        </button> --}}
+        </button>
       </div>
     </div>
 
@@ -273,5 +271,52 @@
       </div>
     </div>
     <button class="btn btn--primary w-100" id="btn-confirm-create-column" disabled>Создать</button>
+  </div>
+
+  <div id="modal-share" class="share-modal hidden">
+    <div class="share-modal__header">
+      <h2 class="share-modal__title">Пригласить</h2>
+      <button class="share-modal__close-btn" id="share-close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <hr class="share-modal__divider">
+
+    <div class="share-modal__toggle">
+      <button class="share-modal__toggle-btn share-modal__toggle-btn--active" data-role="member">Участник</button>
+      <button class="share-modal__toggle-btn" data-role="guest">Гость</button>
+    </div>
+
+    <div class="share-modal__role-wrapper" id="share-role-wrapper">
+      <div class="share-modal__role-select" id="share-role-select">
+        <span class="share-modal__role-text" id="share-role-text">Участник</span>
+        <svg width="18" height="10" viewBox="0 0 18 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 1L9 9L17 1" stroke="#515151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <div class="share-modal__role-dropdown hidden" id="share-role-dropdown">
+        <div class="share-modal__role-option" data-role="member">Участник</div>
+        <div class="share-modal__role-option" data-role="admin">Админ</div>
+        <div class="share-modal__role-option" data-role="super-admin">Супер-Админ</div>
+      </div>
+    </div>
+
+    <label class="share-modal__label">Ссылка для приглашения</label>
+    <div class="share-modal__link-row">
+      <input type="text" class="share-modal__input" id="share-link-input" value="" readonly>
+      <button class="share-modal__copy-btn" id="share-copy-link-btn">Копировать</button>
+    </div>
+
+    <label class="share-modal__label">Email для приглашения</label>
+    <input type="text" class="share-modal__input share-modal__input--email" id="share-email-input" placeholder="Введите email..." readonly>
+
+    <div class="share-modal__actions">
+      <button class="share-modal__btn share-modal__btn--cancel" id="share-cancel-btn">Отмена</button>
+      <button class="share-modal__btn share-modal__btn--invite" id="share-invite-btn" disabled>Пригласить</button>
+    </div>
   </div>
 </div>

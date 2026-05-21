@@ -15,6 +15,7 @@ export interface TaskState {
   error: string | null;
   isLoading: boolean;
   isSaving: boolean;
+  attachments: any[];
 }
 
 export const TaskActionTypes = {

@@ -10,6 +10,7 @@ class TaskStore extends Store {
     usersList: [],
     taskData: null,
     comments: [],
+    attachments: [],
     error: null,
     isLoading: false,
     isSaving: false,
@@ -39,6 +40,7 @@ class TaskStore extends Store {
         this.state.usersList = action.payload.usersList;
         this.state.taskData = action.payload.taskData;
         this.state.comments = action.payload.comments || [];
+        this.state.attachments = action.payload.taskData?.attachments || [];
         this.emit("change");
         break;
       case TaskActionTypes.LOAD_DATA_ERROR:
@@ -121,24 +123,33 @@ class TaskStore extends Store {
           this.emit("change");
         }
         break;
+
       case TaskActionTypes.ADD_ATTACHMENT_SUCCESS:
+        this.state.attachments = [
+          ...this.state.attachments,
+          action.payload.attachment,
+        ];
         if (this.state.taskData) {
-          const newAtt = action.payload.attachment;
           this.state.taskData.attachments = [
             ...(this.state.taskData.attachments || []),
-            newAtt,
+            action.payload.attachment,
           ];
-          this.emit("change");
         }
+        this.emit("change");
         break;
+
       case TaskActionTypes.DELETE_ATTACHMENT_SUCCESS:
+        this.state.attachments = this.state.attachments.filter(
+          (a: any) => a.attachment_link !== action.payload.link,
+        );
         if (this.state.taskData) {
           this.state.taskData.attachments = (
             this.state.taskData.attachments || []
-          ).filter((att: any) => att.attachment_link !== action.payload.id);
-          this.emit("change");
+          ).filter((att: any) => att.attachment_link !== action.payload.link);
         }
+        this.emit("change");
         break;
+
       case TaskActionTypes.CLEAR_STORE:
         this.state = {
           boardId: null,
@@ -147,6 +158,7 @@ class TaskStore extends Store {
           usersList: [],
           taskData: null,
           comments: [],
+          attachments: [],
           error: null,
           isLoading: false,
           isSaving: false,
