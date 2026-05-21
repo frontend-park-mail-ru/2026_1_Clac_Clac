@@ -24,7 +24,7 @@ export const TaskActions = {
       const boardName = boardRes.data.name || "Без названия";
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
-      const rawUsers = usersRes.data.user_links;
+      const rawUsers = usersRes.data.members.map((m) => m.link);
 
       const userPromises = rawUsers.map(async (link) => {
         if (profileCache.has(link)) return profileCache.get(link)!;
@@ -49,8 +49,7 @@ export const TaskActions = {
         kanbanApi.getTask(taskId),
         profileApi.getProfile().catch(() => null),
       ]);
-      const rawData = taskRes.data as any;
-      let taskData = rawData.card || rawData.cards?.[0] || rawData;
+      const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");

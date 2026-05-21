@@ -77,7 +77,7 @@ export interface UpdateBoardRequest {
   name?: string;
 }
 export interface GetMembersResponse {
-  user_links: string[];
+  members: { link: string; role: string }[];
 }
 export interface UploadBackgroundResponse {
   background_key: string;
@@ -105,7 +105,8 @@ export interface ListSectionLink {
 export interface SubtaskInfo {
   description: string;
   is_done: boolean;
-  link: string;
+  link?: string;
+  subtask_link?: string;
   position: number;
 }
 export interface SubtaskResponse {
@@ -142,8 +143,19 @@ export interface CardResponse {
 }
 export interface AttachmentResponse {
   attachment_link: string;
-  name: string;
-  url: string;
+  attachment_path: string;
+  display_name: string;
+  position: number;
+}
+export interface CardSingle {
+  card_link: string;
+  deadline: string;
+  description: string;
+  executor_link: string;
+  position: number;
+  subtasks: SubtaskInfo[];
+  title: string;
+  attachments?: AttachmentResponse[];
 }
 export interface CardsResponse {
   cards: Card[];
@@ -417,7 +429,7 @@ export const kanbanApi = {
   deleteSection: (sectionLink: string) => apiClient.delete<BaseResponse>(`/sections/${sectionLink}`),
 
   getTasks: (sectionLink: string) => apiClient.get<ApiResponse<CardsResponse>>(`/sections/${sectionLink}/cards`),
-  getTask: (taskLink: string) => apiClient.get<ApiResponse<CardsResponse>>(`/cards/${taskLink}`),
+  getTask: (taskLink: string) => apiClient.get<ApiResponse<CardSingle>>(`/cards/${taskLink}`),
   createTask: (data: CreateCardRequest) => apiClient.post<ApiResponse<CreateCardResponse>, CreateCardRequest>(`/cards`, data),
   updateTask: (taskLink: string, data: UpdateCardRequest) => apiClient.put<BaseResponse, UpdateCardRequest>(`/cards/${taskLink}`, data),
   deleteTask: (taskLink: string) => apiClient.delete<BaseResponse>(`/cards/${taskLink}`),
