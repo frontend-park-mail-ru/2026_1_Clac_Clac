@@ -733,22 +733,47 @@ export class KanbanView {
         iconHtml =
           item.subtasks.length > 0
             ? `
-          <span class="gantt-chart__chevron ${chevronClass}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </span>
-        `
+                  <span class="gantt-chart__chevron ${chevronClass}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                `
             : "";
+
         dateRangeHtml = `<span class="gantt-chart__item-date">${formatDateRange(item.start, item.end)}</span>`;
-        leftRow.addEventListener("click", () => {
-          if (item.subtasks.length === 0) return;
-          if (this.collapsedTasks.has(item.id)) {
-            this.collapsedTasks.delete(item.id);
+
+        leftRow.innerHTML = `
+                  <div class="gantt-chart__item-title">
+                    ${iconHtml}
+                    <span>${item.name}</span>
+                  </div>
+                  <button class="icon-btn gantt-chart__row-edit-btn" title="Открыть задачу">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  ${dateRangeHtml}
+                `;
+
+        leftRow.addEventListener("click", (e) => {
+          const target = e.target as HTMLElement;
+          const isChevron = target.closest(".gantt-chart__chevron");
+
+          if (isChevron && item.subtasks.length > 0) {
+            e.stopPropagation();
+            if (this.collapsedTasks.has(item.id)) {
+              this.collapsedTasks.delete(item.id);
+            } else {
+              this.collapsedTasks.add(item.id);
+            }
+            this.renderGanttChart(state);
           } else {
-            this.collapsedTasks.add(item.id);
+            navigateTo(
+              `/task?boardId=${state.boardId}&taskId=${item.id}&title=${encodeURIComponent(item.name)}`,
+            );
           }
-          this.renderGanttChart(state);
         });
       } else if (item.type === "subtask") {
         iconHtml = `

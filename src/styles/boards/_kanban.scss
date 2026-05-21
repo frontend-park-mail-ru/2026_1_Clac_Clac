@@ -1352,3 +1352,34 @@
     gap: 0.5rem;
   }
 }
+
+.gantt-chart__row-edit-btn {
+  opacity: 0;
+  padding: 6px;
+  color: #888;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  margin-right: auto;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+
+  &:hover {
+    color: white;
+  }
+}
+
+.gantt-chart__row:hover .gantt-chart__row-edit-btn {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .gantt-chart__row-edit-btn {
+    opacity: 1;
+    margin-right: 0.5rem;
+  }
+}
