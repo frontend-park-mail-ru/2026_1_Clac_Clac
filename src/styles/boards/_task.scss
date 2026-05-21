@@ -239,97 +239,214 @@
     padding: 4px;
   }
 
+  &__attachments-section {
+    margin-bottom: 2.5rem;
+    border-top: 1px solid #333;
+    padding-top: 1.5rem;
+  }
+
+  &__attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  &__attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #1e1e20;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+
+  &__attachment-icon {
+    color: #888;
+    flex-shrink: 0;
+  }
+
+  &__attachment-name {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__attachment-delete-btn {
+    color: #888;
+    padding: 4px;
+    transition: color 0.15s;
+
+    &:hover {
+      color: #ff5c5c;
+    }
+  }
+
+  &__attachment-upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #888;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0.2rem 0;
+    transition: color 0.15s;
+    margin-top: 0.5rem;
+
+    &:hover {
+      color: white;
+    }
+  }
+
+  &__attachment-icon-svg {
+    margin-right: 0.5rem;
+  }
+
   &__comments-section {
     margin-bottom: 2rem;
+    border-top: 1px solid #333;
+    padding-top: 1.5rem;
   }
 
   &__comments-date {
     text-align: center;
-    color: #666;
+    color: #888;
     font-size: 0.85rem;
     margin: 1.5rem 0 1rem;
+    font-weight: 500;
   }
 
   &__comments-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1.2rem;
   }
 
   &__comment {
     display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    width: 100%;
+
+    &--others {
+      justify-content: flex-start;
+
+      .task__comment-body-wrapper {
+        order: 2;
+      }
+
+      .task__comment-time {
+        order: 3;
+        margin-left: 0.5rem;
+      }
+
+      .task__comment-avatar,
+      .task__comment-avatar-fallback {
+        order: 1;
+      }
+
+      .task__comment-bubble {
+        border-top-left-radius: 0;
+      }
+    }
+
+    &--mine {
+      justify-content: flex-end;
+
+      .task__comment-body-wrapper {
+        order: 2;
+      }
+
+      .task__comment-time {
+        order: 1;
+        margin-right: 0.5rem;
+      }
+
+      .task__comment-avatar,
+      .task__comment-avatar-fallback {
+        order: 3;
+      }
+
+      .task__comment-bubble {
+        border-top-right-radius: 0;
+      }
+    }
+  }
+
+  &__comment-body-wrapper {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
-    align-items: flex-start;
+    max-width: 75%;
   }
 
   &__comment-avatar,
   &__comment-avatar-fallback {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     flex-shrink: 0;
     object-fit: cover;
   }
 
   &__comment-avatar-fallback {
-    background: #8b5cf6;
-    color: white;
+    background: #333335;
+    color: #888;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   &__comment-content {
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-  }
-
-  &__comment-header {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
+    width: 100%;
   }
 
   &__comment-author {
-    color: var(--primary);
-    font-size: 0.8rem;
-    font-weight: 500;
+    color: #8b5cf6;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 0.2rem;
   }
 
   &__comment-bubble {
-    background: #252527;
+    background: #1e1e20;
     border: 1px solid #333;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
     color: #ccc;
     font-size: 0.95rem;
     line-height: 1.4;
-    border-top-left-radius: 0;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: break-word;
     white-space: pre-wrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   &__comment-time {
-    font-size: 0.7rem;
-    color: #888;
-    line-height: 1;
+    font-size: 0.75rem;
+    color: #666;
+    align-self: flex-end;
+    margin-bottom: 0.2rem;
   }
 
   &__comment-input-area {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
     background: #1a1a1c;
-    position: sticky;
-    bottom: 0;
-    padding: 1rem 0;
-    border-top: 1px solid #2a2a2c;
   }
 
   &__comment-input {
@@ -337,8 +454,8 @@
     background: #252527;
     border: 1px solid #333;
     color: white;
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
     outline: none;
     font-size: 0.95rem;
 
@@ -348,17 +465,19 @@
   }
 
   &__comment-send-btn {
-    color: #888;
+    color: #8b5cf6;
     padding: 0.8rem;
     background: transparent;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: opacity 0.15s;
 
     &:hover {
-      color: white;
-      background: #252527;
+      opacity: 0.8;
+      color: #8b5cf6;
+      background: transparent;
     }
   }
 
@@ -453,169 +572,4 @@
     font-size: 0.85rem;
     border-radius: 6px;
   }
-}
-
-.task__panel--no-animation {
-  animation: none !important;
-}
-
-.date-picker {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  background: #252527;
-  border-radius: 16px;
-  padding: 1rem 1.25rem;
-  z-index: 1000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  min-width: 272px;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    color: white;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  &__nav-btn {
-    background: transparent;
-    border: none;
-    color: #888;
-    cursor: pointer;
-    padding: 0.25rem 0.6rem;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    line-height: 1;
-    transition:
-      background 0.15s,
-      color 0.15s;
-
-    &:hover {
-      background: #333;
-      color: white;
-    }
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-
-  &__day-name {
-    text-align: center;
-    font-size: 0.72rem;
-    color: #666;
-    padding: 0.3rem 0 0.5rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-
-  &__day {
-    text-align: center;
-    padding: 0.45rem 0;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.88rem;
-    color: white;
-    transition: background 0.12s;
-    border: 1px solid transparent;
-
-    &:hover {
-      background: #333;
-    }
-
-    &--other-month {
-      color: #444;
-
-      &:hover {
-        background: transparent;
-        cursor: default;
-      }
-    }
-
-    &--today {
-      border-color: #555;
-    }
-
-    &--selected {
-      background: var(--primary, #8b5cf6);
-      color: white;
-
-      &:hover {
-        background: var(--primary, #8b5cf6);
-      }
-    }
-  }
-}
-
-.time-picker {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  background: #252527;
-  border-radius: 16px;
-  padding: 1rem 1.5rem;
-  display: flex;
-  gap: 2rem;
-  z-index: 1000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-
-  &__col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__col-label {
-    color: #888;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-
-  &__scroll {
-    height: 120px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    scroll-snap-type: y mandatory;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__num {
-    font-size: 1.4rem;
-    color: #555;
-    cursor: pointer;
-    line-height: 1.6;
-    min-width: 40px;
-    text-align: center;
-    border-radius: 8px;
-    scroll-snap-align: center;
-    transition: color 0.15s;
-
-    &:hover {
-      color: #bbb;
-    }
-
-    &--selected {
-      color: white;
-      font-size: 1.7rem;
-      font-weight: 700;
-    }
-  }
-}
-
-.section-mandatory-label {
-  min-width: 160px;
 }

@@ -50,7 +50,9 @@ export class TaskView {
     document.querySelector(".context-menu")?.remove();
     document.querySelector(".assignee__dropdown")?.remove();
     if (!(e.target as HTMLElement).closest(".task__comment-menu-wrap")) {
-      this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => d.classList.add("hidden"));
+      this.taskNode
+        ?.querySelectorAll(".task__comment-dropdown")
+        .forEach((d) => d.classList.add("hidden"));
     }
   }
 
@@ -62,7 +64,9 @@ export class TaskView {
     }
 
     if (state.isSaving) {
-      const btnSave = this.taskNode?.querySelector("#btn-save-task") as HTMLButtonElement;
+      const btnSave = this.taskNode?.querySelector(
+        "#btn-save-task",
+      ) as HTMLButtonElement;
       if (btnSave) {
         btnSave.disabled = true;
         btnSave.textContent = "Сохранение...";
@@ -75,7 +79,7 @@ export class TaskView {
       if (state.boardId) {
         navigateTo(`/board?id=${state.boardId}`);
       } else {
-        navigateTo('/boards');
+        navigateTo("/boards");
       }
       return;
     }
@@ -99,7 +103,9 @@ export class TaskView {
     const state = taskStore.getState();
     Toast.error(state.error || "Произошла ошибка");
 
-    const btnSave = this.taskNode?.querySelector("#btn-save-task") as HTMLButtonElement;
+    const btnSave = this.taskNode?.querySelector(
+      "#btn-save-task",
+    ) as HTMLButtonElement;
     if (btnSave) {
       btnSave.disabled = false;
       btnSave.textContent = "Сохранить";
@@ -113,24 +119,40 @@ export class TaskView {
 
     if (!taskData) return;
 
-    const contentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    const contentEl = this.taskNode?.querySelector(
+      ".task__content",
+    ) as HTMLElement;
     const currentScrollTop = contentEl ? contentEl.scrollTop : 0;
 
     const currentSubtasks: Record<string, string> = {};
-    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
-      const id = input.getAttribute("data-id");
-      if (id) {
-        currentSubtasks[id] = (input as HTMLInputElement).value;
-      }
-    });
+    this.taskNode
+      ?.querySelectorAll(".task__subtask-text-input")
+      .forEach((input) => {
+        const id = input.getAttribute("data-id");
+        if (id) {
+          currentSubtasks[id] = (input as HTMLInputElement).value;
+        }
+      });
 
     const currentValues = {
-      title: (this.taskNode?.querySelector("#task-title-input") as HTMLInputElement)?.value,
-      desc: (this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement)?.value,
-      date: (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement)?.value,
-      time: (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement)?.value,
-      subtask: (this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement)?.value,
-      comment: (this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement)?.value,
+      title: (
+        this.taskNode?.querySelector("#task-title-input") as HTMLInputElement
+      )?.value,
+      desc: (
+        this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement
+      )?.value,
+      date: (
+        this.taskNode?.querySelector("#task-date-input") as HTMLInputElement
+      )?.value,
+      time: (
+        this.taskNode?.querySelector("#task-time-input") as HTMLInputElement
+      )?.value,
+      subtask: (
+        this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement
+      )?.value,
+      comment: (
+        this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement
+      )?.value,
     };
 
     const activeEl = document.activeElement as HTMLElement;
@@ -138,21 +160,34 @@ export class TaskView {
     const activeClass = activeEl?.className;
     let activeSelector = activeId ? `#${activeId}` : null;
 
-    if (!activeSelector && activeClass && activeClass.includes('task__comment-input')) {
-      activeSelector = '.task__comment-input';
-    } else if (!activeSelector && activeClass && activeClass.includes('task__subtask-text-input')) {
-      const id = activeEl.getAttribute('data-id');
+    if (
+      !activeSelector &&
+      activeClass &&
+      activeClass.includes("task__comment-input")
+    ) {
+      activeSelector = ".task__comment-input";
+    } else if (
+      !activeSelector &&
+      activeClass &&
+      activeClass.includes("task__subtask-text-input")
+    ) {
+      const id = activeEl.getAttribute("data-id");
       if (id) activeSelector = `.task__subtask-text-input[data-id="${id}"]`;
     }
 
     let selectionStart = 0;
     let selectionEnd = 0;
-    if (activeEl && (activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement)) {
+    if (
+      activeEl &&
+      (activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement)
+    ) {
       selectionStart = activeEl.selectionStart || 0;
       selectionEnd = activeEl.selectionEnd || 0;
     }
 
-    const deadline = taskData.dead_line || taskData.data_dead_line || taskData.deadline;
+    const deadline =
+      taskData.dead_line || taskData.data_dead_line || taskData.deadline;
     let rawDate = "";
     let rawTime = "";
     let formattedDate = "";
@@ -161,9 +196,22 @@ export class TaskView {
     if (deadline) {
       const d = new Date(deadline);
       if (!isNaN(d.getTime())) {
-        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        rawTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const months = [
+          "января",
+          "февраля",
+          "марта",
+          "апреля",
+          "мая",
+          "июня",
+          "июля",
+          "августа",
+          "сентября",
+          "октября",
+          "ноября",
+          "декабря",
+        ];
+        rawDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        rawTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
         formattedDate = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         formattedTime = rawTime;
       }
@@ -199,18 +247,23 @@ export class TaskView {
       this.appDiv.appendChild(this.taskNode);
     }
 
-    const formattedSubtasks = taskData.subtasks.map((st: any) => {
-      const validId = st.link || st.subtask_link || st.link_subtask || st.id || "";
-      const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
-      return {
-        ...st,
-        id: validId,
-        description: validDesc,
-      };
-    }).sort((a: any, b: any) => {
-      if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
-      return String(a.id).localeCompare(String(b.id));
-    });
+    const formattedSubtasks = taskData.subtasks
+      .map((st: any) => {
+        const validId =
+          st.link || st.subtask_link || st.link_subtask || st.id || "";
+        const validDesc =
+          st.description || st.name || st.title || st.resolved_desc || "";
+        return {
+          ...st,
+          id: validId,
+          description: validDesc,
+        };
+      })
+      .sort((a: any, b: any) => {
+        if (a.position !== b.position)
+          return (a.position || 0) - (b.position || 0);
+        return String(a.id).localeCompare(String(b.id));
+      });
 
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
@@ -226,45 +279,73 @@ export class TaskView {
         executor_avatar: executorAvatar,
         executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
-        subtasks: formattedSubtasks
+        subtasks: formattedSubtasks,
+        attachments: taskData.attachments || [],
       },
       comments: state.comments,
     });
 
-    if (currentValues.title !== undefined) (this.taskNode.querySelector("#task-title-input") as HTMLInputElement).value = currentValues.title;
-    if (currentValues.desc !== undefined) (this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement).value = currentValues.desc;
+    if (currentValues.title !== undefined)
+      (
+        this.taskNode.querySelector("#task-title-input") as HTMLInputElement
+      ).value = currentValues.title;
+    if (currentValues.desc !== undefined)
+      (
+        this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement
+      ).value = currentValues.desc;
     if (currentValues.date !== undefined) {
-      (this.taskNode.querySelector("#task-date-input") as HTMLInputElement).value = currentValues.date;
+      (
+        this.taskNode.querySelector("#task-date-input") as HTMLInputElement
+      ).value = currentValues.date;
       this.updateDateBtn(currentValues.date);
     }
     if (currentValues.time !== undefined) {
-      (this.taskNode.querySelector("#task-time-input") as HTMLInputElement).value = currentValues.time;
+      (
+        this.taskNode.querySelector("#task-time-input") as HTMLInputElement
+      ).value = currentValues.time;
       this.updateTimeBtn(currentValues.time);
     }
-    if (currentValues.subtask !== undefined) (this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement).value = currentValues.subtask;
-    if (currentValues.comment !== undefined) (this.taskNode.querySelector(".task__comment-input") as HTMLInputElement).value = currentValues.comment;
+    if (currentValues.subtask !== undefined)
+      (
+        this.taskNode.querySelector("#new-subtask-input") as HTMLInputElement
+      ).value = currentValues.subtask;
+    if (currentValues.comment !== undefined)
+      (
+        this.taskNode.querySelector(".task__comment-input") as HTMLInputElement
+      ).value = currentValues.comment;
 
-    const newContentEl = this.taskNode?.querySelector(".task__content") as HTMLElement;
+    const newContentEl = this.taskNode?.querySelector(
+      ".task__content",
+    ) as HTMLElement;
     if (this.scrollToNewComment) {
       this.scrollToNewComment = false;
       if (newContentEl) newContentEl.scrollTop = currentScrollTop;
       requestAnimationFrame(() => {
-        if (newContentEl) newContentEl.scrollTo({ top: newContentEl.scrollHeight, behavior: "smooth" });
+        if (newContentEl)
+          newContentEl.scrollTo({
+            top: newContentEl.scrollHeight,
+            behavior: "smooth",
+          });
       });
     } else {
       if (newContentEl) newContentEl.scrollTop = currentScrollTop;
     }
 
     if (activeSelector) {
-      const elToFocus = this.taskNode.querySelector(activeSelector) as HTMLInputElement;
+      const elToFocus = this.taskNode.querySelector(
+        activeSelector,
+      ) as HTMLInputElement;
       if (elToFocus) {
         elToFocus.focus();
-        if (elToFocus.setSelectionRange) elToFocus.setSelectionRange(selectionStart, selectionEnd);
+        if (elToFocus.setSelectionRange)
+          elToFocus.setSelectionRange(selectionStart, selectionEnd);
       }
     }
 
     Object.entries(currentSubtasks).forEach(([id, val]) => {
-      const el = this.taskNode?.querySelector(`.task__subtask-text-input[data-id="${id}"]`) as HTMLInputElement;
+      const el = this.taskNode?.querySelector(
+        `.task__subtask-text-input[data-id="${id}"]`,
+      ) as HTMLInputElement;
       if (el) el.value = val;
     });
 
@@ -272,74 +353,122 @@ export class TaskView {
   }
 
   private updateDateBtn(dateVal: string) {
-    const btn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    const btn = this.taskNode?.querySelector(
+      "#task-date-btn",
+    ) as HTMLButtonElement;
     if (!btn) return;
     if (dateVal) {
-      // dateVal is YYYY-MM-DD. Parsing as T00:00:00 ensures local date.
       const d = new Date(`${dateVal}T00:00:00`);
       if (!isNaN(d.getTime())) {
-        const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        const months = [
+          "января",
+          "февраля",
+          "марта",
+          "апреля",
+          "мая",
+          "июня",
+          "июля",
+          "августа",
+          "сентября",
+          "октября",
+          "ноября",
+          "декабря",
+        ];
         btn.textContent = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
         return;
       }
     }
-    btn.textContent = 'Не задана';
+    btn.textContent = "Не задана";
   }
 
   private updateTimeBtn(timeVal: string) {
-    const btn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    const btn = this.taskNode?.querySelector(
+      "#task-time-btn",
+    ) as HTMLButtonElement;
     if (!btn) return;
-    btn.textContent = timeVal || 'Не задано';
+    btn.textContent = timeVal || "Не задано";
   }
 
-  private buildDatePicker(currentDate: string, onSelect?: (dateStr: string) => void): HTMLElement {
-    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  private buildDatePicker(
+    currentDate: string,
+    onSelect?: (dateStr: string) => void,
+  ): HTMLElement {
+    const MONTHS = [
+      "Январь",
+      "Февраль",
+      "Март",
+      "Апрель",
+      "Май",
+      "Июнь",
+      "Июль",
+      "Август",
+      "Сентябрь",
+      "Октябрь",
+      "Ноябрь",
+      "Декабрь",
+    ];
+    const DAYS = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
-    const sel = currentDate ? new Date(currentDate + 'T00:00:00Z') : null;
+    const sel = currentDate ? new Date(currentDate + "T00:00:00Z") : null;
     let viewYear = sel ? sel.getUTCFullYear() : new Date().getFullYear();
     let viewMonth = sel ? sel.getUTCMonth() : new Date().getMonth();
 
     const todayUtc = new Date();
-    const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth()+1).padStart(2,'0')}-${String(todayUtc.getDate()).padStart(2,'0')}`;
-    let selectedStr = currentDate || '';
+    const todayStr = `${todayUtc.getFullYear()}-${String(todayUtc.getMonth() + 1).padStart(2, "0")}-${String(todayUtc.getDate()).padStart(2, "0")}`;
+    let selectedStr = currentDate || "";
 
-    const picker = document.createElement('div');
-    picker.className = 'date-picker';
+    const picker = document.createElement("div");
+    picker.className = "date-picker";
     picker.dataset.selectedDate = selectedStr;
 
     const render = () => {
-      picker.innerHTML = '';
+      picker.innerHTML = "";
 
-      const header = document.createElement('div');
-      header.className = 'date-picker__header';
+      const header = document.createElement("div");
+      header.className = "date-picker__header";
 
-      const prev = document.createElement('button');
-      prev.className = 'date-picker__nav-btn';
-      prev.type = 'button';
-      prev.textContent = '‹';
-      prev.addEventListener('click', (e) => { e.stopPropagation(); viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
+      const prev = document.createElement("button");
+      prev.className = "date-picker__nav-btn";
+      prev.type = "button";
+      prev.textContent = "‹";
+      prev.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewMonth--;
+        if (viewMonth < 0) {
+          viewMonth = 11;
+          viewYear--;
+        }
+        render();
+      });
 
-      const title = document.createElement('span');
+      const title = document.createElement("span");
       title.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
 
-      const next = document.createElement('button');
-      next.className = 'date-picker__nav-btn';
-      next.type = 'button';
-      next.textContent = '›';
-      next.addEventListener('click', (e) => { e.stopPropagation(); viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
+      const next = document.createElement("button");
+      next.className = "date-picker__nav-btn";
+      next.type = "button";
+      next.textContent = "›";
+      next.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewMonth++;
+        if (viewMonth > 11) {
+          viewMonth = 0;
+          viewYear++;
+        }
+        render();
+      });
 
       header.appendChild(prev);
       header.appendChild(title);
       header.appendChild(next);
       picker.appendChild(header);
 
-      const grid = document.createElement('div');
-      grid.className = 'date-picker__grid';
+      const grid = document.createElement("div");
+      grid.className = "date-picker__grid";
 
-      DAYS.forEach(d => {
-        const el = document.createElement('div');
-        el.className = 'date-picker__day-name';
+      DAYS.forEach((d) => {
+        const el = document.createElement("div");
+        el.className = "date-picker__day-name";
         el.textContent = d;
         grid.appendChild(el);
       });
@@ -350,21 +479,24 @@ export class TaskView {
 
       const prevLast = new Date(Date.UTC(viewYear, viewMonth, 0)).getUTCDate();
       for (let i = dow - 1; i >= 0; i--) {
-        const el = document.createElement('div');
-        el.className = 'date-picker__day date-picker__day--other-month';
+        const el = document.createElement("div");
+        el.className = "date-picker__day date-picker__day--other-month";
         el.textContent = String(prevLast - i);
         grid.appendChild(el);
       }
 
-      const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+      const daysInMonth = new Date(
+        Date.UTC(viewYear, viewMonth + 1, 0),
+      ).getUTCDate();
       for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const el = document.createElement('div');
-        el.className = 'date-picker__day';
-        if (dateStr === todayStr) el.classList.add('date-picker__day--today');
-        if (dateStr === selectedStr) el.classList.add('date-picker__day--selected');
+        const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const el = document.createElement("div");
+        el.className = "date-picker__day";
+        if (dateStr === todayStr) el.classList.add("date-picker__day--today");
+        if (dateStr === selectedStr)
+          el.classList.add("date-picker__day--selected");
         el.textContent = String(d);
-        el.addEventListener('click', (e) => {
+        el.addEventListener("click", (e) => {
           e.stopPropagation();
           selectedStr = dateStr;
           picker.dataset.selectedDate = dateStr;
@@ -376,8 +508,8 @@ export class TaskView {
 
       const total = Math.ceil((dow + daysInMonth) / 7) * 7;
       for (let d = 1; d <= total - dow - daysInMonth; d++) {
-        const el = document.createElement('div');
-        el.className = 'date-picker__day date-picker__day--other-month';
+        const el = document.createElement("div");
+        el.className = "date-picker__day date-picker__day--other-month";
         el.textContent = String(d);
         grid.appendChild(el);
       }
@@ -390,47 +522,60 @@ export class TaskView {
   }
 
   private buildTimePicker(currentTime: string): HTMLElement {
-    const [h, m] = currentTime ? currentTime.split(':').map(Number) : [0, 0];
-    const picker = document.createElement('div');
-    picker.className = 'time-picker';
+    const [h, m] = currentTime ? currentTime.split(":").map(Number) : [0, 0];
+    const picker = document.createElement("div");
+    picker.className = "time-picker";
 
     const updateSelectedByScroll = (scroll: HTMLElement) => {
       const scrollRect = scroll.getBoundingClientRect();
       const center = scrollRect.top + scrollRect.height / 2;
       let closest: HTMLElement | null = null;
       let minDist = Infinity;
-      scroll.querySelectorAll<HTMLElement>('.time-picker__num').forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        const dist = Math.abs(rect.top + rect.height / 2 - center);
-        if (dist < minDist) { minDist = dist; closest = el; }
-      });
-      scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
-      (closest as HTMLElement | null)?.classList.add('time-picker__num--selected');
+      scroll
+        .querySelectorAll<HTMLElement>(".time-picker__num")
+        .forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const dist = Math.abs(rect.top + rect.height / 2 - center);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = el;
+          }
+        });
+      scroll
+        .querySelectorAll(".time-picker__num")
+        .forEach((el) => el.classList.remove("time-picker__num--selected"));
+      (closest as HTMLElement | null)?.classList.add(
+        "time-picker__num--selected",
+      );
     };
 
     const createCol = (label: string, count: number, selected: number) => {
-      const col = document.createElement('div');
-      col.className = 'time-picker__col';
-      const labelEl = document.createElement('div');
-      labelEl.className = 'time-picker__col-label';
+      const col = document.createElement("div");
+      col.className = "time-picker__col";
+      const labelEl = document.createElement("div");
+      labelEl.className = "time-picker__col-label";
       labelEl.textContent = label;
       col.appendChild(labelEl);
-      const scroll = document.createElement('div');
-      scroll.className = 'time-picker__scroll';
+      const scroll = document.createElement("div");
+      scroll.className = "time-picker__scroll";
       for (let i = 0; i < count; i++) {
-        const num = document.createElement('div');
-        num.className = 'time-picker__num' + (i === selected ? ' time-picker__num--selected' : '');
-        num.textContent = String(i).padStart(2, '0');
+        const num = document.createElement("div");
+        num.className =
+          "time-picker__num" +
+          (i === selected ? " time-picker__num--selected" : "");
+        num.textContent = String(i).padStart(2, "0");
         num.dataset.value = String(i);
-        num.addEventListener('click', () => {
-          scroll.querySelectorAll('.time-picker__num').forEach(el => el.classList.remove('time-picker__num--selected'));
-          num.classList.add('time-picker__num--selected');
-          num.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        num.addEventListener("click", () => {
+          scroll
+            .querySelectorAll(".time-picker__num")
+            .forEach((el) => el.classList.remove("time-picker__num--selected"));
+          num.classList.add("time-picker__num--selected");
+          num.scrollIntoView({ block: "center", behavior: "smooth" });
         });
         scroll.appendChild(num);
       }
       let scrollTimer: ReturnType<typeof setTimeout>;
-      scroll.addEventListener('scroll', () => {
+      scroll.addEventListener("scroll", () => {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 200);
       });
@@ -438,14 +583,18 @@ export class TaskView {
       return { col, scroll };
     };
 
-    const { col: hourCol, scroll: hourScroll } = createCol('Часы', 24, h);
-    const { col: minCol, scroll: minScroll } = createCol('Минуты', 60, m);
+    const { col: hourCol, scroll: hourScroll } = createCol("Часы", 24, h);
+    const { col: minCol, scroll: minScroll } = createCol("Минуты", 60, m);
     picker.appendChild(hourCol);
     picker.appendChild(minCol);
 
     setTimeout(() => {
-      hourScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
-      minScroll.querySelector('.time-picker__num--selected')?.scrollIntoView({ block: 'center' });
+      hourScroll
+        .querySelector(".time-picker__num--selected")
+        ?.scrollIntoView({ block: "center" });
+      minScroll
+        .querySelector(".time-picker__num--selected")
+        ?.scrollIntoView({ block: "center" });
     }, 0);
 
     return picker;
@@ -454,40 +603,64 @@ export class TaskView {
   private attachListeners() {
     const state = taskStore.getState();
 
-    this.taskNode?.querySelector("#btn-save-task")?.addEventListener("click", () => {
-      const title = (this.taskNode?.querySelector("#task-title-input") as HTMLInputElement).value.trim();
-      const description = (this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement).value.trim();
-      const dateVal = (this.taskNode?.querySelector("#task-date-input") as HTMLInputElement).value;
-      const timeVal = (this.taskNode?.querySelector("#task-time-input") as HTMLInputElement).value;
+    this.taskNode
+      ?.querySelector("#btn-save-task")
+      ?.addEventListener("click", () => {
+        const title = (
+          this.taskNode?.querySelector("#task-title-input") as HTMLInputElement
+        ).value.trim();
+        const description = (
+          this.taskNode?.querySelector(
+            "#task-desc-input",
+          ) as HTMLTextAreaElement
+        ).value.trim();
+        const dateVal = (
+          this.taskNode?.querySelector("#task-date-input") as HTMLInputElement
+        ).value;
+        const timeVal = (
+          this.taskNode?.querySelector("#task-time-input") as HTMLInputElement
+        ).value;
 
-      let finalDeadline = state.taskData.dead_line || state.taskData.data_dead_line || state.taskData.deadline;
-      if (dateVal) {
-        const d = new Date(`${dateVal}T${timeVal || "00:00"}`);
-        finalDeadline = d.toISOString();
-      }
+        let finalDeadline =
+          state.taskData.dead_line ||
+          state.taskData.data_dead_line ||
+          state.taskData.deadline;
+        if (dateVal) {
+          const d = new Date(`${dateVal}T${timeVal || "00:00"}`);
+          finalDeadline = d.toISOString();
+        }
 
-      const payload = {
-        link_card: state.taskId,
-        title: title || "Без названия",
-        description: description,
-        executor_link: this.currentExecuterId || null,
-        deadline: finalDeadline,
-        max_tasks: state.taskData?.max_tasks || 100,
-      };
+        const payload = {
+          link_card: state.taskId,
+          title: title || "Без названия",
+          description: description,
+          executor_link: this.currentExecuterId || null,
+          deadline: finalDeadline,
+          max_tasks: state.taskData?.max_tasks || 100,
+        };
 
-      if (state.taskId) {
-        TaskActions.saveTask(state.taskId, payload);
-      }
-    });
+        if (state.taskId) {
+          TaskActions.saveTask(state.taskId, payload);
+        }
+      });
 
-    const dateInput = this.taskNode?.querySelector("#task-date-input") as HTMLInputElement;
-    const dateBtn = this.taskNode?.querySelector("#task-date-btn") as HTMLButtonElement;
+    const dateInput = this.taskNode?.querySelector(
+      "#task-date-input",
+    ) as HTMLInputElement;
+    const dateBtn = this.taskNode?.querySelector(
+      "#task-date-btn",
+    ) as HTMLButtonElement;
     dateBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
       const existing = this.taskNode?.querySelector(".date-picker");
-      if (existing) { existing.remove(); return; }
+      if (existing) {
+        existing.remove();
+        return;
+      }
 
-      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+      const timeInput = this.taskNode?.querySelector(
+        "#task-time-input",
+      ) as HTMLInputElement;
 
       const picker = this.buildDatePicker(dateInput.value, (dateStr) => {
         dateInput.value = dateStr;
@@ -496,15 +669,15 @@ export class TaskView {
         if (!timeInput.value) {
           const now = new Date();
           const target = new Date(
-            parseInt(dateStr.split('-')[0]),
-            parseInt(dateStr.split('-')[1]) - 1,
-            parseInt(dateStr.split('-')[2]),
+            parseInt(dateStr.split("-")[0]),
+            parseInt(dateStr.split("-")[1]) - 1,
+            parseInt(dateStr.split("-")[2]),
             now.getHours() + 1,
-            now.getMinutes()
+            now.getMinutes(),
           );
 
-          const finalDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-          const finalTime = `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
+          const finalDate = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+          const finalTime = `${String(target.getHours()).padStart(2, "0")}:${String(target.getMinutes()).padStart(2, "0")}`;
 
           dateInput.value = finalDate;
           this.updateDateBtn(finalDate);
@@ -536,7 +709,10 @@ export class TaskView {
           cleanup();
         }
       };
-      const onOutside = () => { picker.remove(); cleanup(); };
+      const onOutside = () => {
+        picker.remove();
+        cleanup();
+      };
       setTimeout(() => {
         document.addEventListener("keydown", onKey);
         document.addEventListener("click", onOutside);
@@ -553,7 +729,7 @@ export class TaskView {
 
       if (!dateInput.value) {
         const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         dateInput.value = todayStr;
         this.updateDateBtn(todayStr);
       }
@@ -561,10 +737,14 @@ export class TaskView {
       picker.remove();
     };
 
-    const timeBtn = this.taskNode?.querySelector("#task-time-btn") as HTMLButtonElement;
+    const timeBtn = this.taskNode?.querySelector(
+      "#task-time-btn",
+    ) as HTMLButtonElement;
     timeBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
-      const timeInput = this.taskNode?.querySelector("#task-time-input") as HTMLInputElement;
+      const timeInput = this.taskNode?.querySelector(
+        "#task-time-input",
+      ) as HTMLInputElement;
       const existing = this.taskNode?.querySelector(".time-picker");
       if (existing) {
         commitTimePicker(existing, timeInput);
@@ -592,8 +772,12 @@ export class TaskView {
       }, 0);
     });
 
-    const saveBtn = this.taskNode?.querySelector("#btn-save-task") as HTMLButtonElement;
-    const titleInput = this.taskNode?.querySelector("#task-title-input") as HTMLInputElement;
+    const saveBtn = this.taskNode?.querySelector(
+      "#btn-save-task",
+    ) as HTMLButtonElement;
+    const titleInput = this.taskNode?.querySelector(
+      "#task-title-input",
+    ) as HTMLInputElement;
     if (saveBtn && titleInput) {
       saveBtn.disabled = !titleInput.value.trim();
       titleInput.addEventListener("input", () => {
@@ -605,16 +789,22 @@ export class TaskView {
       navigateTo(`/board?id=${state.boardId}`);
     });
 
-    this.taskNode?.querySelector("#task-overlay")?.addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) {
-        navigateTo(`/board?id=${state.boardId}`);
-      }
-    });
+    this.taskNode
+      ?.querySelector("#task-overlay")
+      ?.addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) {
+          navigateTo(`/board?id=${state.boardId}`);
+        }
+      });
 
-    const execBtn = this.taskNode?.querySelector("#task-executor-btn") as HTMLButtonElement;
+    const execBtn = this.taskNode?.querySelector(
+      "#task-executor-btn",
+    ) as HTMLButtonElement;
     execBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.taskNode?.querySelectorAll(".assignee__dropdown").forEach((dd) => dd.remove());
+      this.taskNode
+        ?.querySelectorAll(".assignee__dropdown")
+        .forEach((dd) => dd.remove());
 
       const dropdown = document.createElement("div");
       dropdown.className = "assignee__dropdown";
@@ -637,7 +827,8 @@ export class TaskView {
 
         if ("Не назначен".toLowerCase().includes(filter.toLowerCase())) {
           const clearItem = document.createElement("div");
-          clearItem.className = "assignee__dropdown-item assignee__dropdown-item--clear";
+          clearItem.className =
+            "assignee__dropdown-item assignee__dropdown-item--clear";
           clearItem.innerHTML = `<div class="assignee__avatar assignee__avatar--clear">?</div><div class="assignee__info"><span class="assignee__name">Не назначен</span></div>`;
           clearItem.addEventListener("click", () => {
             execBtn.innerHTML = `Не назначен`;
@@ -647,30 +838,34 @@ export class TaskView {
           listContainer.appendChild(clearItem);
         }
 
-        state.usersList.filter(u => u.name.toLowerCase().includes(filter.toLowerCase())).forEach((user) => {
-          const item = document.createElement("div");
-          item.className = "assignee__dropdown-item";
-          item.innerHTML = `
+        state.usersList
+          .filter((u) => u.name.toLowerCase().includes(filter.toLowerCase()))
+          .forEach((user) => {
+            const item = document.createElement("div");
+            item.className = "assignee__dropdown-item";
+            item.innerHTML = `
             ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
             <div class="assignee__info">
               <span class="assignee__name">${user.name}</span>
               <span class="assignee__email">${user.email}</span>
             </div>
           `;
-          item.addEventListener("click", () => {
-            execBtn.innerHTML = `
+            item.addEventListener("click", () => {
+              execBtn.innerHTML = `
               ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
               ${user.name}
             `;
-            this.currentExecuterId = user.id;
-            dropdown.remove();
+              this.currentExecuterId = user.id;
+              dropdown.remove();
+            });
+            listContainer.appendChild(item);
           });
-          listContainer.appendChild(item);
-        });
       };
 
       renderList();
-      searchInput.addEventListener("input", (e) => renderList((e.target as HTMLInputElement).value));
+      searchInput.addEventListener("input", (e) =>
+        renderList((e.target as HTMLInputElement).value),
+      );
 
       if (!execBtn.parentElement) return;
       execBtn.parentElement.appendChild(dropdown);
@@ -693,16 +888,28 @@ export class TaskView {
       document.body.appendChild(menu);
 
       menu.querySelector("#ctx-delete-task")?.addEventListener("click", () => {
-        const modalOverlay = this.taskNode?.querySelector("#modal-overlay") as HTMLElement;
-        const modalDelete = this.taskNode?.querySelector("#modal-delete-task") as HTMLElement;
-        const titleInput = this.taskNode?.querySelector("#task-title-input") as HTMLInputElement;
+        const modalOverlay = this.taskNode?.querySelector(
+          "#modal-overlay",
+        ) as HTMLElement;
+        const modalDelete = this.taskNode?.querySelector(
+          "#modal-delete-task",
+        ) as HTMLElement;
+        const titleInput = this.taskNode?.querySelector(
+          "#task-title-input",
+        ) as HTMLInputElement;
 
-        (this.taskNode?.querySelector("#delete-task-name") as HTMLElement).textContent = titleInput.value;
+        (
+          this.taskNode?.querySelector("#delete-task-name") as HTMLElement
+        ).textContent = titleInput.value;
 
         modalOverlay.classList.remove("hidden");
         modalDelete.classList.remove("hidden");
 
-        (this.taskNode?.querySelector("#btn-confirm-delete-task") as HTMLElement).onclick = () => {
+        (
+          this.taskNode?.querySelector(
+            "#btn-confirm-delete-task",
+          ) as HTMLElement
+        ).onclick = () => {
           if (state.taskId) {
             TaskActions.deleteTask(state.taskId);
           }
@@ -714,12 +921,18 @@ export class TaskView {
     this.taskNode?.querySelectorAll(".modal__close-btn").forEach((btn) =>
       btn.addEventListener("click", () => {
         this.taskNode?.querySelector("#modal-overlay")?.classList.add("hidden");
-        this.taskNode?.querySelector("#modal-delete-task")?.classList.add("hidden");
+        this.taskNode
+          ?.querySelector("#modal-delete-task")
+          ?.classList.add("hidden");
       }),
     );
 
-    const commentInput = this.taskNode?.querySelector(".task__comment-input") as HTMLInputElement;
-    const commentBtn = this.taskNode?.querySelector(".task__comment-send-btn") as HTMLButtonElement;
+    const commentInput = this.taskNode?.querySelector(
+      ".task__comment-input",
+    ) as HTMLInputElement;
+    const commentBtn = this.taskNode?.querySelector(
+      ".task__comment-send-btn",
+    ) as HTMLButtonElement;
 
     const submitComment = () => {
       const text = commentInput?.value.trim();
@@ -738,8 +951,12 @@ export class TaskView {
       }
     });
 
-    const subtaskInput = this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement;
-    const subtaskAddBtn = this.taskNode?.querySelector("#subtask-add-btn") as HTMLButtonElement;
+    const subtaskInput = this.taskNode?.querySelector(
+      "#new-subtask-input",
+    ) as HTMLInputElement;
+    const subtaskAddBtn = this.taskNode?.querySelector(
+      "#subtask-add-btn",
+    ) as HTMLButtonElement;
 
     const submitSubtask = () => {
       const desc = subtaskInput.value.trim();
@@ -763,7 +980,9 @@ export class TaskView {
         const id = target.getAttribute("data-id");
         const desc = target.getAttribute("data-desc");
 
-        const textInput = target.parentElement?.querySelector(".task__subtask-text-input");
+        const textInput = target.parentElement?.querySelector(
+          ".task__subtask-text-input",
+        );
         if (target.checked) {
           textInput?.classList.add("task__subtask-text-input--done");
         } else {
@@ -776,125 +995,180 @@ export class TaskView {
       });
     });
 
-    this.taskNode?.querySelectorAll(".task__subtask-text-input").forEach((input) => {
-      const updateSubtask = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        const id = target.getAttribute("data-id");
-        const isDone = target.getAttribute("data-done") === "true";
-        const desc = target.value.trim();
-        if (id && desc) {
-          TaskActions.toggleSubtask(id, isDone, desc);
-        }
-      };
-      input.addEventListener("blur", updateSubtask);
-      input.addEventListener("keydown", (e: Event) => {
-        const keyEvent = e as KeyboardEvent;
-        if (keyEvent.key === "Enter") {
-          keyEvent.preventDefault();
-          (keyEvent.target as HTMLElement).blur();
-        }
-      });
-    });
-
-    this.taskNode?.querySelectorAll(".task__comment-menu-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const dropdown = (e.currentTarget as HTMLElement)
-          .closest(".task__comment-menu-wrap")
-          ?.querySelector(".task__comment-dropdown");
-        this.taskNode?.querySelectorAll(".task__comment-dropdown").forEach(d => {
-          if (d !== dropdown) d.classList.add("hidden");
-        });
-        dropdown?.classList.toggle("hidden");
-      });
-    });
-
-    this.taskNode?.querySelectorAll(".task__comment-delete-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment");
-        const commentId = commentEl?.getAttribute("data-id");
-        const taskId = state.taskId;
-        if (!commentId || !taskId) return;
-        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
-        showConfirmModal({
-          title: "Удалить комментарий",
-          text: "Вы уверены, что хотите удалить комментарий?",
-          confirmLabel: "Удалить",
-          onConfirm: () => TaskActions.deleteComment(commentId, taskId),
-        });
-      });
-    });
-
-    this.taskNode?.querySelectorAll(".task__comment-edit-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const commentEl = (e.currentTarget as HTMLElement).closest(".task__comment") as HTMLElement;
-        const commentId = commentEl?.getAttribute("data-id");
-        const taskId = state.taskId;
-        const bubble = commentEl?.querySelector(".task__comment-bubble") as HTMLElement;
-        if (!commentId || !taskId || !bubble) return;
-        (e.currentTarget as HTMLElement).closest(".task__comment-dropdown")?.classList.add("hidden");
-
-        const originalText = bubble.textContent ?? "";
-
-        const textarea = document.createElement("textarea");
-        textarea.className = "task__comment-edit-input";
-        textarea.value = originalText;
-
-        const actionsDiv = document.createElement("div");
-        actionsDiv.className = "task__comment-edit-actions";
-
-        const btnSave = document.createElement("button");
-        btnSave.className = "btn btn--primary task__comment-edit-save";
-        btnSave.textContent = "Сохранить";
-
-        const btnCancel = document.createElement("button");
-        btnCancel.className = "btn btn--cancel task__comment-edit-cancel";
-        btnCancel.textContent = "Отмена";
-
-        actionsDiv.appendChild(btnSave);
-        actionsDiv.appendChild(btnCancel);
-        bubble.replaceWith(textarea);
-        textarea.after(actionsDiv);
-        textarea.focus();
-        textarea.selectionStart = textarea.value.length;
-
-        const cancelEdit = () => {
-          textarea.replaceWith(bubble);
-          actionsDiv.remove();
-        };
-
-        const saveEdit = () => {
-          const newText = textarea.value.trim();
-          if (!newText || newText === originalText) {
-            cancelEdit();
-            return;
+    this.taskNode
+      ?.querySelectorAll(".task__subtask-text-input")
+      .forEach((input) => {
+        const updateSubtask = (e: Event) => {
+          const target = e.target as HTMLInputElement;
+          const id = target.getAttribute("data-id");
+          const isDone = target.getAttribute("data-done") === "true";
+          const desc = target.value.trim();
+          if (id && desc) {
+            TaskActions.toggleSubtask(id, isDone, desc);
           }
-          TaskActions.updateComment(commentId, newText, taskId);
         };
-
-        btnSave.addEventListener("click", saveEdit);
-        btnCancel.addEventListener("click", cancelEdit);
-        textarea.addEventListener("keydown", (ev) => {
-          if (ev.key === "Escape") { cancelEdit(); }
-          else if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); saveEdit(); }
+        input.addEventListener("blur", updateSubtask);
+        input.addEventListener("keydown", (e: Event) => {
+          const keyEvent = e as KeyboardEvent;
+          if (keyEvent.key === "Enter") {
+            keyEvent.preventDefault();
+            (keyEvent.target as HTMLElement).blur();
+          }
         });
       });
+
+    this.taskNode
+      ?.querySelectorAll(".task__comment-menu-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const dropdown = (e.currentTarget as HTMLElement)
+            .closest(".task__comment-menu-wrap")
+            ?.querySelector(".task__comment-dropdown");
+          this.taskNode
+            ?.querySelectorAll(".task__comment-dropdown")
+            .forEach((d) => {
+              if (d !== dropdown) d.classList.add("hidden");
+            });
+          dropdown?.classList.toggle("hidden");
+        });
+      });
+
+    this.taskNode
+      ?.querySelectorAll(".task__comment-delete-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const commentEl = (e.currentTarget as HTMLElement).closest(
+            ".task__comment",
+          );
+          const commentId = commentEl?.getAttribute("data-id");
+          const taskId = state.taskId;
+          if (!commentId || !taskId) return;
+          (e.currentTarget as HTMLElement)
+            .closest(".task__comment-dropdown")
+            ?.classList.add("hidden");
+          showConfirmModal({
+            title: "Удалить комментарий",
+            text: "Вы уверены, что хотите удалить комментарий?",
+            confirmLabel: "Удалить",
+            onConfirm: () => TaskActions.deleteComment(commentId, taskId),
+          });
+        });
+      });
+
+    this.taskNode
+      ?.querySelectorAll(".task__comment-edit-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const commentEl = (e.currentTarget as HTMLElement).closest(
+            ".task__comment",
+          ) as HTMLElement;
+          const commentId = commentEl?.getAttribute("data-id");
+          const taskId = state.taskId;
+          const bubble = commentEl?.querySelector(
+            ".task__comment-bubble",
+          ) as HTMLElement;
+          const commentTextEl = commentEl?.querySelector(
+            ".task__comment-text",
+          ) as HTMLElement;
+          if (!commentId || !taskId || !bubble || !commentTextEl) return;
+          (e.currentTarget as HTMLElement)
+            .closest(".task__comment-dropdown")
+            ?.classList.add("hidden");
+
+          const originalText = commentTextEl.textContent ?? "";
+
+          const textarea = document.createElement("textarea");
+          textarea.className = "task__comment-edit-input";
+          textarea.value = originalText;
+
+          const actionsDiv = document.createElement("div");
+          actionsDiv.className = "task__comment-edit-actions";
+
+          const btnSave = document.createElement("button");
+          btnSave.className = "btn btn--primary task__comment-edit-save";
+          btnSave.textContent = "Сохранить";
+
+          const btnCancel = document.createElement("button");
+          btnCancel.className = "btn btn--cancel task__comment-edit-cancel";
+          btnCancel.textContent = "Отмена";
+
+          actionsDiv.appendChild(btnSave);
+          actionsDiv.appendChild(btnCancel);
+          commentTextEl.replaceWith(textarea);
+          textarea.after(actionsDiv);
+          textarea.focus();
+          textarea.selectionStart = textarea.value.length;
+
+          const cancelEdit = () => {
+            textarea.replaceWith(commentTextEl);
+            actionsDiv.remove();
+          };
+
+          const saveEdit = () => {
+            const newText = textarea.value.trim();
+            if (!newText || newText === originalText) {
+              cancelEdit();
+              return;
+            }
+            TaskActions.updateComment(commentId, newText, taskId);
+          };
+
+          btnSave.addEventListener("click", saveEdit);
+          btnCancel.addEventListener("click", cancelEdit);
+          textarea.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape") {
+              cancelEdit();
+            } else if (ev.key === "Enter" && !ev.shiftKey) {
+              ev.preventDefault();
+              saveEdit();
+            }
+          });
+        });
+      });
+
+    this.taskNode
+      ?.querySelectorAll(".task__subtask-delete-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
+          if (id) {
+            showConfirmModal({
+              title: "Удалить подзадачу",
+              text: "Вы уверены, что хотите удалить подзадачу?",
+              confirmLabel: "Удалить",
+              onConfirm: () => TaskActions.deleteSubtask(id),
+            });
+          }
+        });
+      });
+
+    const attachmentInput = this.taskNode?.querySelector(
+      "#task-attachment-input",
+    ) as HTMLInputElement;
+    attachmentInput?.addEventListener("change", (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file && state.taskId) {
+        TaskActions.uploadAttachment(state.taskId, file);
+      }
     });
 
-    this.taskNode?.querySelectorAll(".task__subtask-delete-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
-        if (id) {
-          showConfirmModal({
-            title: "Удалить подзадачу",
-            text: "Вы уверены, что хотите удалить подзадачу?",
-            confirmLabel: "Удалить",
-            onConfirm: () => TaskActions.deleteSubtask(id),
-          });
-        }
+    this.taskNode
+      ?.querySelectorAll(".task__attachment-delete-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = (e.currentTarget as HTMLElement).getAttribute("data-id");
+          if (id) {
+            showConfirmModal({
+              title: "Удалить вложение",
+              text: "Вы уверены, что хотите удалить вложение?",
+              confirmLabel: "Удалить",
+              onConfirm: () => TaskActions.deleteAttachment(id),
+            });
+          }
+        });
       });
-    });
   }
 }

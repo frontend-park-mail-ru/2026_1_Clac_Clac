@@ -11,7 +11,24 @@ interface ExtendedCommentResponse extends CommentResponse {
   author_fallback?: string;
   created_time?: string;
   is_mine?: boolean;
-}
+  show_date_header?: boolean;
+  date_header?: string;
+};
+
+const months = [
+  "января",
+  "февраля",
+  "марта",
+  "апреля",
+  "мая",
+  "июня",
+  "июля",
+  "августа",
+  "сентября",
+  "октября",
+  "ноября",
+  "декабря",
+];
 
 let currentUserLink: string | null = null;
 const commentsCache = new Map<string, ExtendedCommentResponse[]>();
@@ -81,11 +98,12 @@ export const TaskActions = {
               }
             }
           }
-          c.created_time = (date && !isNaN(date.getTime()))
-            ? `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
-            : '';
+          c.created_time =
+            date && !isNaN(date.getTime())
+              ? `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
+              : "";
         } catch {
-          c.created_time = '';
+          c.created_time = "";
         }
         c.is_mine = c.author_link === currentUserLink;
         return c;
@@ -99,7 +117,22 @@ export const TaskActions = {
         try {
           const commentsRes = await kanbanApi.getComments(taskId);
           comments = commentsRes.data.comments;
-          comments.forEach(c => enrichComment(c, usersList));
+          let lastDate = "";
+          comments.forEach((c) => {
+            enrichComment(c, usersList);
+            if (c.created_at) {
+              const d = new Date(c.created_at);
+              if (!isNaN(d.getTime())) {
+                const dateStr = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+                if (dateStr !== lastDate) {
+                  c.show_date_header = true;
+                  c.date_header = dateStr;
+                  lastDate = dateStr;
+                }
+              }
+            }
+          });
+
           commentsCache.set(taskId, comments);
         } catch (e) {
           console.error("Failed to load comments", e);
@@ -158,11 +191,28 @@ export const TaskActions = {
       const res = await kanbanApi.createComment(taskId, { text });
       const commentLink = res.data.comment_link;
 
-      const { usersList } = taskStore.getState();
-      const me = usersList.find(u => u.id === currentUserLink);
+      const { usersList, comments } = taskStore.getState();
+      const me = usersList.find((u) => u.id === currentUserLink);
 
       const now = new Date();
-      const created_time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const created_time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+      const dateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+      let show_date_header = false;
+      let date_header = "";
+
+      const lastComment = comments[comments.length - 1];
+      if (lastComment && lastComment.created_at) {
+        const lastD = new Date(lastComment.created_at);
+        const lastDateStr = `${lastD.getDate()} ${months[lastD.getMonth()]} ${lastD.getFullYear()}`;
+        if (dateStr !== lastDateStr) {
+          show_date_header = true;
+          date_header = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+        }
+      } else {
+        show_date_header = true;
+        date_header = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+      }
 
       const comment: ExtendedCommentResponse = {
         comment_link: commentLink,
@@ -175,12 +225,17 @@ export const TaskActions = {
         author_fallback: (me?.name ?? "U").charAt(0).toUpperCase(),
         created_time,
         is_mine: true,
+        show_date_header,
+        date_header,
       };
 
       const cached = commentsCache.get(taskId) ?? [];
       commentsCache.set(taskId, [...cached, comment]);
 
-      appDispatcher.dispatch({ type: TaskActionTypes.APPEND_COMMENT, payload: { comment } });
+      appDispatcher.dispatch({
+        type: TaskActionTypes.APPEND_COMMENT,
+        payload: { comment },
+      });
     } catch (e) {
       console.error("Add comment error", e);
       Toast.error("Ошибка при отправке комментария");
@@ -191,8 +246,14 @@ export const TaskActions = {
     try {
       await kanbanApi.deleteComment(commentLink);
       const cached = commentsCache.get(taskId) ?? [];
-      commentsCache.set(taskId, cached.filter(c => c.comment_link !== commentLink));
-      appDispatcher.dispatch({ type: TaskActionTypes.DELETE_COMMENT, payload: { commentLink } });
+      commentsCache.set(
+        taskId,
+        cached.filter((c) => c.comment_link !== commentLink),
+      );
+      appDispatcher.dispatch({
+        type: TaskActionTypes.DELETE_COMMENT,
+        payload: { commentLink },
+      });
     } catch (e) {
       console.error("Delete comment error", e);
       Toast.error("Ошибка при удалении комментария");
@@ -203,8 +264,16 @@ export const TaskActions = {
     try {
       await kanbanApi.updateComment(commentLink, { text });
       const cached = commentsCache.get(taskId) ?? [];
-      commentsCache.set(taskId, cached.map(c => c.comment_link === commentLink ? { ...c, text } : c));
-      appDispatcher.dispatch({ type: TaskActionTypes.UPDATE_COMMENT, payload: { commentLink, text } });
+      commentsCache.set(
+        taskId,
+        cached.map((c) =>
+          c.comment_link === commentLink ? { ...c, text } : c,
+        ),
+      );
+      appDispatcher.dispatch({
+        type: TaskActionTypes.UPDATE_COMMENT,
+        payload: { commentLink, text },
+      });
     } catch (e) {
       console.error("Update comment error", e);
       Toast.error("Ошибка при редактировании комментария");
@@ -216,7 +285,7 @@ export const TaskActions = {
       const res = await kanbanApi.createSubtask(taskId, { description });
       appDispatcher.dispatch({
         type: TaskActionTypes.ADD_SUBTASK_SUCCESS,
-        payload: { subtask: res.data }
+        payload: { subtask: res.data },
       });
     } catch (e) {
       console.error("Create subtask error", e);
@@ -225,17 +294,20 @@ export const TaskActions = {
 
   async toggleSubtask(subtaskId: string, isDone: boolean, description: string) {
     try {
-      await kanbanApi.updateSubtask(subtaskId, { is_done: isDone, description });
+      await kanbanApi.updateSubtask(subtaskId, {
+        is_done: isDone,
+        description,
+      });
       appDispatcher.dispatch({
         type: TaskActionTypes.UPDATE_SUBTASK_SUCCESS,
-        payload: { 
-          id: subtaskId, 
-          subtask: { 
-            id: subtaskId, 
-            description, 
-            is_done: isDone 
-          } 
-        }
+        payload: {
+          id: subtaskId,
+          subtask: {
+            id: subtaskId,
+            description,
+            is_done: isDone,
+          },
+        },
       });
     } catch (e) {
       console.error("Update subtask error", e);
@@ -247,10 +319,45 @@ export const TaskActions = {
       await kanbanApi.deleteSubtask(subtaskId);
       appDispatcher.dispatch({
         type: TaskActionTypes.DELETE_SUBTASK_SUCCESS,
-        payload: { id: subtaskId }
+        payload: { id: subtaskId },
       });
     } catch (e) {
       console.error("Delete subtask error", e);
     }
-  }
+  },
+
+  async uploadAttachment(taskId: string, file: File) {
+    const fd = new FormData();
+    fd.append("attachment", file);
+    try {
+      const res = await kanbanApi.uploadAttachment(taskId, fd);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.ADD_ATTACHMENT_SUCCESS,
+        payload: { attachment: res.data },
+      });
+      Toast.success("Файл успешно загружен");
+    } catch (e: any) {
+      console.error("Upload attachment error", e);
+      const status = e?.status;
+      if (status === 413) {
+        Toast.error("Файл слишком большой");
+      } else {
+        Toast.error("Не удалось загрузить файл");
+      }
+    }
+  },
+
+  async deleteAttachment(attachmentLink: string) {
+    try {
+      await kanbanApi.deleteAttachment(attachmentLink);
+      appDispatcher.dispatch({
+        type: TaskActionTypes.DELETE_ATTACHMENT_SUCCESS,
+        payload: { id: attachmentLink },
+      });
+      Toast.success("Вложение удалено");
+    } catch (e) {
+      console.error("Delete attachment error", e);
+      Toast.error("Не удалось удалить вложение");
+    }
+  },
 };
