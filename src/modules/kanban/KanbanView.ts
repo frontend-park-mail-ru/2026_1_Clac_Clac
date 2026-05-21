@@ -748,31 +748,35 @@ export class KanbanView {
                     ${iconHtml}
                     <span>${item.name}</span>
                   </div>
-                  <button class="icon-btn gantt-chart__row-edit-btn" title="Открыть задачу">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  <button class="gantt-chart__open-details-btn" title="Открыть карточку">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
                     </svg>
+                    <span class="gantt-chart__btn-text">Карточка</span>
                   </button>
                   ${dateRangeHtml}
                 `;
 
         leftRow.addEventListener("click", (e) => {
           const target = e.target as HTMLElement;
-          const isChevron = target.closest(".gantt-chart__chevron");
+          const isDetailsBtn = target.closest(".gantt-chart__open-details-btn");
 
-          if (isChevron && item.subtasks.length > 0) {
+          if (isDetailsBtn) {
             e.stopPropagation();
-            if (this.collapsedTasks.has(item.id)) {
-              this.collapsedTasks.delete(item.id);
-            } else {
-              this.collapsedTasks.add(item.id);
-            }
-            this.renderGanttChart(state);
-          } else {
             navigateTo(
               `/task?boardId=${state.boardId}&taskId=${item.id}&title=${encodeURIComponent(item.name)}`,
             );
+          } else {
+            if (item.subtasks.length > 0) {
+              if (this.collapsedTasks.has(item.id)) {
+                this.collapsedTasks.delete(item.id);
+              } else {
+                this.collapsedTasks.add(item.id);
+              }
+              this.renderGanttChart(state);
+            }
           }
         });
       } else if (item.type === "subtask") {

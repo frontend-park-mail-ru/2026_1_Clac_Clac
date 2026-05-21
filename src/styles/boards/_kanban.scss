@@ -1353,33 +1353,43 @@
   }
 }
 
-.gantt-chart__row-edit-btn {
-  opacity: 0;
-  padding: 6px;
-  color: #888;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
+.gantt-chart__open-details-btn {
+  display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
+  background: #2a2a2c;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
   margin-left: 0.5rem;
   margin-right: auto;
-  transition:
-    opacity 0.2s,
-    color 0.2s;
+  box-sizing: border-box;
 
   &:hover {
+    background: #3a3a3c;
     color: white;
+    border-color: #666;
+  }
+
+  svg {
+    flex-shrink: 0;
   }
 }
 
-.gantt-chart__row:hover .gantt-chart__row-edit-btn {
-  opacity: 1;
-}
-
 @media (max-width: 768px) {
-  .gantt-chart__row-edit-btn {
-    opacity: 1;
-    margin-right: 0.5rem;
+  .gantt-chart__open-details-btn {
+    padding: 6px;
+
+    .gantt-chart__btn-text {
+      display: none;
+    }
   }
 }
