@@ -1,6 +1,6 @@
 import { appDispatcher } from "../../core/Dispatcher";
 import { boardsApi, CommentResponse, kanbanApi, profileApi } from "../../api";
-import { TaskActionTypes } from "./task.types";
+import { TaskActionTypes, User } from "./task.types";
 import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
@@ -11,7 +11,7 @@ interface ExtendedCommentResponse extends CommentResponse {
   author_fallback?: string;
   created_time?: string;
   is_mine?: boolean;
-};
+}
 
 let currentUserLink: string | null = null;
 const commentsCache = new Map<string, ExtendedCommentResponse[]>();
@@ -24,9 +24,9 @@ export const TaskActions = {
       const boardName = boardRes.data.name || "Без названия";
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
-      const rawUsers = usersRes.data.user_links;
+      const rawUsers = usersRes.data.members.map((m) => m.link);
 
-      const userPromises = rawUsers.map(async (link) => {
+      const userPromises = rawUsers.map(async (link: string) => {
         if (profileCache.has(link)) return profileCache.get(link)!;
         try {
           const pRes = await profileApi.getProfileByLink(link);
@@ -60,8 +60,8 @@ export const TaskActions = {
         currentUserLink = meRes.data.link;
       }
 
-      const enrichComment = (c: ExtendedCommentResponse, users: typeof usersList) => {
-        const u = users.find(user => user.id === c.author_link);
+      const enrichComment = (c: ExtendedCommentResponse, users: User[]) => {
+        const u = users.find((user: User) => user.id === c.author_link);
         if (u) {
           c.author_name = u.name;
           c.author_avatar = u.avatarUrl;
