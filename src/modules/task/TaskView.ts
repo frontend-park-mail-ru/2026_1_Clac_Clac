@@ -610,7 +610,7 @@ export class TaskView {
           num.classList.add("time-picker__num--selected");
           num.scrollIntoView({ block: "center", behavior: "smooth" });
         });
-        col.appendChild(scroll);
+        scroll.appendChild(num);
       }
       let scrollTimer: ReturnType<typeof setTimeout>;
       scroll.addEventListener("scroll", () => {
