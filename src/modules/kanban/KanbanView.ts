@@ -1,5 +1,6 @@
 import Handlebars from "handlebars";
 import kanbanTpl from "../../templates/kanban.hbs?raw";
+import { kanbanStore } from "./KanbanStore";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
 import { authApi, boardsApi, kanbanApi } from "../../api";
@@ -751,11 +752,11 @@ export class KanbanView {
         });
       } else if (item.type === "subtask") {
         iconHtml = `
-          <label class="custom-checkbox gantt-chart__subtask-checkbox">
-            <input type="checkbox" class="gantt-subtask-cb" data-id="${item.id}" ${item.is_done ? "checked" : ""}>
-            <span class="checkmark"></span>
-          </label>
-        `;
+                <label class="custom-checkbox gantt-chart__subtask-checkbox">
+                  <input type="checkbox" class="gantt-subtask-cb" data-id="${item.id}" data-task-id="${item.taskId}" data-desc="${item.name}" ${item.is_done ? "checked" : ""}>
+                  <span class="checkmark"></span>
+                </label>
+              `;
         dateRangeHtml = `<span class="gantt-chart__item-date">${formatDateRange(item.start, item.end)}</span>`;
       }
 
@@ -773,16 +774,37 @@ export class KanbanView {
         ) as HTMLInputElement;
         cb?.addEventListener("click", (ev) => ev.stopPropagation());
         cb?.addEventListener("change", async () => {
+          const taskId = cb.getAttribute("data-task-id") || "";
+          const subtaskId = item.id;
+          const desc = item.name;
+
+          kanbanStore.updateSubtaskSilently(
+            taskId,
+            subtaskId,
+            cb.checked,
+            desc,
+          );
+
+          item.is_done = cb.checked;
+
+          this.renderGanttChart(state);
+
           try {
-            await kanbanApi.updateSubtask(item.id, {
+            await kanbanApi.updateSubtask(subtaskId, {
               is_done: cb.checked,
-              description: item.name,
+              description: desc,
             });
-            item.is_done = cb.checked;
-            this.renderGanttChart(state);
             KanbanActions.fetchKanban(state.boardId!, true);
           } catch {
+            kanbanStore.updateSubtaskSilently(
+              taskId,
+              subtaskId,
+              !cb.checked,
+              desc,
+            );
+            item.is_done = !cb.checked;
             cb.checked = !cb.checked;
+            this.renderGanttChart(state);
             Toast.error("Ошибка при обновлении подзадачи");
           }
         });
