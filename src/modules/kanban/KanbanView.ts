@@ -10,6 +10,7 @@ import { KanbanTaskCreation } from "./components/KanbanTaskCreation";
 import { KanbanColumnManager } from "./components/KanbanColumnManager";
 import { showConfirmModal } from "../../utils/confirmModal";
 import { Toast } from "../../utils/toast";
+import { boardsApi } from "../../api";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -195,5 +196,130 @@ export class KanbanView {
       KanbanContextMenus.bind(this.appDiv, state, signal);
       KanbanDragAndDrop.bind(this.appDiv, state.boardId, signal);
     }
+
+    this.appDiv.querySelector("#btn-share-board")?.addEventListener("click", async () => {
+          closeModals();
+          this.appDiv.querySelector("#modal-overlay")?.classList.remove("hidden");
+          
+          const inviteModal = this.appDiv.querySelector("#modal-invite-board") as HTMLElement;
+          if (!inviteModal) return;
+          inviteModal.classList.remove("hidden");
+    
+          const linkInput = inviteModal.querySelector("#invite-link-input") as HTMLInputElement;
+          const emailInput = inviteModal.querySelector("#invite-email-input") as HTMLInputElement;
+          const confirmBtn = inviteModal.querySelector("#btn-confirm-invite") as HTMLButtonElement;
+          const roleBtn = inviteModal.querySelector("#invite-role-btn") as HTMLButtonElement;
+          const roleText = inviteModal.querySelector("#invite-role-text") as HTMLElement;
+          const roleDropdown = inviteModal.querySelector("#invite-role-dropdown") as HTMLElement;
+          const roleContainer = inviteModal.querySelector("#invite-role-select-container") as HTMLElement;
+    
+          const tabMember = inviteModal.querySelector("#tab-invite-member") as HTMLButtonElement;
+          const tabGuest = inviteModal.querySelector("#tab-invite-guest") as HTMLButtonElement;
+    
+          if (linkInput) linkInput.value = "Загрузка ссылки...";
+          if (emailInput) emailInput.value = "";
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Пригласить";
+          }
+    
+          let currentRole = "editor";
+    
+          const generateLink = async (role: string) => {
+            if (!state.boardId) return;
+            try {
+              const res = await boardsApi.createInvite(state.boardId, {
+                default_role: role,
+                expire_seconds: 86400 * 7
+              });
+              if (linkInput) {
+                linkInput.value = `${window.location.origin}/invite/${res.data.invite_link}`;
+              }
+            } catch {
+              if (linkInput) linkInput.value = "Ошибка при генерации ссылки";
+            }
+          };
+    
+          generateLink(currentRole);
+    
+          tabMember?.addEventListener("click", () => {
+            tabMember.classList.add("active");
+            tabGuest.classList.remove("active");
+            roleContainer.classList.remove("hidden");
+            currentRole = "editor";
+            if (roleText) roleText.textContent = "Участник";
+            generateLink(currentRole);
+          });
+    
+          tabGuest?.addEventListener("click", () => {
+            tabGuest.classList.add("active");
+            tabMember.classList.remove("active");
+            roleContainer.classList.add("hidden");
+            currentRole = "viewer";
+            generateLink(currentRole);
+          });
+    
+          roleBtn?.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            roleDropdown?.classList.toggle("hidden");
+          });
+    
+          roleDropdown?.querySelectorAll(".invite-modal__dropdown-item").forEach(item => {
+            item.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              const role = item.getAttribute("data-role") || "editor";
+              const visibleName = item.textContent?.trim() || "Участник";
+              currentRole = role;
+              if (roleText) roleText.textContent = visibleName;
+              roleDropdown.classList.add("hidden");
+              generateLink(currentRole);
+            });
+          });
+    
+          const closeDropdown = () => {
+            roleDropdown?.classList.add("hidden");
+          };
+          document.addEventListener("click", closeDropdown);
+    
+          emailInput?.addEventListener("input", () => {
+            const val = emailInput.value.trim();
+            const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+            if (confirmBtn) {
+              confirmBtn.disabled = !isValid;
+            }
+          });
+    
+          inviteModal.querySelector("#btn-copy-invite-link")?.addEventListener("click", () => {
+            if (linkInput && linkInput.value && !linkInput.value.startsWith("Загрузка")) {
+              navigator.clipboard.writeText(linkInput.value).then(() => {
+                Toast.success("Ссылка скопирована!");
+              });
+            }
+          });
+    
+          inviteModal.querySelector("#btn-cancel-invite")?.addEventListener("click", closeModals);
+          inviteModal.querySelector("#btn-close-invite")?.addEventListener("click", closeModals);
+    
+          confirmBtn?.addEventListener("click", async () => {
+            const email = emailInput.value.trim();
+            if (!email) return;
+    
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Отправка...";
+    
+            try {
+              await boardsApi.createInvite(state.boardId!, {
+                default_role: currentRole,
+                expire_seconds: 86400 * 7
+              });
+              Toast.success(`Приглашение отправлено на ${email}!`);
+              closeModals();
+            } catch {
+              Toast.error("Не удалось отправить приглашение");
+              confirmBtn.disabled = false;
+              confirmBtn.textContent = "Пригласить";
+            }
+          });
+        }, { signal });
   }
 }
