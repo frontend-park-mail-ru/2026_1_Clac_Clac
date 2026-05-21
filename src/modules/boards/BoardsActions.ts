@@ -1,9 +1,7 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, authApi } from "../../api";
+import { boardsApi, authApi, kanbanApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
-import {
-  ApiError, Board
-} from "./boards.types";
+import { ApiError } from "./boards.types";
 import { Toast } from "../../utils/toast";
 
 const bgUploadErrorMessage = (status: number): string => {
@@ -18,16 +16,81 @@ export const BoardsActions = {
 
     try {
       const res = await boardsApi.getBoards();
+      const rawBoards = res.data;
 
-      const boards: Board[] = res.data.map((board) => ({
-        id: board.link,
-        board_name: board.name || "Без названия",
-        description: board.description || "Без описания",
-        background: board.background || "",
-        backlog: 0,
-        hot: 0,
-        members: 0,
-      }));
+      const boardsWithStatsPromises = rawBoards.map(async (board) => {
+        let backlogCount = 0;
+        let hotCount = 0;
+        let membersCount = 0;
+
+        try {
+          const membersRes = await boardsApi.getBoardUsers(board.link);
+          membersCount = membersRes.data.members?.length || 0;
+        } catch (err) {
+          console.error(`Failed to fetch members for board ${board.link}`, err);
+        }
+
+        try {
+          const sectionsRes = await kanbanApi.getSections(board.link);
+          const sections = sectionsRes.data || [];
+
+          if (sections.length > 0) {
+            const tasksPromises = sections.map(async (sec, idx) => {
+              try {
+                const tasksRes = await kanbanApi.getTasks(sec.link);
+                const tasks = tasksRes.data.cards || [];
+
+                if (idx === 0) {
+                  backlogCount = tasks.length;
+                }
+
+                const isDoneSection =
+                  sec.name?.toLowerCase().includes("готово") ||
+                  sec.name?.toLowerCase().includes("done");
+
+                if (!isDoneSection) {
+                  const now = Date.now();
+                  const oneDayMs = 24 * 60 * 60 * 1000;
+
+                  tasks.forEach((t) => {
+                    const dl = t.deadline;
+                    if (dl) {
+                      const dlTime = new Date(dl).getTime();
+                      if (!isNaN(dlTime) && dlTime < now + oneDayMs) {
+                        hotCount++;
+                      }
+                    }
+                  });
+                }
+              } catch (err) {
+                console.error(
+                  `Failed to fetch tasks for section ${sec.link}`,
+                  err,
+                );
+              }
+            });
+
+            await Promise.all(tasksPromises);
+          }
+        } catch (err) {
+          console.error(
+            `Failed to fetch sections for board ${board.link}`,
+            err,
+          );
+        }
+
+        return {
+          id: board.link,
+          board_name: board.name || "Без названия",
+          description: board.description || "Без описания",
+          background: board.background || "",
+          backlog: backlogCount,
+          hot: hotCount,
+          members: membersCount,
+        };
+      });
+
+      const boards = await Promise.all(boardsWithStatsPromises);
 
       appDispatcher.dispatch({
         type: "FETCH_BOARDS_SUCCESS",
@@ -48,7 +111,11 @@ export const BoardsActions = {
     }
   },
 
-  async createBoard(name: string, description: string, file?: File): Promise<void> {
+  async createBoard(
+    name: string,
+    description: string,
+    file?: File,
+  ): Promise<void> {
     try {
       const res = await boardsApi.createBoard({ name, description });
       const newBoardId = res.data.link;
@@ -70,7 +137,12 @@ export const BoardsActions = {
     }
   },
 
-  async updateBoard(id: string, name: string, description: string, file?: File): Promise<void> {
+  async updateBoard(
+    id: string,
+    name: string,
+    description: string,
+    file?: File,
+  ): Promise<void> {
     try {
       await boardsApi.updateBoard(id, { name, description, board_link: id });
 
@@ -106,7 +178,7 @@ export const BoardsActions = {
     } catch (err: unknown) {
       console.error("Logout error", err);
     }
-    
+
     setIsAuth(false);
     localStorage.removeItem("isAuth");
     navigateTo("/login");
