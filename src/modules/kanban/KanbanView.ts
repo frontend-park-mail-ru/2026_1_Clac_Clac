@@ -14,35 +14,6 @@ import { KanbanActions } from "./KanbanActions";
 
 const template = Handlebars.compile(kanbanTpl);
 
-/*
-const openLightbox = (url: string, name: string) => {
-  const overlay = document.createElement("div");
-  overlay.className = "lightbox-overlay";
-  overlay.innerHTML = `
-    <div class="lightbox-container">
-      <button class="lightbox-close">&times;</button>
-      <img src="${url}" alt="${name}" class="lightbox-img">
-      <div class="lightbox-caption">${name}</div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  requestAnimationFrame(() => {
-    overlay.classList.add("lightbox-overlay--visible");
-  });
-
-  const close = () => {
-    overlay.classList.remove("lightbox-overlay--visible");
-    setTimeout(() => overlay.remove(), 250);
-  };
-
-  overlay.querySelector(".lightbox-close")?.addEventListener("click", close);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
-};
-*/
-
 export class KanbanView {
   private appDiv: HTMLElement;
   private abortController: AbortController | null = null;
@@ -57,6 +28,9 @@ export class KanbanView {
   private ganttFilterEndDate: Date | null = null;
   private ganttFilterWithTime = false;
   private ganttFilterWithStart = false;
+
+  private tempGanttFilterStartDate: Date | null = null;
+  private tempGanttFilterEndDate: Date | null = null;
 
   constructor(appDiv: HTMLElement) {
     this.appDiv = appDiv;
@@ -316,12 +290,16 @@ export class KanbanView {
       popover.className = "gantt-filter-popover";
     }
 
-    let tempStartDate = this.ganttFilterStartDate
-      ? new Date(this.ganttFilterStartDate)
-      : new Date(Date.now() - 3 * 86400000);
-    let tempEndDate = this.ganttFilterEndDate
-      ? new Date(this.ganttFilterEndDate)
-      : new Date(Date.now() + 3 * 86400000);
+    if (!this.tempGanttFilterStartDate) {
+      this.tempGanttFilterStartDate = this.ganttFilterStartDate
+        ? new Date(this.ganttFilterStartDate)
+        : new Date(Date.now() - 3 * 86400000);
+    }
+    if (!this.tempGanttFilterEndDate) {
+      this.tempGanttFilterEndDate = this.ganttFilterEndDate
+        ? new Date(this.ganttFilterEndDate)
+        : new Date(Date.now() + 3 * 86400000);
+    }
 
     const formatDateToInput = (d: Date | null): string => {
       if (!d) return "";
@@ -341,20 +319,20 @@ export class KanbanView {
         row.innerHTML = `
           <div class="gantt-filter-input-group">
             <span>с</span>
-            <input type="text" id="gantt-val-date-from" class="gantt-filter-field" value="${formatDateToInput(tempStartDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempStartDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-from" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterStartDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterStartDate)}" readonly>` : ""}
           </div>
           <div class="gantt-filter-input-group">
             <span>до</span>
-            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(tempEndDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempEndDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" readonly>` : ""}
           </div>
         `;
       } else {
         row.innerHTML = `
           <div class="gantt-filter-input-group">
-            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(tempEndDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(tempEndDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" readonly>
+            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" readonly>` : ""}
           </div>
         `;
       }
@@ -367,15 +345,24 @@ export class KanbanView {
     calendarsContainer.className = "gantt-filter-calendars";
 
     if (this.ganttFilterWithStart) {
-      const calFrom = this.buildFilterCalendar(tempStartDate, (d) => {
-        tempStartDate = d;
-        refreshPopover();
-      });
+      const calFrom = this.buildFilterCalendar(
+        this.tempGanttFilterStartDate,
+        (d) => {
+          this.tempGanttFilterStartDate = d;
+          if (this.tempGanttFilterEndDate && d > this.tempGanttFilterEndDate) {
+            this.tempGanttFilterEndDate = new Date(d);
+          }
+          refreshPopover();
+        },
+      );
       calendarsContainer.appendChild(calFrom);
     }
 
-    const calTo = this.buildFilterCalendar(tempEndDate, (d) => {
-      tempEndDate = d;
+    const calTo = this.buildFilterCalendar(this.tempGanttFilterEndDate, (d) => {
+      this.tempGanttFilterEndDate = d;
+      if (this.tempGanttFilterStartDate && d < this.tempGanttFilterStartDate) {
+        this.tempGanttFilterStartDate = new Date(d);
+      }
       refreshPopover();
     });
     calendarsContainer.appendChild(calTo);
@@ -415,6 +402,8 @@ export class KanbanView {
       this.ganttFilterEnabled = false;
       this.ganttFilterStartDate = null;
       this.ganttFilterEndDate = null;
+      this.tempGanttFilterStartDate = null;
+      this.tempGanttFilterEndDate = null;
       popover.classList.add("hidden");
       const label = this.appDiv.querySelector(
         "#gantt-filter-label",
@@ -430,9 +419,9 @@ export class KanbanView {
       ev.stopPropagation();
       this.ganttFilterEnabled = true;
       this.ganttFilterStartDate = this.ganttFilterWithStart
-        ? tempStartDate
+        ? this.tempGanttFilterStartDate
         : null;
-      this.ganttFilterEndDate = tempEndDate;
+      this.ganttFilterEndDate = this.tempGanttFilterEndDate;
 
       popover.classList.add("hidden");
       const label = this.appDiv.querySelector(
@@ -440,9 +429,9 @@ export class KanbanView {
       ) as HTMLElement;
       if (label) {
         if (this.ganttFilterWithStart) {
-          label.textContent = `Период: ${formatDateToInput(tempStartDate)} - ${formatDateToInput(tempEndDate)}`;
+          label.textContent = `Период: ${formatDateToInput(this.tempGanttFilterStartDate)} - ${formatDateToInput(this.tempGanttFilterEndDate)}`;
         } else {
-          label.textContent = `День: ${formatDateToInput(tempEndDate)}`;
+          label.textContent = `День: ${formatDateToInput(this.tempGanttFilterEndDate)}`;
         }
       }
       this.renderGanttChart(state);
@@ -509,14 +498,24 @@ export class KanbanView {
     };
 
     const filterActive = this.ganttFilterEnabled;
-    const tStart = this.ganttFilterStartDate
-      ? this.ganttFilterStartDate.getTime()
-      : this.ganttFilterEndDate
-        ? this.ganttFilterEndDate.getTime() - 86400000
-        : 0;
-    const tEnd = this.ganttFilterEndDate
-      ? this.ganttFilterEndDate.getTime() + 86400000
-      : 0;
+    let tStart = 0;
+    let tEnd = 0;
+
+    if (filterActive) {
+      if (this.ganttFilterStartDate) {
+        tStart = this.ganttFilterStartDate.getTime();
+        tEnd = this.ganttFilterEndDate
+          ? this.ganttFilterEndDate.getTime()
+          : Infinity;
+      } else if (this.ganttFilterEndDate) {
+        const dayStart = new Date(this.ganttFilterEndDate);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(this.ganttFilterEndDate);
+        dayEnd.setHours(23, 59, 59, 999);
+        tStart = dayStart.getTime();
+        tEnd = dayEnd.getTime();
+      }
+    }
 
     state.sections.forEach((sec) => {
       const matchingTasks: any[] = [];
@@ -1066,6 +1065,12 @@ export class KanbanView {
           closeModals();
           if (wasHidden) {
             popover.classList.remove("hidden");
+            this.tempGanttFilterStartDate = this.ganttFilterStartDate
+              ? new Date(this.ganttFilterStartDate)
+              : new Date(Date.now() - 3 * 86400000);
+            this.tempGanttFilterEndDate = this.ganttFilterEndDate
+              ? new Date(this.ganttFilterEndDate)
+              : new Date(Date.now() + 3 * 86400000);
             this.renderGanttFilterPopover(state);
           }
         }

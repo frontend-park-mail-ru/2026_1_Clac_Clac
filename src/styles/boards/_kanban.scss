@@ -1272,3 +1272,83 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .kanban__view-tabs {
+    padding: 0 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .gantt-chart {
+    margin: 1rem;
+    flex-direction: row;
+
+    &__left-pane {
+      width: 150px;
+      min-width: 150px;
+    }
+
+    &__right-pane {
+      width: calc(100% - 150px);
+    }
+
+    &__header-row {
+      padding: 0 0.5rem;
+      font-size: 0.75rem;
+
+      span:last-child {
+        display: none;
+      }
+    }
+
+    &__row {
+      padding: 0 0.5rem;
+      font-size: 0.8rem;
+      height: 48px;
+
+      &--task {
+        padding-left: 1rem;
+      }
+
+      &--subtask {
+        padding-left: 1.5rem;
+      }
+    }
+
+    &__item-date {
+      display: none;
+    }
+
+    &__grid-row {
+      height: 48px;
+    }
+
+    &__bar {
+      top: 16px;
+    }
+  }
+
+  .gantt-filter-popover {
+    width: calc(100vw - 2rem);
+    min-width: 0 !important;
+    max-width: 340px;
+    right: 50% !important;
+    left: auto !important;
+    transform: translateX(50%);
+    padding: 1rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .gantt-filter-calendars {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .gantt-filter-inputs-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
