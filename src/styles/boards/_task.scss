@@ -197,6 +197,7 @@
     flex: 1;
     display: flex;
     align-items: center;
+    min-width: 0;
   }
 
   &__subtask-row-flex {
@@ -205,6 +206,7 @@
     justify-content: space-between;
     gap: 0.5rem;
     width: 100%;
+    min-width: 0;
   }
 
   &__subtask-text {
@@ -223,6 +225,8 @@
     color: #cccccc;
     font-family: inherit;
     transition: color 0.2s;
+    flex: 1;
+    min-width: 0;
 
     &:focus {
       color: #ffffff;
@@ -255,10 +259,12 @@
   &__attachment-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    background: transparent;
-    border: none;
+    gap: 0.75rem;
+    background: #1e1e20;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+    min-width: 0;
   }
 
   &__attachment-icon {
@@ -273,6 +279,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
   }
 
   &__attachment-delete-btn {
@@ -409,11 +416,11 @@
   }
 
   &__comment-body-wrapper {
-    display: block;
-    max-width: 70%;
-    min-width: 180px;
-    width: fit-content;
-    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 75%;
+    min-width: 0;
   }
 
   &__comment-avatar,
@@ -439,7 +446,7 @@
     color: #8b5cf6;
     font-size: 0.85rem;
     font-weight: bold;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
   }
 
   &__comment-bubble {
@@ -453,9 +460,12 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: break-word;
+    white-space: pre-wrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    box-sizing: border-box;
+
+    width: fit-content;
+    max-width: 100%;
+    min-width: 140px;
   }
 
   &__comment-time {
@@ -514,11 +524,10 @@
   }
 
   &__comment-menu-wrap {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    left: -35px;
+    position: relative;
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: flex-start;
   }
 
   &__comment-menu-btn {
@@ -599,6 +608,82 @@
     padding: 0.3rem 0.8rem;
     font-size: 0.85rem;
     border-radius: 6px;
+  }
+
+  &__panel {
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    background-color: #1a1a1c;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  &__content {
+    padding: 0 2rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__title-input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    width: 100%;
+    padding: 0.5rem 0;
+    margin-bottom: 1.5rem;
+    outline: none;
+
+    &:focus {
+      border-bottom: 1px solid #444;
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__panel {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    &__header-bar {
+      padding: 1rem 1.25rem;
+    }
+    &__content {
+      padding: 0 1.25rem;
+    }
+    &__title-input {
+      font-size: 1.6rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &__meta-label {
+      min-width: 90px;
+      font-size: 0.85rem;
+    }
+    &__meta-value-btn {
+      font-size: 0.85rem;
+    }
+    &__meta-date-input {
+      font-size: 0.85rem;
+    }
+    &__subtask-text-input {
+      font-size: 0.85rem;
+    }
+    &__comment-body-wrapper {
+      max-width: 80%;
+      min-width: 140px;
+    }
+    &__comment-bubble {
+      padding: 0.6rem 0.8rem;
+      font-size: 0.9rem;
+    }
+    &__comment-time {
+      font-size: 0.7rem;
+    }
   }
 }
 
