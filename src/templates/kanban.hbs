@@ -45,6 +45,11 @@
       </div>
     </div>
 
+    <div class="kanban__view-tabs">
+      <button class="kanban__view-tab active" id="tab-view-kanban">Канбан</button>
+      <button class="kanban__view-tab" id="tab-view-gantt">Диаграмма Ганта</button>
+    </div>
+
     <div class="kanban__columns-wrapper">
       <div class="kanban__columns-container">
         {{#each sections}}
@@ -157,6 +162,10 @@
 
       </div>
     </div>
+
+    <div class="gantt-chart hidden" id="gantt-chart-container">
+    </div>
+
   </div>
 </div>
 
