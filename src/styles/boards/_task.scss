@@ -120,9 +120,6 @@
     color: #ccc;
     line-height: 1.6;
     font-size: 1rem;
-    background: #252527;
-    border-radius: 12px;
-    border: 1px solid #333;
   }
 
   &__desc-title {
@@ -381,7 +378,9 @@
     color: #555;
     padding: 4px 6px;
     border-radius: 6px;
-    transition: color 0.15s, background 0.15s;
+    transition:
+      color 0.15s,
+      background 0.15s;
 
     &:hover {
       color: #ccc;
@@ -490,7 +489,9 @@
     border-radius: 8px;
     font-size: 1.2rem;
     line-height: 1;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
 
     &:hover {
       background: #333;
