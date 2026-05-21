@@ -286,6 +286,13 @@
     }
   }
 
+  &__attachment-upload {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.2rem;
+  }
+
   &__attachment-upload-btn {
     display: flex;
     align-items: center;
@@ -382,6 +389,7 @@
     align-items: center;
     gap: 0.5rem;
     max-width: 75%;
+    min-width: 0;
   }
 
   &__comment-avatar,
@@ -400,14 +408,7 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1rem;
-  }
-
-  &__comment-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    width: 100%;
+    font-size: 1.1rem;
   }
 
   &__comment-author {
@@ -430,6 +431,10 @@
     word-break: break-word;
     white-space: pre-wrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    width: fit-content;
+    max-width: 100%;
+    min-width: 140px;
   }
 
   &__comment-time {
@@ -437,6 +442,7 @@
     color: #666;
     align-self: flex-end;
     margin-bottom: 0.2rem;
+    flex-shrink: 0;
   }
 
   &__comment-input-area {

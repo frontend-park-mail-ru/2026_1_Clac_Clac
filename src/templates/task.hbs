@@ -18,13 +18,6 @@
             <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
-        {{!-- <button class="icon-btn task__share-btn" id="btn-share" title="Поделиться">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h6v6"></path>
-            <path d="M10 14L21 3"></path>
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          </svg>
-        </button> --}}
       </div>
     </div>
 
@@ -143,7 +136,7 @@
           </div>
           {{/each}}
         </div>
-        <div class="task__subtask-add mt-05">
+        <div class="task__attachment-upload mt-05">
           <label for="task-attachment-input" class="task__attachment-upload-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="task__attachment-icon-svg">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -180,12 +173,11 @@
             {{/unless}}
 
             <div class="task__comment-body-wrapper">
-              <div class="task__comment-content">
-                <div class="task__comment-bubble">
-                  <div class="task__comment-author">{{author_name}}</div>
-                  <div class="task__comment-text">{{text}}</div>
-                </div>
+              <div class="task__comment-bubble">
+                <div class="task__comment-author">{{author_name}}</div>
+                <div class="task__comment-text">{{text}}</div>
               </div>
+
               {{#if is_mine}}
               <div class="task__comment-menu-wrap">
                 <button class="task__comment-menu-btn icon-btn" title="Действия">
