@@ -9,6 +9,33 @@ import { showConfirmModal } from "../../utils/confirmModal";
 
 const template = Handlebars.compile(taskTpl);
 
+const openLightbox = (url: string, name: string) => {
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox-overlay";
+  overlay.innerHTML = `
+    <div class="lightbox-container">
+      <button class="lightbox-close">&times;</button>
+      <img src="${url}" alt="${name}" class="lightbox-img">
+      <div class="lightbox-caption">${name}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("lightbox-overlay--visible");
+  });
+
+  const close = () => {
+    overlay.classList.remove("lightbox-overlay--visible");
+    setTimeout(() => overlay.remove(), 250);
+  };
+
+  overlay.querySelector(".lightbox-close")?.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+};
+
 export class TaskView {
   private appDiv: HTMLElement;
   private taskNode: HTMLElement | null = null;
@@ -265,6 +292,15 @@ export class TaskView {
         return String(a.id).localeCompare(String(b.id));
       });
 
+    const formattedAttachments = (state.attachments || []).map((att: any) => {
+      const name = att.display_name || "";
+      const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(name);
+      return {
+        ...att,
+        isImage,
+      };
+    });
+
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
@@ -280,12 +316,11 @@ export class TaskView {
         executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
         subtasks: formattedSubtasks,
-        attachments: taskData.attachments || [],
       },
       comments: state.comments,
-      attachments: state.attachments,
-      attachmentsCount: state.attachments.length,
-      isAttachmentsFull: state.attachments.length >= 5,
+      attachments: formattedAttachments,
+      attachmentsCount: formattedAttachments.length,
+      isAttachmentsFull: formattedAttachments.length >= 5,
     });
 
     if (currentValues.title !== undefined)
@@ -575,7 +610,7 @@ export class TaskView {
           num.classList.add("time-picker__num--selected");
           num.scrollIntoView({ block: "center", behavior: "smooth" });
         });
-        scroll.appendChild(num);
+        col.appendChild(scroll);
       }
       let scrollTimer: ReturnType<typeof setTimeout>;
       scroll.addEventListener("scroll", () => {
@@ -641,6 +676,20 @@ export class TaskView {
               confirmLabel: "Удалить",
               onConfirm: () => TaskActions.deleteAttachment(link),
             });
+          }
+        });
+      });
+
+    this.taskNode
+      ?.querySelectorAll(".task__attachment-link")
+      .forEach((link) => {
+        link.addEventListener("click", (e) => {
+          const isImage = link.getAttribute("data-is-image") === "true";
+          if (isImage) {
+            e.preventDefault();
+            const path = link.getAttribute("href") || "";
+            const name = link.getAttribute("title") || "";
+            openLightbox(path, name);
           }
         });
       });

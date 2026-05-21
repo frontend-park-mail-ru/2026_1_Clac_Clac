@@ -239,6 +239,7 @@
     padding: 4px;
   }
 
+  /* --- Раздел: Вложения (Attachments) --- */
   &__attachments-section {
     margin-bottom: 2.5rem;
     border-top: 1px solid #333;
@@ -255,11 +256,10 @@
   &__attachment-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    background: #1e1e20;
-    padding: 0.8rem 1rem;
-    border-radius: 12px;
-    border: 1px solid #333;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    background: transparent;
+    border: none;
   }
 
   &__attachment-icon {
@@ -284,6 +284,31 @@
     &:hover {
       color: #ff5c5c;
     }
+  }
+
+  &__attachment-preview-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #252527;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #333;
+    cursor: pointer;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: #555;
+    }
+  }
+
+  &__attachment-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   &__attachment-upload {
@@ -429,6 +454,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: break-word;
+    white-space: pre-wrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     width: 100%;
     box-sizing: border-box;
@@ -741,4 +767,66 @@
 
 .section-mandatory-label {
   min-width: 160px;
+}
+
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(5px);
+
+  &--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.lightbox-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #ff5c5c;
+  }
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-caption {
+  color: #ccc;
+  margin-top: 1rem;
+  font-size: 1rem;
+  text-align: center;
 }
