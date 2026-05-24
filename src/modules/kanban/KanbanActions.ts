@@ -74,6 +74,8 @@ export const KanbanActions = {
               const exUser = users.find((u) => u.id === exId);
               const dl = t.deadline;
 
+              const isDone = (t as any).status === true || (t as any).done === true || false;
+
               let formattedDate = null;
               let formattedTime = null;
 
@@ -155,6 +157,7 @@ export const KanbanActions = {
                 progressPercentStyle,
                 hasSubtasks,
                 position: t.position,
+                is_done: isDone,
               };
             })
             .sort((a, b) => a.position - b.position);

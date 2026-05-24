@@ -1030,3 +1030,52 @@
     border-radius: 8px !important;
   }
 }
+
+.task__status-btn {
+  width: auto !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.9rem !important;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+
+  &--pending {
+    background: transparent;
+    color: #ccc;
+    border: 1px solid #444;
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: #10b981;
+      color: #10b981;
+    }
+  }
+
+  &--done {
+    background: #10b981;
+    color: white;
+    border: 1px solid #10b981;
+
+    &:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+  }
+}
+
+.task__title-input {
+  transition:
+    text-decoration 0.2s ease,
+    color 0.2s ease;
+
+  &--done {
+    text-decoration: line-through;
+    color: #666 !important;
+  }
+}

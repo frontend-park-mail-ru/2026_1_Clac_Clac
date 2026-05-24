@@ -146,6 +146,8 @@ export class TaskView {
 
     if (!taskData) return;
 
+    const isDone = taskData.status === true || taskData.done === true || false;
+
     const contentEl = this.taskNode?.querySelector(
       ".task__content",
     ) as HTMLElement;
@@ -316,11 +318,12 @@ export class TaskView {
         executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
         subtasks: formattedSubtasks,
+        is_done: isDone,
       },
       comments: state.comments,
       attachments: formattedAttachments,
       attachmentsCount: formattedAttachments.length,
-      isAttachmentsFull: formattedAttachments.length >= 5,
+      isAttachmentsFull: formattedAttachments.length >= 100,
     });
 
     if (currentValues.title !== undefined)
@@ -640,6 +643,19 @@ export class TaskView {
 
   private attachListeners() {
     const state = taskStore.getState();
+
+    this.taskNode
+      ?.querySelector("#btn-toggle-task-status")
+      ?.addEventListener("click", () => {
+        const state = taskStore.getState();
+        if (state.taskId && state.taskData) {
+          const currentDone =
+            state.taskData.status === true ||
+            state.taskData.done === true ||
+            false;
+          TaskActions.toggleTaskStatus(state.taskId, !currentDone);
+        }
+      });
 
     const fileInput = this.taskNode?.querySelector(
       "#task-file-input",

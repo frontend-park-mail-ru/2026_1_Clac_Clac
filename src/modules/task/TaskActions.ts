@@ -4,6 +4,7 @@ import { TaskActionTypes, User } from "./task.types";
 import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
+import { clearKanbanCache } from "../kanban";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -375,4 +376,26 @@ export const TaskActions = {
       Toast.error("Ошибка при удалении файла");
     }
   },
+
+  async toggleTaskStatus(taskId: string, isDone: boolean) {
+      appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
+      try {
+        await kanbanApi.updateTaskStatus(taskId, { done: isDone });
+        
+        appDispatcher.dispatch({
+          type: "TASK_UPDATE_STATUS_SUCCESS",
+          payload: { is_done: isDone }
+        });
+        
+        clearKanbanCache();
+        Toast.success(isDone ? "Задача выполнена" : "Статус задачи изменен");
+      } catch (err) {
+        console.error("Failed to update status", err);
+        Toast.error("Ошибка при обновлении статуса");
+        appDispatcher.dispatch({
+          type: TaskActionTypes.SAVE_TASK_ERROR,
+          payload: { error: "Ошибка при изменении статуса" }
+        });
+      }
+    },
 };
