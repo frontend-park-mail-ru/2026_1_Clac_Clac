@@ -408,7 +408,7 @@ export class KanbanView {
       const label = this.appDiv.querySelector(
         "#gantt-filter-label",
       ) as HTMLElement;
-      if (label) label.textContent = "Период: Все";
+      if (label) label.textContent = "Period: All";
       this.renderGanttChart(state);
     });
 
@@ -1337,7 +1337,12 @@ export class KanbanView {
           try {
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;
-            renderMembersList(searchInput?.value.trim() || "");
+            const activeSearchInput = inviteModal.querySelector(
+              "#invite-members-search",
+            ) as HTMLInputElement;
+            renderMembersList(
+              activeSearchInput ? activeSearchInput.value.trim() : "",
+            );
           } catch {
             if (listContainer) {
               listContainer.innerHTML = `<div style="text-align: center; color: #ff5c5c; padding: 1.5rem; font-size: 0.9rem;">Ошибка при загрузке участников</div>`;
@@ -1350,14 +1355,15 @@ export class KanbanView {
         ) as HTMLInputElement;
         if (searchInput) {
           searchInput.value = "";
-          const onSearchInput = () => {
-            renderMembersList(searchInput.value.trim());
-          };
-          searchInput.replaceWith(searchInput.cloneNode(true));
-          const newSearchInput = inviteModal.querySelector(
-            "#invite-members-search",
+          const newSearchInput = searchInput.cloneNode(
+            true,
           ) as HTMLInputElement;
-          newSearchInput.addEventListener("input", onSearchInput);
+          searchInput.replaceWith(newSearchInput);
+
+          newSearchInput.addEventListener("input", (e) => {
+            const target = e.target as HTMLInputElement;
+            renderMembersList(target.value.trim());
+          });
         }
 
         loadMembersAndRender();
