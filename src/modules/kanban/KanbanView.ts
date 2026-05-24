@@ -1102,34 +1102,38 @@ export class KanbanView {
           "#modal-invite-board",
         ) as HTMLElement;
         if (!inviteModal) return;
-        inviteModal.classList.remove("hidden");
 
-        const linkInput = inviteModal.querySelector(
+        const newInviteModal = inviteModal.cloneNode(true) as HTMLElement;
+        inviteModal.replaceWith(newInviteModal);
+
+        newInviteModal.classList.remove("hidden");
+
+        const linkInput = newInviteModal.querySelector(
           "#invite-link-input",
         ) as HTMLInputElement;
-        const emailInput = inviteModal.querySelector(
+        const emailInput = newInviteModal.querySelector(
           "#invite-email-input",
         ) as HTMLInputElement;
-        const confirmBtn = inviteModal.querySelector(
+        const confirmBtn = newInviteModal.querySelector(
           "#btn-confirm-invite",
         ) as HTMLButtonElement;
-        const roleBtn = inviteModal.querySelector(
+        const roleBtn = newInviteModal.querySelector(
           "#invite-role-btn",
         ) as HTMLButtonElement;
-        const roleText = inviteModal.querySelector(
+        const roleText = newInviteModal.querySelector(
           "#invite-role-text",
         ) as HTMLElement;
-        const roleDropdown = inviteModal.querySelector(
+        const roleDropdown = newInviteModal.querySelector(
           "#invite-role-dropdown",
         ) as HTMLElement;
-        const roleContainer = inviteModal.querySelector(
+        const roleContainer = newInviteModal.querySelector(
           "#invite-role-select-container",
         ) as HTMLElement;
 
-        const tabMember = inviteModal.querySelector(
+        const tabMember = newInviteModal.querySelector(
           "#tab-invite-member",
         ) as HTMLButtonElement;
-        const tabGuest = inviteModal.querySelector(
+        const tabGuest = newInviteModal.querySelector(
           "#tab-invite-guest",
         ) as HTMLButtonElement;
 
@@ -1163,7 +1167,7 @@ export class KanbanView {
         let myEmail = "";
 
         const renderMembersList = (filter = "") => {
-          const listContainer = inviteModal.querySelector(
+          const listContainer = newInviteModal.querySelector(
             "#invite-members-list",
           );
           if (!listContainer) return;
@@ -1223,11 +1227,6 @@ export class KanbanView {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
-                <div class="invite-modal__member-role-dropdown hidden">
-                  <div class="invite-modal__member-role-option" data-role="viewer">Гость</div>
-                  <div class="invite-modal__member-role-option" data-role="editor">Участник</div>
-                  <div class="invite-modal__member-role-option" data-role="admin">Админ</div>
-                </div>
               </div>`
               : `<span class="invite-modal__member-role-static">${roleLabel}</span>`;
 
@@ -1349,7 +1348,7 @@ export class KanbanView {
         };
 
         const loadMembersAndRender = async () => {
-          const listContainer = inviteModal.querySelector(
+          const listContainer = newInviteModal.querySelector(
             "#invite-members-list",
           );
           if (listContainer) {
@@ -1367,7 +1366,7 @@ export class KanbanView {
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;
 
-            const activeSearchInput = inviteModal.querySelector(
+            const activeSearchInput = newInviteModal.querySelector(
               "#invite-members-search",
             ) as HTMLInputElement;
             renderMembersList(
@@ -1380,7 +1379,7 @@ export class KanbanView {
           }
         };
 
-        const searchInput = inviteModal.querySelector(
+        const searchInput = newInviteModal.querySelector(
           "#invite-members-search",
         ) as HTMLInputElement;
         if (searchInput) {
@@ -1404,14 +1403,14 @@ export class KanbanView {
             .forEach((el) => el.remove());
         });
 
-        inviteModal
+        newInviteModal
           .querySelector("#invite-members-list")
           ?.addEventListener("scroll", () => {
             document
               .querySelectorAll(".invite-modal__active-role-dropdown")
               .forEach((el) => el.remove());
           });
-        inviteModal.addEventListener("scroll", () => {
+        newInviteModal.addEventListener("scroll", () => {
           document
             .querySelectorAll(".invite-modal__active-role-dropdown")
             .forEach((el) => el.remove());
@@ -1466,7 +1465,7 @@ export class KanbanView {
           }
         });
 
-        inviteModal
+        newInviteModal
           .querySelector("#btn-copy-invite-link")
           ?.addEventListener("click", () => {
             if (
@@ -1480,10 +1479,10 @@ export class KanbanView {
             }
           });
 
-        inviteModal
+        newInviteModal
           .querySelector("#btn-cancel-invite")
           ?.addEventListener("click", closeModals);
-        inviteModal
+        newInviteModal
           .querySelector("#btn-close-invite")
           ?.addEventListener("click", closeModals);
 
