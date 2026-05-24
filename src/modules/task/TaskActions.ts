@@ -149,8 +149,7 @@ export const TaskActions = {
       try {
         const parsed = JSON.parse(event.data);
         if (
-          parsed.type === "new_comment" &&
-          parsed.payload?.action === "new_comment"
+          parsed.type === "new_comment"
         ) {
           const { user_link, data } = parsed.payload;
           if (!data) return;
