@@ -1199,6 +1199,7 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     pointer-events: auto !important;
     z-index: 10;
+    overflow: visible !important;
 
     &--white {
       background: white;
@@ -1516,8 +1517,35 @@
     background: #10b981 !important;
   }
 
+  &__bar-handle {
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 15;
+    background: transparent;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    &--left {
+      left: 0;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &--right {
+      right: 0;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+  }
+
   &__task-status-btn {
-    position: static !important; // Сбрасываем абсолютное позиционирование карточки
+    position: static !important;
     margin-right: 0.6rem;
     flex-shrink: 0;
     width: 18px !important;

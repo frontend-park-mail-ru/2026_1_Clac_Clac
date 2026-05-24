@@ -820,6 +820,147 @@ export class KanbanView {
         bar.title = `${item.name}: ${formatDateRange(item.start, item.end)}`;
 
         if (!isTaskDone) {
+          const leftHandle = document.createElement("div");
+          leftHandle.className =
+            "gantt-chart__bar-handle gantt-chart__bar-handle--left";
+          leftHandle.title = "Изменить дату начала";
+
+          const rightHandle = document.createElement("div");
+          rightHandle.className =
+            "gantt-chart__bar-handle gantt-chart__bar-handle--right";
+          rightHandle.title = "Изменить дедлайн";
+
+          bar.appendChild(leftHandle);
+          bar.appendChild(rightHandle);
+
+          const msPerPixel = 86400000 / cellWidth;
+
+          leftHandle.addEventListener("mousedown", (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const startX = e.clientX;
+            const originalLeftPercent = parseFloat(bar.style.left);
+            const originalWidthPercent = parseFloat(bar.style.width);
+            const parentWidth = (
+              bar.parentElement as HTMLElement
+            ).getBoundingClientRect().width;
+
+            document.body.style.cursor = "ew-resize";
+
+            const onMouseMove = (moveEv: MouseEvent) => {
+              const deltaX = moveEv.clientX - startX;
+              const deltaPercent = (deltaX / parentWidth) * 100;
+
+              let newLeft = originalLeftPercent + deltaPercent;
+              let newWidth = originalWidthPercent - deltaPercent;
+
+              const minWidthPercent = (cellWidth / parentWidth) * 100;
+
+              if (newLeft < 0) {
+                newLeft = 0;
+                newWidth = originalLeftPercent + originalWidthPercent;
+              }
+              if (newWidth < minWidthPercent) {
+                newWidth = minWidthPercent;
+                newLeft =
+                  originalLeftPercent + originalWidthPercent - minWidthPercent;
+              }
+
+              bar.style.left = `${newLeft}%`;
+              bar.style.width = `${newWidth}%`;
+            };
+
+            const onMouseUp = async (upEv: MouseEvent) => {
+              document.removeEventListener("mousemove", onMouseMove);
+              document.removeEventListener("mouseup", onMouseUp);
+              document.body.style.cursor = "";
+
+              const deltaX = upEv.clientX - startX;
+              const deltaTimeMs = deltaX * msPerPixel;
+
+              let newStartTime = item.start.getTime() + deltaTimeMs;
+              if (newStartTime >= item.end.getTime()) {
+                newStartTime = item.end.getTime() - 86400000;
+              }
+
+              try {
+                await kanbanApi.updateTaskTimeline(item.id, {
+                  start: new Date(newStartTime).toISOString(),
+                  deadline: item.end.toISOString(),
+                });
+                Toast.success(`Дата начала задачи "${item.name}" обновлена`);
+                await KanbanActions.fetchKanban(state.boardId!, true);
+              } catch {
+                Toast.error("Не удалось изменить дату начала");
+                this.renderGanttChart(state);
+              }
+            };
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+          });
+
+          rightHandle.addEventListener("mousedown", (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const startX = e.clientX;
+            const originalLeftPercent = parseFloat(bar.style.left);
+            const originalWidthPercent = parseFloat(bar.style.width);
+            const parentWidth = (
+              bar.parentElement as HTMLElement
+            ).getBoundingClientRect().width;
+
+            document.body.style.cursor = "ew-resize";
+
+            const onMouseMove = (moveEv: MouseEvent) => {
+              const deltaX = moveEv.clientX - startX;
+              const deltaPercent = (deltaX / parentWidth) * 100;
+
+              let newWidth = originalWidthPercent + deltaPercent;
+              const minWidthPercent = (cellWidth / parentWidth) * 100;
+
+              if (newWidth < minWidthPercent) {
+                newWidth = minWidthPercent;
+              }
+              if (originalLeftPercent + newWidth > 100) {
+                newWidth = 100 - originalLeftPercent;
+              }
+
+              bar.style.width = `${newWidth}%`;
+            };
+
+            const onMouseUp = async (upEv: MouseEvent) => {
+              document.removeEventListener("mousemove", onMouseMove);
+              document.removeEventListener("mouseup", onMouseUp);
+              document.body.style.cursor = "";
+
+              const deltaX = upEv.clientX - startX;
+              const deltaTimeMs = deltaX * msPerPixel;
+
+              let newEndTime = item.end.getTime() + deltaTimeMs;
+              if (newEndTime <= item.start.getTime()) {
+                newEndTime = item.start.getTime() + 86400000;
+              }
+
+              try {
+                await kanbanApi.updateTaskTimeline(item.id, {
+                  start: item.start.toISOString(),
+                  deadline: new Date(newEndTime).toISOString(),
+                });
+                Toast.success(`Дедлайн задачи "${item.name}" обновлен`);
+                await KanbanActions.fetchKanban(state.boardId!, true);
+              } catch {
+                Toast.error("Не удалось изменить дедлайн");
+                this.renderGanttChart(state);
+              }
+            };
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+          });
+
           bar.addEventListener("mousedown", (e: MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
