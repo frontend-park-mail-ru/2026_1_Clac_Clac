@@ -20,7 +20,7 @@
   &__avatar-preview {
     width: 80px;
     height: 80px;
-    background: #252527;
+    background: var(--bg-panel);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -41,7 +41,7 @@
   }
 
   &__action-link {
-    color: #8b5cf6;
+    color: var(--primary);
     font-size: 0.9rem;
     cursor: pointer;
     text-decoration: none;
@@ -52,7 +52,7 @@
   }
 
   &__action-delete {
-    color: #ccc;
+    color: var(--text-light);
     font-size: 0.9rem;
     cursor: pointer;
     text-decoration: none;
@@ -63,33 +63,33 @@
     }
 
     &--disabled {
-      color: #555;
+      color: var(--text-muted);
       cursor: not-allowed;
       pointer-events: none;
 
       &:hover {
-        color: #555;
+        color: var(--text-muted);
         text-decoration: none;
       }
     }
   }
 
   &__input-label {
-    color: #ccc;
+    color: var(--text-light);
     margin-bottom: 0.6rem;
     font-size: 0.85rem;
   }
 
   &__input-field {
-    background: #252527;
-    border-color: #333;
+    background: var(--bg-panel);
+    border-color: var(--border-card);
   }
 
   &__textarea {
     resize: vertical;
     min-height: 100px;
-    background: #252527;
-    border-color: #333;
+    background: var(--bg-panel);
+    border-color: var(--border-card);
   }
 
   &__email-wrapper {
@@ -97,10 +97,10 @@
   }
 
   &__email-input {
-    background: #252527;
-    border-color: #333;
+    background: var(--bg-panel);
+    border-color: var(--border-card);
     padding-right: 2.5rem;
-    color: #888;
+    color: var(--text-muted);
   }
 
   &__email-icon {
@@ -121,8 +121,8 @@
   }
 
   &__btn-disabled {
-    background: #555;
-    color: #999;
+    background: var(--bg-control-hover);
+    color: var(--text-muted);
     cursor: not-allowed;
   }
 }
@@ -166,7 +166,7 @@
   &__colors-title {
     font-size: 1rem;
     font-weight: 500;
-    color: white;
+    color: var(--text-main);
     margin-bottom: 0.8rem;
   }
 
@@ -181,7 +181,7 @@
   &__action-btn {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--text-main);
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
@@ -193,7 +193,7 @@
     }
 
     &--delete {
-      color: #ccc;
+      color: var(--text-light);
 
       &:hover {
         color: var(--text-error);
@@ -217,20 +217,20 @@
       transition: background 0.2s;
 
       &--cancel {
-        background: #333;
-        color: white;
+        background: var(--bg-control);
+        color: var(--text-main);
 
         &:hover {
-          background: #444;
+          background: var(--bg-control-hover);
         }
       }
 
       &--save {
-        background: white;
-        color: black;
+        background: var(--text-main);
+        color: var(--text-contrast);
 
         &:hover {
-          background: #e5e5e5;
+          background: var(--text-light);
         }
       }
     }

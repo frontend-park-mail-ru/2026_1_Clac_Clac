@@ -12,8 +12,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 2rem;
-    border-bottom: 1px solid #2a2a2c;
-    background: #1a1a1c;
+    border-bottom: 1px solid var(--border-divider);
+    background: var(--bg-layout);
     flex-shrink: 0;
     z-index: 10;
   }
@@ -32,7 +32,7 @@
   &__board-title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-main);
     margin: 0;
   }
 
@@ -52,9 +52,9 @@
     width: auto;
 
     &--share {
-      background: #252525;
+      background: var(--bg-panel);
       border: none;
-      color: #fff;
+      color: var(--text-main);
       border-radius: 16px;
       padding: 6px 26px 6px 15px;
       width: 169px;
@@ -64,7 +64,7 @@
       gap: 8px;
 
       &:hover {
-        background: #333333;
+        background: var(--bg-control);
       }
     }
 
@@ -90,27 +90,27 @@
     overflow-y: hidden;
     flex: 1;
     align-items: stretch;
-    border: 1px solid #2a2a2c;
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
-    background: #222224;
+    background: var(--bg-card);
 
     &::-webkit-scrollbar {
       height: 12px;
     }
 
     &::-webkit-scrollbar-track {
-      background: #1a1a1c;
+      background: var(--bg-layout);
       border-radius: 8px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #333;
+      background: var(--bg-control);
       border-radius: 8px;
     }
   }
 
   &__column {
-    background: #222224;
+    background: var(--bg-card);
     border-radius: 0;
     min-width: 360px;
     max-width: 360px;
@@ -135,8 +135,8 @@
       width: 1px;
       background: repeating-linear-gradient(
         to bottom,
-        #2a2a2c,
-        #2a2a2c 10px,
+        var(--border-divider),
+        var(--border-divider) 10px,
         transparent 10px,
         transparent 20px
       );
@@ -186,7 +186,7 @@
     min-height: 0;
     padding: 0 0.25rem 0.5rem 0.25rem;
     scrollbar-width: thin;
-    scrollbar-color: #3a3a3c transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -198,12 +198,12 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #3a3a3c;
+      background: var(--scrollbar-thumb);
       border-radius: 4px;
       transition: background 0.2s;
 
       &:hover {
-        background: #4a4a4c;
+        background: var(--border-hover);
       }
     }
 
@@ -216,7 +216,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #ccc;
+    color: var(--text-light);
     padding: 0.8rem;
     cursor: pointer;
     border-radius: 8px;
@@ -228,8 +228,8 @@
     text-align: left;
 
     &:hover {
-      background: #2a2a2c;
-      color: white;
+      background: var(--bg-control);
+      color: var(--text-main);
     }
   }
 
@@ -239,7 +239,7 @@
   }
 
   &__add-column-btn {
-    border: 1px dashed #444;
+    border: 1px dashed var(--border-card);
     border-radius: 12px;
     height: 60px;
     display: flex;
@@ -247,28 +247,28 @@
     justify-content: flex-start;
     padding: 0 1rem;
     gap: 0.5rem;
-    color: #ccc;
+    color: var(--text-light);
     cursor: pointer;
     transition: all 0.2s;
     background: transparent;
 
     &:hover {
-      border-color: #888;
-      color: white;
+      border-color: var(--border-hover);
+      color: var(--text-main);
     }
   }
 
   &__add-card-form {
-    background: #1e1e20;
-    border: 1px dashed #444;
+    background: var(--bg-modal);
+    border: 1px dashed var(--border-card);
     border-radius: 12px;
     padding: 1.2rem;
     margin-bottom: 0.5rem;
   }
 
   &__add-column-form {
-    background: #1e1e20;
-    border: 1px dashed #444;
+    background: var(--bg-modal);
+    border: 1px dashed var(--border-card);
     border-radius: 12px;
     padding: 1.2rem;
     min-height: 75px;
@@ -281,7 +281,7 @@
     width: 100%;
     background: transparent;
     border: none;
-    color: white;
+    color: var(--text-main);
     font-size: 0.95rem;
     resize: none;
     outline: none;
@@ -293,11 +293,11 @@
 
   &__modal-input {
     width: 100%;
-    background: #1a1a1c;
-    border: 1px solid #444;
+    background: var(--bg-layout);
+    border: 1px solid var(--border-card);
     border-radius: 8px;
     padding: 0.8rem;
-    color: white;
+    color: var(--text-main);
     font-size: 1rem;
     outline: none;
     margin-bottom: 1rem;
@@ -308,7 +308,7 @@
   }
 
   &__assignee-block {
-    background: #252527;
+    background: var(--bg-panel);
     padding: 0.8rem;
     display: flex;
     align-items: center;
@@ -333,8 +333,8 @@
 }
 
 .kanban-card {
-  background-color: #222224;
-  border: 1px solid #333;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 10px;
   padding: 1.25rem;
   cursor: pointer;
@@ -347,7 +347,7 @@
   flex-direction: column;
 
   &:hover {
-    border-color: #555;
+    border-color: var(--border-hover);
     z-index: 10;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -365,14 +365,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #3b3b3d;
+    border-bottom: 1px solid var(--border-divider);
     padding-bottom: 0.8rem;
     margin-bottom: 1rem;
   }
 
   &__assignee {
     font-size: 0.85rem;
-    color: #777;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     line-height: 1;
@@ -381,14 +381,14 @@
   }
 
   &__assignee-text {
-    color: white;
+    color: var(--text-main);
   }
 
   &__options-btn {
     opacity: 0;
     background: transparent;
     border: none;
-    color: #888;
+    color: var(--text-muted);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -398,14 +398,14 @@
     justify-content: center;
 
     &:hover {
-      background-color: #2a2a2c;
-      color: white;
+      background-color: var(--bg-control);
+      color: var(--text-main);
     }
   }
 
   &__title {
     font-size: 1.15rem;
-    color: white;
+    color: var(--text-main);
     font-weight: bold;
     margin-bottom: 1.2rem;
     line-height: 1.4;
@@ -425,21 +425,21 @@
   }
 
   &__meta-text {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-weight: 500;
   }
 
   &__subtasks {
     margin-bottom: 1rem;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-card);
     padding-top: 0.8rem;
   }
 
   &__progress-bar {
     width: 100%;
     height: 4px;
-    background: #2a2a2c;
+    background: var(--bg-control);
     border-radius: 2px;
     margin-bottom: 0.8rem;
     overflow: hidden;
@@ -456,18 +456,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #fff;
+    color: var(--text-main);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
 
     svg {
-      color: #888;
+      color: var(--text-muted);
       transition: transform 0.2s;
     }
 
     &:hover svg {
-      color: #fff;
+      color: var(--text-main);
     }
   }
 
@@ -496,30 +496,30 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #ccc;
+    color: var(--text-light);
 
     &--done {
       text-decoration: line-through;
-      color: #666;
+      color: var(--text-muted);
     }
   }
 
   &__subtasks-more {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-muted);
     cursor: pointer;
     margin-top: 0.3rem;
 
     &:hover {
-      color: #fff;
+      color: var(--text-main);
       text-decoration: underline;
     }
   }
 
   &--done {
     opacity: 0.55;
-    border-color: #2a2a2c;
-    background-color: #1f1f21;
+    border-color: var(--border-divider);
+    background-color: var(--bg-secondary);
 
     &:hover {
       opacity: 0.8;
@@ -544,7 +544,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 2px solid #555;
+    border: 2px solid var(--text-muted);
     background: transparent;
     display: flex;
     align-items: center;

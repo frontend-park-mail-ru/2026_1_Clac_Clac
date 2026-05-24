@@ -154,19 +154,28 @@ const togglePasswordVisibility = (btn: Element): void => {
 /**
  * Инициализирует глобальные слушатели событий.
  */
-export const initGlobalListeners = (): void => {
-  document.body.addEventListener('click', (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-
-    if (target.closest('#nav-support')) {
-      handleSupportClick();
-      return;
-    }
-
-    const toggleBtn = target.closest('.input-group__toggle-btn');
-    if (toggleBtn) {
-      togglePasswordVisibility(toggleBtn);
-      return;
-    }
-  });
-};
+ export const initGlobalListeners = (): void => {
+   document.body.addEventListener('click', (e: MouseEvent) => {
+     const target = e.target as HTMLElement;
+ 
+     if (target.closest('#nav-support')) {
+       handleSupportClick();
+       return;
+     }
+ 
+     const toggleBtn = target.closest('.input-group__toggle-btn');
+     if (toggleBtn) {
+       togglePasswordVisibility(toggleBtn);
+       return;
+     }
+ 
+     const themeBtn = target.closest('#theme-toggle-btn');
+     if (themeBtn) {
+       const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+       document.documentElement.setAttribute('data-theme', nextTheme);
+       localStorage.setItem('theme', nextTheme);
+       return;
+     }
+   });
+ };

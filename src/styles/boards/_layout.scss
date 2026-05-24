@@ -3,14 +3,14 @@
     display: flex;
     height: 100vh;
     height: 100dvh;
-    background-color: #1a1a1c;
+    background-color: var(--bg-layout);
   }
 }
 
 .sidebar {
   width: 72px;
-  background-color: #1a1a1c;
-  border-right: 1px solid #2a2a2c;
+  background-color: var(--bg-layout);
+  border-right: 1px solid var(--border-divider);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,14 +32,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
     margin-bottom: 0.5rem;
 
     &:hover {
-      background-color: #2a2a2c;
-      color: white;
+      background-color: var(--bg-control);
+      color: var(--text-main);
     }
 
     &--active {
@@ -80,7 +80,7 @@
     padding-bottom: env(safe-area-inset-bottom);
     flex-direction: row;
     border-right: none;
-    border-top: 1px solid #2a2a2c;
+    border-top: 1px solid var(--border-divider);
     justify-content: space-around;
     align-items: center;
   }
