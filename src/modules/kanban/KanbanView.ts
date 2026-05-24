@@ -1215,11 +1215,6 @@ export class KanbanView {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
-                <div class="invite-modal__member-role-dropdown hidden">
-                  <div class="invite-modal__member-role-option" data-role="viewer">Гость</div>
-                  <div class="invite-modal__member-role-option" data-role="editor">Участник</div>
-                  <div class="invite-modal__member-role-option" data-role="admin">Админ</div>
-                </div>
               </div>`
               : `<span class="invite-modal__member-role-static">${roleLabel}</span>`;
 
@@ -1251,44 +1246,56 @@ export class KanbanView {
               const trigger = item.querySelector(
                 ".invite-modal__member-role-trigger",
               ) as HTMLButtonElement;
-              const dropdown = item.querySelector(
-                ".invite-modal__member-role-dropdown",
-              ) as HTMLElement;
 
               trigger?.addEventListener("click", (e) => {
                 e.stopPropagation();
                 document
-                  .querySelectorAll(".invite-modal__member-role-dropdown")
-                  .forEach((dd) => {
-                    if (dd !== dropdown) dd.classList.add("hidden");
+                  .querySelectorAll(".invite-modal__active-role-dropdown")
+                  .forEach((el) => el.remove());
+
+                const dropdown = document.createElement("div");
+                dropdown.className =
+                  "invite-modal__member-role-dropdown invite-modal__active-role-dropdown";
+                dropdown.innerHTML = `
+                  <div class="invite-modal__member-role-option" data-role="viewer">Гость</div>
+                  <div class="invite-modal__member-role-option" data-role="editor">Участник</div>
+                  <div class="invite-modal__member-role-option" data-role="admin">Админ</div>
+                `;
+
+                const rect = trigger.getBoundingClientRect();
+                dropdown.style.position = "fixed";
+                dropdown.style.top = `${rect.bottom + 4}px`;
+                dropdown.style.left = `${rect.left}px`;
+                dropdown.style.width = `${rect.width}px`;
+                dropdown.style.zIndex = "10005";
+
+                document.body.appendChild(dropdown);
+
+                const options = dropdown.querySelectorAll(
+                  ".invite-modal__member-role-option",
+                );
+                options.forEach((opt) => {
+                  opt.addEventListener("click", async (ev) => {
+                    ev.stopPropagation();
+                    const nextRole = opt.getAttribute("data-role") || "editor";
+                    dropdown.remove();
+
+                    try {
+                      await boardsApi.updateMemberRole(state.boardId!, m.link, {
+                        new_role: nextRole,
+                      });
+                      Toast.success("Роль участника обновлена");
+                      m.role = nextRole;
+                      renderMembersList(searchInput?.value.trim() || "");
+                      KanbanActions.fetchKanban(state.boardId!, true);
+                    } catch (err: any) {
+                      const msg =
+                        err?.data?.message ||
+                        err?.data?.error ||
+                        "Не удалось обновить роль";
+                      Toast.error(msg);
+                    }
                   });
-                dropdown?.classList.toggle("hidden");
-              });
-
-              const options = item.querySelectorAll(
-                ".invite-modal__member-role-option",
-              );
-              options.forEach((opt) => {
-                opt.addEventListener("click", async (e) => {
-                  e.stopPropagation();
-                  const nextRole = opt.getAttribute("data-role") || "editor";
-                  dropdown.classList.add("hidden");
-
-                  try {
-                    await boardsApi.updateMemberRole(state.boardId!, m.link, {
-                      new_role: nextRole,
-                    });
-                    Toast.success("Роль участника обновлена");
-                    m.role = nextRole;
-                    renderMembersList(searchInput?.value.trim() || "");
-                    KanbanActions.fetchKanban(state.boardId!, true);
-                  } catch (err: any) {
-                    const msg =
-                      err?.data?.message ||
-                      err?.data?.error ||
-                      "Не удалось обновить роль";
-                    Toast.error(msg);
-                  }
                 });
               });
             }
@@ -1378,17 +1385,23 @@ export class KanbanView {
 
         loadMembersAndRender();
 
-        document.addEventListener("click", (e) => {
-          const target = e.target as HTMLElement;
-          if (
-            !target.closest(".invite-modal__member-role-dropdown-container")
-          ) {
+        document.addEventListener("click", () => {
+          document
+            .querySelectorAll(".invite-modal__active-role-dropdown")
+            .forEach((el) => el.remove());
+        });
+
+        inviteModal
+          .querySelector("#invite-members-list")
+          ?.addEventListener("scroll", () => {
             document
-              .querySelectorAll(".invite-modal__member-role-dropdown")
-              .forEach((dd) => {
-                dd.classList.add("hidden");
-              });
-          }
+              .querySelectorAll(".invite-modal__active-role-dropdown")
+              .forEach((el) => el.remove());
+          });
+        inviteModal.addEventListener("scroll", () => {
+          document
+            .querySelectorAll(".invite-modal__active-role-dropdown")
+            .forEach((el) => el.remove());
         });
 
         tabMember?.addEventListener("click", () => {

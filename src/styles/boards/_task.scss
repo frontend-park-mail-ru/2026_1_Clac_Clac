@@ -1094,20 +1094,12 @@
   }
 
   &__member-role-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
+    position: fixed;
     background: #1e1e20;
     border: 1px solid #333;
     border-radius: 8px;
-    min-width: 120px;
-    z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     overflow: hidden;
-
-    &.hidden {
-      display: none;
-    }
   }
 
   &__member-role-option {
