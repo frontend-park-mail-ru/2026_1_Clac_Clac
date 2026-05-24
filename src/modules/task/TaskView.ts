@@ -1,6 +1,7 @@
 import Handlebars from "handlebars";
 import taskTpl from "../../templates/task.hbs?raw";
 import { taskStore } from "./TaskStore";
+import { kanbanStore } from "../kanban/KanbanStore";
 import { TaskActions } from "./TaskActions";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
@@ -145,6 +146,11 @@ export class TaskView {
     const usersList = state.usersList;
 
     if (!taskData) return;
+
+    const kanbanState = kanbanStore.getState();
+    const isViewer = kanbanState.myRole === "viewer";
+
+    const isDone = taskData.status === true || taskData.done === true || false;
 
     const contentEl = this.taskNode?.querySelector(
       ".task__content",
@@ -304,6 +310,7 @@ export class TaskView {
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
+      isViewer: isViewer,
       task: {
         title: taskData.title || "Без названия",
         description: taskData.description || "",
@@ -316,11 +323,12 @@ export class TaskView {
         executor_fallback: executorFallback,
         executor_id: this.currentExecuterId,
         subtasks: formattedSubtasks,
+        is_done: isDone,
       },
       comments: state.comments,
       attachments: formattedAttachments,
       attachmentsCount: formattedAttachments.length,
-      isAttachmentsFull: formattedAttachments.length >= 5,
+      isAttachmentsFull: formattedAttachments.length >= 100,
     });
 
     if (currentValues.title !== undefined)
@@ -640,6 +648,19 @@ export class TaskView {
 
   private attachListeners() {
     const state = taskStore.getState();
+
+    this.taskNode
+      ?.querySelector("#btn-toggle-task-status")
+      ?.addEventListener("click", () => {
+        const state = taskStore.getState();
+        if (state.taskId && state.taskData) {
+          const currentDone =
+            state.taskData.status === true ||
+            state.taskData.done === true ||
+            false;
+          TaskActions.toggleTaskStatus(state.taskId, !currentDone);
+        }
+      });
 
     const fileInput = this.taskNode?.querySelector(
       "#task-file-input",

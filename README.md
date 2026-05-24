@@ -24,6 +24,6 @@ Frontend репозиторий команды "КЛАЦ КЛАЦ", проект
 
 ## Ссылки
 
-[Деплой](https://clac-clac.mooo.com)
+[Деплой](https://clac-clac.ru)
 
 [Figma](https://www.figma.com/design/aNUgkgI6XxYZbTInlOGpX4/CLAC-CLAC-Team?node-id=1-4&p=f)

@@ -515,6 +515,67 @@
       text-decoration: underline;
     }
   }
+
+  &--done {
+    opacity: 0.55;
+    border-color: #2a2a2c;
+    background-color: #1f1f21;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__title {
+    transition:
+      text-decoration 0.2s ease,
+      color 0.2s ease;
+
+    &--done {
+      text-decoration: line-through;
+      color: var(--text-muted) !important;
+    }
+  }
+
+  &__status-checkmark {
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: transparent;
+    padding: 0;
+
+    &:hover {
+      border-color: #10b981;
+      color: rgba(16, 185, 129, 0.4);
+    }
+
+    &--active {
+      border-color: #10b981;
+      background-color: #10b981;
+      color: white;
+
+      &:hover {
+        background-color: #059669;
+        border-color: #059669;
+      }
+    }
+
+    svg {
+      width: 12px;
+      height: 12px;
+      stroke-width: 3px;
+    }
+  }
 }
 
 .create-column-form__color-btn {
@@ -1136,13 +1197,28 @@
     height: 16px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    pointer-events: auto !important;
+    z-index: 10;
+    overflow: visible !important;
 
     &--white {
       background: white;
+      .gantt-chart__bar-handle::after {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .gantt-chart__bar-handle:hover::after {
+        background: rgba(0, 0, 0, 0.75);
+      }
     }
 
     &--purple {
       background: #8b5cf6;
+      .gantt-chart__bar-handle::after {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .gantt-chart__bar-handle:hover::after {
+        background: rgba(255, 255, 255, 0.9);
+      }
     }
   }
 }
@@ -1153,7 +1229,7 @@
   &-popover {
     position: absolute;
     top: calc(100% + 8px);
-    right: 0;
+    left: 0;
     background: #1e1e20;
     border: 1px solid #333;
     border-radius: 16px;
@@ -1390,6 +1466,133 @@
 
     .gantt-chart__btn-text {
       display: none;
+    }
+  }
+
+  .gantt-filter-popover {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 2rem);
+    min-width: 0 !important;
+    max-width: 340px;
+    padding: 1rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+.gantt-chart {
+  &__timeline-header {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #2a2a2c;
+    background: #1a1a1c;
+    flex-shrink: 0;
+  }
+
+  &__months-row {
+    display: flex;
+    height: 26px;
+    border-bottom: 1px solid #2a2a2c;
+    background: #141416;
+    overflow: hidden;
+  }
+
+  &__month-cell {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 0.78rem;
+    color: #888;
+    font-weight: bold;
+    border-right: 1px solid #2a2a2c;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__days-row {
+    display: flex;
+    height: 24px;
+  }
+
+  &__timeline-cell {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    color: #666;
+    font-weight: 500;
+    border-right: 1px solid #1f1f21;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  &__row--done {
+    opacity: 0.5;
+  }
+
+  &__bar--done {
+    opacity: 0.5;
+    background: #10b981 !important;
+  }
+
+  &__bar-handle {
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 15;
+    background: transparent;
+    transition:
+      background 0.15s ease,
+      opacity 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &::after {
+      content: "";
+      width: 2px;
+      height: 8px;
+      border-radius: 1px;
+      transition: background 0.15s ease;
+    }
+
+    &--left {
+      left: 0;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &--right {
+      right: 0;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  &__task-status-btn {
+    position: static !important;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+    width: 18px !important;
+    height: 18px !important;
+
+    svg {
+      width: 10px !important;
+      height: 10px !important;
     }
   }
 }

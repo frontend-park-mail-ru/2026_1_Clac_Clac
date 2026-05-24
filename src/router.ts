@@ -1,27 +1,49 @@
-import { renderLoginModule } from "./modules/login";
-import { renderRegisterModule } from "./modules/register";
-import { renderBoardsModule } from "./modules/boards";
-import { renderPasswordRecoveryModule } from "./modules/passwordRecovery";
-import { renderProfileModule } from "./modules/profile";
-import { renderKanbanModule } from "./modules/kanban";
-import { renderTaskModule } from "./modules/task";
-import { renderSectionModule } from "./modules/section";
-import { renderSupportWidgetModule } from "./modules/supportWidget";
-import { renderSupportAdminModule } from "./modules/supportAdmin";
 import { boardsApi } from "./api";
 import { Toast } from "./utils/toast";
 
-export const routes: Record<string, (appDiv: HTMLElement) => void> = {
-  "/login": renderLoginModule,
-  "/register": renderRegisterModule,
-  "/forgot-password": renderPasswordRecoveryModule,
-  "/boards": renderBoardsModule,
-  "/profile": renderProfileModule,
-  "/board": renderKanbanModule,
-  "/task": renderTaskModule,
-  "/section": renderSectionModule,
-  "/support-widget": renderSupportWidgetModule,
-  "/support-admin": renderSupportAdminModule,
+export const routes: Record<string, (appDiv: HTMLElement) => Promise<void>> = {
+  "/login": async (appDiv) => {
+    const { renderLoginModule } = await import("./modules/login");
+    renderLoginModule(appDiv);
+  },
+  "/register": async (appDiv) => {
+    const { renderRegisterModule } = await import("./modules/register");
+    renderRegisterModule(appDiv);
+  },
+  "/forgot-password": async (appDiv) => {
+    const { renderPasswordRecoveryModule } =
+      await import("./modules/passwordRecovery");
+    renderPasswordRecoveryModule(appDiv);
+  },
+  "/boards": async (appDiv) => {
+    const { renderBoardsModule } = await import("./modules/boards");
+    await renderBoardsModule(appDiv);
+  },
+  "/profile": async (appDiv) => {
+    const { renderProfileModule } = await import("./modules/profile");
+    renderProfileModule(appDiv);
+  },
+  "/board": async (appDiv) => {
+    const { renderKanbanModule } = await import("./modules/kanban");
+    await renderKanbanModule(appDiv);
+  },
+  "/task": async (appDiv) => {
+    const { renderTaskModule } = await import("./modules/task");
+    await renderTaskModule(appDiv);
+  },
+  "/section": async (appDiv) => {
+    const { renderSectionModule } = await import("./modules/section");
+    await renderSectionModule(appDiv);
+  },
+  "/support-widget": async (appDiv) => {
+    const { renderSupportWidgetModule } =
+      await import("./modules/supportWidget");
+    renderSupportWidgetModule(appDiv);
+  },
+  "/support-admin": async (appDiv) => {
+    const { renderSupportAdminModule } = await import("./modules/supportAdmin");
+    renderSupportAdminModule(appDiv);
+  },
 };
 
 let isAuthenticated = false;
@@ -37,7 +59,7 @@ export const navigateTo = (path: string): void => {
   handleRoute();
 };
 
-export const handleRoute = (): void => {
+export const handleRoute = async (): Promise<void> => {
   const appDiv = document.getElementById("app") as HTMLDivElement | null;
   if (!appDiv) {
     return;
@@ -109,7 +131,7 @@ export const handleRoute = (): void => {
   }
 
   const routeHandler = routes[path] || routes["/login"];
-  routeHandler(appDiv);
+  await routeHandler(appDiv);
 };
 
 window.addEventListener("popstate", handleRoute);

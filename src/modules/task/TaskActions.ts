@@ -4,6 +4,7 @@ import { TaskActionTypes, User } from "./task.types";
 import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
+import { clearKanbanCache } from "../kanban";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -57,27 +58,6 @@ const formatDateWithComma = (date: Date): string => {
 
 const formatDateWithSpace = (date: Date): string => {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-};
-
-const fetchBoardUsers = async (links: string[]): Promise<User[]> => {
-  const userPromises = links.map(async (link: string) => {
-    if (profileCache.has(link)) return profileCache.get(link)!;
-    try {
-      const pRes = await profileApi.getProfileByLink(link);
-      const pData = pRes.data;
-      const user: User = {
-        id: link,
-        name: pData.display_name || "Без имени",
-        email: pData.email || "",
-        avatarUrl: pData.avatar_url,
-      };
-      profileCache.set(link, user);
-      return user;
-    } catch {
-      return { id: link, name: "Пользователь", email: "" };
-    }
-  });
-  return Promise.all(userPromises);
 };
 
 const enrichComment = (
@@ -150,8 +130,17 @@ export const TaskActions = {
       const boardName = boardRes.data.name || "Без названия";
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
-      const rawUsers = usersRes.data.members.map((m) => m.link);
-      const usersList = await fetchBoardUsers(rawUsers);
+
+      const usersList: User[] = usersRes.data.members.map((m) => {
+        const user: User = {
+          id: m.link,
+          name: m.display_name || "Без имени",
+          email: m.email || "",
+          avatarUrl: m.avatar_url,
+        };
+        profileCache.set(m.link, user);
+        return user;
+      });
 
       const [taskRes, meRes] = await Promise.all([
         kanbanApi.getTask(taskId),
@@ -387,4 +376,26 @@ export const TaskActions = {
       Toast.error("Ошибка при удалении файла");
     }
   },
+
+  async toggleTaskStatus(taskId: string, isDone: boolean) {
+      appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
+      try {
+        await kanbanApi.updateTaskStatus(taskId, { done: isDone });
+        
+        appDispatcher.dispatch({
+          type: "TASK_UPDATE_STATUS_SUCCESS",
+          payload: { is_done: isDone }
+        });
+        
+        clearKanbanCache();
+        Toast.success(isDone ? "Задача выполнена" : "Статус задачи изменен");
+      } catch (err) {
+        console.error("Failed to update status", err);
+        Toast.error("Ошибка при обновлении статуса");
+        appDispatcher.dispatch({
+          type: TaskActionTypes.SAVE_TASK_ERROR,
+          payload: { error: "Ошибка при изменении статуса" }
+        });
+      }
+    },
 };

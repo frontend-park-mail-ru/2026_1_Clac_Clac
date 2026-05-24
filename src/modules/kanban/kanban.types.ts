@@ -42,6 +42,7 @@ export interface KanbanState {
   sections: Section[];
   isLoading: boolean;
   error: string | null;
+  myRole?: string;
 }
 
 export const KANBAN_COLORS: Record<string, string> = {
@@ -101,6 +102,7 @@ export interface FetchKanbanSuccessPayload {
   boardName: string;
   users: BoardUser[];
   sections: Section[];
+  myRole?: string;
 }
 
 export interface FetchKanbanErrorPayload {

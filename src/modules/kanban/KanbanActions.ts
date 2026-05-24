@@ -3,18 +3,28 @@ import { boardsApi, kanbanApi, profileApi, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
+import { currentUser } from "../../main";
 import {
-  BoardUser, Section, Task,
-  KANBAN_COLORS, ApiError
+  BoardUser,
+  Section,
+  Task,
+  KANBAN_COLORS,
+  ApiError,
 } from "./kanban.types";
 
 export const profileCache = new Map<string, BoardUser>();
+
+let cachedMyEmail: string | null = null;
 
 export const KanbanActions = {
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
     const currentState = kanbanStore.getState();
 
-    if (currentState.boardId === boardId && !forceFetch && currentState.sections.length > 0) {
+    if (
+      currentState.boardId === boardId &&
+      !forceFetch &&
+      currentState.sections.length > 0
+    ) {
       kanbanStore.emit("change");
       return;
     }
@@ -26,27 +36,34 @@ export const KanbanActions = {
       const boardName = boardRes.data.name;
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
-      const rawUsers: string[] = usersRes.data.members.map((m) => m.link);
 
-      const userPromises = rawUsers.map(async (link: string) => {
-        if (profileCache.has(link)) return profileCache.get(link)!;
-
+      let myEmail =
+        cachedMyEmail || (currentUser?.email || "").toLowerCase().trim();
+      if (!myEmail) {
         try {
-          const pRes = await profileApi.getProfileByLink(link);
-          const pData = pRes.data;
-          const userObj: BoardUser = {
-            id: link,
-            name: pData.display_name,
-            email: pData.email,
-            avatarUrl: pData.avatar_url,
-          };
-          profileCache.set(link, userObj);
-          return userObj;
-        } catch {
-          return { id: link, name: "Пользователь", email: "" };
+          const profileRes = await profileApi.getProfile();
+          myEmail = (profileRes.data.email || "").toLowerCase().trim();
+          cachedMyEmail = myEmail;
+        } catch (err) {
+          console.error("Failed to load profile for role check", err);
         }
+      }
+
+      const myMember = usersRes.data.members.find(
+        (m) => m.email.toLowerCase().trim() === myEmail,
+      );
+      const myRole = myMember?.role || "viewer";
+
+      const users: BoardUser[] = usersRes.data.members.map((m) => {
+        const userObj: BoardUser = {
+          id: m.link,
+          name: m.display_name || "Пользователь",
+          email: m.email || "",
+          avatarUrl: m.avatar_url,
+        };
+        profileCache.set(m.link, userObj);
+        return userObj;
       });
-      const users = await Promise.all(userPromises);
 
       const sectionsRes = await kanbanApi.getSections(boardId);
       const fetchedSections = sectionsRes.data;
@@ -71,61 +88,104 @@ export const KanbanActions = {
           const tasksRes = await kanbanApi.getTasks(secId);
           const tasksList = tasksRes.data.cards;
 
-          section.tasks = tasksList.map((t) => {
-            const exId = t.executor_link;
-            const exUser = users.find((u) => u.id === exId);
-            const dl = t.deadline;
+          section.tasks = tasksList
+            .map((t) => {
+              const exId = t.executor_link;
+              const exUser = users.find((u) => u.id === exId);
+              const dl = t.deadline;
 
-            let formattedDate = null;
-            let formattedTime = null;
+              const isDone =
+                (t as any).status === true || (t as any).done === true || false;
 
-            if (dl) {
-              const dlDate = new Date(dl);
-              const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-              formattedDate = `${dlDate.getDate()} ${months[dlDate.getMonth()]}, ${dlDate.getFullYear()}`;
-              formattedTime = `${String(dlDate.getHours()).padStart(2, '0')}:${String(dlDate.getMinutes()).padStart(2, '0')}`;
-            }
+              let formattedDate = null;
+              let formattedTime = null;
 
-            let subtasks = Array.isArray(t.subtasks) ? t.subtasks :[];
-            const subtasksCount = subtasks.length;
-            const subtasksDone = subtasks.filter((st: any) => st.is_done).length;
-            const progressPercent = subtasksCount > 0 ? Math.round((subtasksDone / subtasksCount) * 100) : 0;
-            const subtasksProgressText = subtasksCount > 0 ? `Подзадачи ${subtasksDone}/${subtasksCount}` : '';
-            const progressPercentStyle = subtasksCount > 0 ? `width: ${progressPercent}%` : 'width: 0%';
-            const hasSubtasks = subtasksCount > 0;
+              if (dl) {
+                const dlDate = new Date(dl);
+                const months = [
+                  "января",
+                  "февраля",
+                  "марта",
+                  "апреля",
+                  "мая",
+                  "июня",
+                  "июля",
+                  "августа",
+                  "сентября",
+                  "октября",
+                  "ноября",
+                  "декабря",
+                ];
+                formattedDate = `${dlDate.getDate()} ${months[dlDate.getMonth()]}, ${dlDate.getFullYear()}`;
+                formattedTime = `${String(dlDate.getHours()).padStart(2, "0")}:${String(dlDate.getMinutes()).padStart(2, "0")}`;
+              }
 
-            subtasks = subtasks.map((st: any) => {
-              const validId = st.subtask_link || st.link_subtask || st.id || st.link || "";
-              const validDesc = st.description || st.name || st.title || st.resolved_desc || "";
+              let subtasks = Array.isArray(t.subtasks) ? t.subtasks : [];
+              const subtasksCount = subtasks.length;
+              const subtasksDone = subtasks.filter(
+                (st: any) => st.is_done,
+              ).length;
+              const progressPercent =
+                subtasksCount > 0
+                  ? Math.round((subtasksDone / subtasksCount) * 100)
+                  : 0;
+              const subtasksProgressText =
+                subtasksCount > 0
+                  ? `Подзадачи ${subtasksDone}/${subtasksCount}`
+                  : "";
+              const progressPercentStyle =
+                subtasksCount > 0 ? `width: ${progressPercent}%` : "width: 0%";
+              const hasSubtasks = subtasksCount > 0;
+
+              subtasks = subtasks
+                .map((st: any) => {
+                  const validId =
+                    st.subtask_link ||
+                    st.link_subtask ||
+                    st.id ||
+                    st.link ||
+                    "";
+                  const validDesc =
+                    st.description ||
+                    st.name ||
+                    st.title ||
+                    st.resolved_desc ||
+                    "";
+                  return {
+                    ...st,
+                    id: validId,
+                    description: validDesc,
+                  };
+                })
+                .sort((a: any, b: any) => {
+                  if (a.position !== b.position)
+                    return (a.position || 0) - (b.position || 0);
+                  return String(a.id).localeCompare(String(b.id));
+                });
+
               return {
-                ...st,
-                id: validId,
-                description: validDesc,
+                id: t.link,
+                title: t.title || "Без названия",
+                due_date: formattedDate,
+                time: formattedTime,
+                executor: exUser ? exUser.name : "",
+                executor_id: exId,
+                subtasks,
+                subtasksCount,
+                subtasksDone,
+                progressPercent,
+                subtasksProgressText,
+                progressPercentStyle,
+                hasSubtasks,
+                position: t.position,
+                is_done: isDone,
+                start: (t as any).Start || null,
+                deadline: dl || null,
               };
-            }).sort((a: any, b: any) => {
-              if (a.position !== b.position) return (a.position || 0) - (b.position || 0);
-              return String(a.id).localeCompare(String(b.id));
-            });
-
-            return {
-              id: t.link,
-              title: t.title || "Без названия",
-              due_date: formattedDate,
-              time: formattedTime,
-              executor: exUser ? exUser.name : "",
-              executor_id: exId,
-              subtasks,
-              subtasksCount,
-              subtasksDone,
-              progressPercent,
-              subtasksProgressText,
-              progressPercentStyle,
-              hasSubtasks,
-              position: t.position,
-            };
-          }).sort((a, b) => a.position - b.position);
+            })
+            .sort((a, b) => a.position - b.position);
         } catch {
-          section.tasks =[];
+          section.tasks = [];
         }
         return section;
       });
@@ -134,9 +194,8 @@ export const KanbanActions = {
 
       appDispatcher.dispatch({
         type: "FETCH_KANBAN_SUCCESS",
-        payload: { boardId, boardName, users, sections },
+        payload: { boardId, boardName, users, sections, myRole },
       });
-
     } catch (err: unknown) {
       appDispatcher.dispatch({
         type: "FETCH_KANBAN_ERROR",
@@ -146,7 +205,13 @@ export const KanbanActions = {
     }
   },
 
-  async createSection(boardId: string, name: string, maxTasks: number, isMandatory: boolean, color: string): Promise<void> {
+  async createSection(
+    boardId: string,
+    name: string,
+    maxTasks: number,
+    isMandatory: boolean,
+    color: string,
+  ): Promise<void> {
     try {
       const res = await kanbanApi.createSection({
         board_link: boardId,
@@ -160,22 +225,32 @@ export const KanbanActions = {
         id: secData.link,
         section_name: secData.name,
         color: secData.color || color,
-        colorHex: KANBAN_COLORS[secData.color || color] || secData.color || color,
+        colorHex:
+          KANBAN_COLORS[secData.color || color] || secData.color || color,
         max_tasks: secData.max_tasks,
         is_mandatory: secData.is_mandatory,
         position: secData.position,
         tasks: [],
       };
-      appDispatcher.dispatch({ type: "KANBAN_ADD_SECTION_SUCCESS", payload: { section: newSection } });
+      appDispatcher.dispatch({
+        type: "KANBAN_ADD_SECTION_SUCCESS",
+        payload: { section: newSection },
+      });
     } catch {
       Toast.error("Ошибка при создании колонки");
     }
   },
 
-  async updateSection(sectionId: string, data: Partial<SectionInfo>): Promise<void> {
+  async updateSection(
+    sectionId: string,
+    data: Partial<SectionInfo>,
+  ): Promise<void> {
     try {
       await kanbanApi.updateSection(sectionId, data);
-      appDispatcher.dispatch({ type: "KANBAN_UPDATE_SECTION_SUCCESS", payload: { sectionId, data } });
+      appDispatcher.dispatch({
+        type: "KANBAN_UPDATE_SECTION_SUCCESS",
+        payload: { sectionId, data },
+      });
     } catch {
       Toast.error("Ошибка при обновлении колонки");
       throw new Error("Update section failed");
@@ -185,24 +260,40 @@ export const KanbanActions = {
   async deleteSection(_boardId: string, sectionId: string): Promise<void> {
     try {
       await kanbanApi.deleteSection(sectionId);
-      appDispatcher.dispatch({ type: "KANBAN_DELETE_SECTION_SUCCESS", payload: { sectionId } });
+      appDispatcher.dispatch({
+        type: "KANBAN_DELETE_SECTION_SUCCESS",
+        payload: { sectionId },
+      });
     } catch {
       Toast.error("Ошибка при удалении колонки");
     }
   },
 
   async reorderSections(boardId: string, newOrder: string[]): Promise<void> {
-    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
-    appDispatcher.dispatch({ type: "KANBAN_REORDER_SECTIONS", payload: { newOrder } });
+    const snapshot = JSON.parse(
+      JSON.stringify(kanbanStore.getState().sections),
+    );
+    appDispatcher.dispatch({
+      type: "KANBAN_REORDER_SECTIONS",
+      payload: { newOrder },
+    });
     try {
       await kanbanApi.reorderSections(boardId, { list_links: newOrder });
     } catch {
-      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
+      appDispatcher.dispatch({
+        type: "KANBAN_REVERT_SECTIONS",
+        payload: { sections: snapshot },
+      });
       Toast.error("Ошибка при сохранении порядка");
     }
   },
 
-  async createTask(_boardId: string, sectionId: string, title: string, executerId?: string): Promise<void> {
+  async createTask(
+    _boardId: string,
+    sectionId: string,
+    title: string,
+    executerId?: string,
+  ): Promise<void> {
     try {
       const res = await kanbanApi.createTask({
         title,
@@ -229,12 +320,15 @@ export const KanbanActions = {
         subtasks: [],
         subtasksCount: 0,
         subtasksDone: 0,
-        subtasksProgressText: '',
-        progressPercentStyle: 'width: 0%',
-        hasSubtasks: false
+        subtasksProgressText: "",
+        progressPercentStyle: "width: 0%",
+        hasSubtasks: false,
       };
 
-      appDispatcher.dispatch({ type: "KANBAN_ADD_TASK_SUCCESS", payload: { sectionId, task: newTask } });
+      appDispatcher.dispatch({
+        type: "KANBAN_ADD_TASK_SUCCESS",
+        payload: { sectionId, task: newTask },
+      });
     } catch (err) {
       const error = err as ApiError;
       if (error?.data?.message === "task limit reached") {
@@ -248,22 +342,39 @@ export const KanbanActions = {
   async deleteTask(_boardId: string, taskId: string): Promise<void> {
     try {
       await kanbanApi.deleteTask(taskId);
-      appDispatcher.dispatch({ type: "KANBAN_DELETE_TASK_SUCCESS", payload: { taskId } });
+      appDispatcher.dispatch({
+        type: "KANBAN_DELETE_TASK_SUCCESS",
+        payload: { taskId },
+      });
     } catch {
       Toast.error("Ошибка при удалении");
     }
   },
 
-  async moveTask(_boardId: string, taskId: string, sourceSectionId: string, targetSectionId: string, position: number): Promise<void> {
-    const snapshot = JSON.parse(JSON.stringify(kanbanStore.getState().sections));
-    appDispatcher.dispatch({ type: "KANBAN_MOVE_TASK", payload: { taskId, sourceSectionId, targetSectionId, position } });
+  async moveTask(
+    _boardId: string,
+    taskId: string,
+    sourceSectionId: string,
+    targetSectionId: string,
+    position: number,
+  ): Promise<void> {
+    const snapshot = JSON.parse(
+      JSON.stringify(kanbanStore.getState().sections),
+    );
+    appDispatcher.dispatch({
+      type: "KANBAN_MOVE_TASK",
+      payload: { taskId, sourceSectionId, targetSectionId, position },
+    });
     try {
       await kanbanApi.reorderTask(taskId, {
         section_link: targetSectionId,
         position: position + 1,
       });
     } catch (err: unknown) {
-      appDispatcher.dispatch({ type: "KANBAN_REVERT_SECTIONS", payload: { sections: snapshot } });
+      appDispatcher.dispatch({
+        type: "KANBAN_REVERT_SECTIONS",
+        payload: { sections: snapshot },
+      });
       const error = err as ApiError;
       const msg = error?.data?.message;
       if (msg === "task limit reached") {
@@ -278,5 +389,5 @@ export const KanbanActions = {
         Toast.error("Ошибка при переносе");
       }
     }
-  }
+  },
 };

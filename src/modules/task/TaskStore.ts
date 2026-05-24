@@ -150,6 +150,15 @@ class TaskStore extends Store {
         this.emit("change");
         break;
 
+      case "TASK_UPDATE_STATUS_SUCCESS":
+        this.state.isSaving = false;
+        if (this.state.taskData) {
+          this.state.taskData.status = action.payload.is_done;
+          this.state.taskData.done = action.payload.is_done;
+        }
+        this.emit("change");
+        break;
+
       case TaskActionTypes.CLEAR_STORE:
         this.state = {
           boardId: null,
