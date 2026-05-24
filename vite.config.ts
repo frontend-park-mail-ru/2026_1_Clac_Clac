@@ -1,20 +1,26 @@
-import { defineConfig, Plugin } from 'vite';
-import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { createHash } from 'node:crypto';
+import { defineConfig, Plugin } from "vite";
+import {
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+  existsSync,
+} from "node:fs";
+import { join } from "node:path";
+import { createHash } from "node:crypto";
 
 function swPlugin(): Plugin {
   return {
-    name: 'sw-inject-manifest',
-    apply: 'build',
+    name: "sw-inject-manifest",
+    apply: "build",
     closeBundle() {
-      const distDir = join(process.cwd(), 'dist');
-      const assetsDir = join(distDir, 'assets');
+      const distDir = join(process.cwd(), "dist");
+      const assetsDir = join(distDir, "assets");
 
       const rootFiles = [
-        '/',
+        "/",
         ...readdirSync(distDir)
-          .filter((f) => statSync(join(distDir, f)).isFile() && f !== 'sw.js')
+          .filter((f) => statSync(join(distDir, f)).isFile() && f !== "sw.js")
           .map((f) => `/${f}`),
       ];
 
@@ -23,13 +29,16 @@ function swPlugin(): Plugin {
         : [];
 
       const manifest = [...rootFiles, ...assetFiles];
-      const version = createHash('md5').update(manifest.join(',')).digest('hex').slice(0, 8);
+      const version = createHash("md5")
+        .update(manifest.join(","))
+        .digest("hex")
+        .slice(0, 8);
 
-      const swPath = join(distDir, 'sw.js');
-      let sw = readFileSync(swPath, 'utf-8');
+      const swPath = join(distDir, "sw.js");
+      let sw = readFileSync(swPath, "utf-8");
       sw = sw
-        .replace('__CACHE_VERSION__', version)
-        .replace('__PRECACHE_MANIFEST__', JSON.stringify(manifest, null, 2));
+        .replace("__CACHE_VERSION__", version)
+        .replace("__PRECACHE_MANIFEST__", JSON.stringify(manifest, null, 2));
       writeFileSync(swPath, sw);
     },
   };
@@ -41,17 +50,24 @@ export default defineConfig({
     open: true,
   },
   build: {
-    target: 'esnext',
-    outDir: 'dist',
+    target: "esnext",
+    outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler',
+        api: "modern-compiler",
       },
     },
   },
-  plugins: [
-    swPlugin(),
-  ]
+  plugins: [swPlugin()],
 });
