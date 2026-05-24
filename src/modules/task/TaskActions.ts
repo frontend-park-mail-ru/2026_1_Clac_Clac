@@ -148,11 +148,13 @@ export const TaskActions = {
     eventSource.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);
-        if (
-          parsed.type === "new_comment"
-        ) {
+        if (parsed.type === "new_comment" && parsed.payload) {
           const { user_link, data } = parsed.payload;
           if (!data) return;
+
+          if (user_link && currentUserLink && user_link === currentUserLink) {
+            return;
+          }
 
           const commentTaskLink =
             data.card_link || data.parent_link || data.task_link;
