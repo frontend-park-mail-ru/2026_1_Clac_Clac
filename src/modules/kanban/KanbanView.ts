@@ -2,7 +2,7 @@ import Handlebars from "handlebars";
 import kanbanTpl from "../../templates/kanban.hbs?raw";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
-import { authApi, boardsApi, kanbanApi } from "../../api";
+import { authApi, boardsApi, kanbanApi, profileApi } from "../../api";
 import { currentUser } from "../../main";
 
 import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
@@ -408,7 +408,7 @@ export class KanbanView {
       const label = this.appDiv.querySelector(
         "#gantt-filter-label",
       ) as HTMLElement;
-      if (label) label.textContent = "Period: All";
+      if (label) label.textContent = "Период: Все";
       this.renderGanttChart(state);
     });
 
@@ -1152,6 +1152,7 @@ export class KanbanView {
         generateLink(currentRole);
 
         let cachedMembers: any[] = [];
+        let myEmail = "";
 
         const renderMembersList = (filter = "") => {
           const listContainer = inviteModal.querySelector(
@@ -1174,7 +1175,7 @@ export class KanbanView {
           }
 
           const myMember = cachedMembers.find(
-            (m) => m.email === currentUser?.email,
+            (m) => m.email.toLowerCase().trim() === myEmail,
           );
           const myRole = myMember?.role || "";
 
@@ -1197,7 +1198,7 @@ export class KanbanView {
               ? `<img src="${m.avatar_url}" class="invite-modal__member-avatar" alt="Avatar">`
               : `<div class="invite-modal__member-avatar-fallback">${(m.display_name || "U").charAt(0).toUpperCase()}</div>`;
 
-            const isSelf = m.email === currentUser?.email;
+            const isSelf = m.email.toLowerCase().trim() === myEmail;
             const isOwner = m.role === "owner" || m.role === "creator";
 
             const canDeleteThisMember = canManage && !isSelf && !isOwner;
@@ -1335,8 +1336,17 @@ export class KanbanView {
             listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1.5rem; font-size: 0.9rem;">Загрузка участников...</div>`;
           }
           try {
+            myEmail = (currentUser?.email || "").toLowerCase().trim();
+            if (!myEmail) {
+              try {
+                const profileRes = await profileApi.getProfile();
+                myEmail = (profileRes.data.email || "").toLowerCase().trim();
+              } catch {}
+            }
+
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;
+
             const activeSearchInput = inviteModal.querySelector(
               "#invite-members-search",
             ) as HTMLInputElement;
