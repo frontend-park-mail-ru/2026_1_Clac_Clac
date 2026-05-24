@@ -1,0 +1,264 @@
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+
+export interface ApiError<T = unknown> {
+  status: number;
+  data: T | null;
+}
+
+export interface BaseResponse {
+  status: string;
+}
+
+export interface ApiResponse<T> {
+  status: string;
+  data: T;
+}
+
+export interface UserInfoResponse {
+  avatar: string;
+  display_name: string;
+  email: string;
+  link: string;
+}
+export interface LogInRequest {
+  email: string;
+  password: string;
+}
+export interface RegisterRequest {
+  display_name: string;
+  email: string;
+  password: string;
+  repeated_password: string;
+}
+export interface PasswordRecoveryRequest {
+  email: string;
+}
+export interface RecoveryCodeRequest {
+  code: string;
+}
+export interface NewPasswordRequest {
+  password: string;
+  repeated_password: string;
+  token_id: string;
+}
+
+export interface ProfileResponse {
+  avatar_url: string;
+  description_user: string;
+  display_name: string;
+  email: string;
+  link: string;
+}
+export interface UpdateProfileRequest {
+  description_user: string;
+  display_name: string;
+}
+export interface AvatarResponse {
+  avatar_url: string;
+}
+
+export interface BoardInfo {
+  background: string;
+  description: string;
+  link: string;
+  name: string;
+}
+export interface CreateBoardRequest {
+  background?: string;
+  description?: string;
+  name: string;
+}
+export interface UpdateBoardRequest {
+  background?: string;
+  board_link: string;
+  description?: string;
+  name?: string;
+}
+export interface MemberInfo {
+  link: string;
+  role: string;
+}
+export interface GetMembersResponse {
+  members: MemberInfo[];
+}
+export interface UploadBackgroundResponse {
+  background_key: string;
+}
+export interface InviteInfo {
+  board_link: string;
+  created_at: number;
+  default_role: string;
+  expire_at: number;
+  invite_link: string;
+  status: string;
+  target_user_link?: string;
+}
+export interface CreateInviteRequest {
+  default_role: string;
+  expire_seconds: number;
+  user_link?: string;
+}
+export interface CreateInviteResponse {
+  board_link: string;
+  created_at: number;
+  default_role: string;
+  expire_at: number;
+  invite_link: string;
+  status: string;
+  target_user_link?: string;
+}
+export interface AcceptInviteResponse {
+  board_link: string;
+  role: string;
+}
+export interface UpdateMemberRoleRequest {
+  new_role: string;
+}
+
+export interface SectionInfo {
+  color: string;
+  is_mandatory: boolean;
+  link: string;
+  max_tasks: number;
+  name: string;
+  position: number;
+}
+export interface CreateSectionRequest {
+  board_link: string;
+  color?: string;
+  is_mandatory?: boolean;
+  max_tasks?: number;
+  name: string;
+}
+export interface ListSectionLink {
+  list_links: string[];
+}
+
+export interface SubtaskInfo {
+  description: string;
+  is_done: boolean;
+  link: string;
+  position: number;
+}
+export interface SubtaskResponse {
+  description: string;
+  is_done: boolean;
+  position: number;
+  subtask_link: string;
+}
+export interface CreateSubtaskRequest {
+  description: string;
+}
+export interface UpdateSubtaskRequest {
+  description: string;
+  is_done: boolean;
+}
+
+export interface AttachmentResponse {
+  attachment_link: string;
+  attachment_path: string;
+  display_name: string;
+  position: number;
+}
+
+export interface Card {
+  deadline: string;
+  description: string;
+  executor_link: string;
+  link: string;
+  subtasks: SubtaskInfo[];
+  title: string;
+  position: number;
+}
+export interface CardResponse {
+  attachments?: AttachmentResponse[];
+  card_link: string;
+  deadline: string;
+  description: string;
+  executor_link: string;
+  subtasks: SubtaskResponse[];
+  title: string;
+  position: number;
+}
+export interface CardsResponse {
+  cards: Card[];
+}
+export interface CreateCardRequest {
+  deadline?: string;
+  description?: string;
+  executor_link?: string;
+  section_link: string;
+  title: string;
+}
+export interface CreateCardResponse {
+  card_link: string;
+  position: number;
+  section_link: string;
+}
+export interface UpdateCardRequest {
+  deadline?: string;
+  description?: string;
+  executor_link?: string | null;
+  title: string;
+}
+export interface ReorderCardsRequest {
+  position: number;
+  section_link: string;
+}
+
+export interface CommentResponse {
+  author_link: string;
+  comment_link: string;
+  parent_link: string;
+  text: string;
+  created_at: string;
+}
+export interface CommentsResponse {
+  comments: CommentResponse[];
+}
+export interface CreateCommentRequest {
+  parent_link?: string;
+  text: string;
+}
+export interface CreateCommentResponse {
+  comment_link: string;
+}
+export interface UpdateCommentRequest {
+  text: string;
+}
+
+// --- Support / Appeals ---
+export interface AppealInfo {
+  appeal_id: number;
+  appeal_link: string;
+  attachment_url: string;
+  attachment_key?: string;
+  category: string;
+  created_at: string;
+  description: string;
+  display_name: string;
+  email: string;
+  status: string;
+}
+export interface GetAppealsResponse {
+  appeals: AppealInfo[];
+  role: string;
+}
+export interface CreateAppealRequest {
+  category: string;
+  description: string;
+  display_name: string;
+  email: string;
+}
+export interface ChangeAppealStatusInfo {
+  appeal_link?: string;
+  new_status: string;
+}
+export interface AppealsStats {
+  close_appeals: number;
+  in_work_appeals: number;
+  open_appeals: number;
+}
+export interface UploadAttachmentResponse {
+  attachment_url: string;
+}

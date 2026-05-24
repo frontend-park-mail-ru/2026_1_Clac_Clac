@@ -1,0 +1,28 @@
+import { apiClient } from "./client";
+import {
+  BaseResponse,
+  ApiResponse,
+  UserInfoResponse,
+  LogInRequest,
+  RegisterRequest,
+  PasswordRecoveryRequest,
+  RecoveryCodeRequest,
+  NewPasswordRequest,
+} from "./types";
+
+export const authApi = {
+  checkAuth: () => apiClient.get<BaseResponse>("/me"),
+  login: (data: LogInRequest) =>
+    apiClient.post<ApiResponse<UserInfoResponse>, LogInRequest>("/login", data),
+  register: (data: RegisterRequest) =>
+    apiClient.post<ApiResponse<UserInfoResponse>, RegisterRequest>("/register", data),
+  logout: () => apiClient.post<BaseResponse>("/logout"),
+  forgotPassword: (data: PasswordRecoveryRequest) =>
+    apiClient.post<BaseResponse, PasswordRecoveryRequest>("/forgot-password", data),
+  checkCode: (data: RecoveryCodeRequest) =>
+    apiClient.post<BaseResponse, RecoveryCodeRequest>("/check-code", data),
+  resetPassword: (data: NewPasswordRequest) =>
+    apiClient.post<BaseResponse, NewPasswordRequest>("/reset-password", data),
+  vkLogin: (code: string) =>
+    apiClient.get<void>(`/oauth/vk?code=${encodeURIComponent(code)}`),
+};

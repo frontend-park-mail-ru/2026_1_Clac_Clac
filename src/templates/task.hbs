@@ -18,13 +18,6 @@
             <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
-        {{!-- <button class="icon-btn task__share-btn" id="btn-share" title="Поделиться">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h6v6"></path>
-            <path d="M10 14L21 3"></path>
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          </svg>
-        </button> --}}
       </div>
     </div>
 
@@ -124,39 +117,117 @@
         </div>
       </div>
 
+      <div class="task__attachments-section">
+        <h3 class="task__section-title">Вложения</h3>
+        <div class="task__attachments-list">
+          {{#each attachments}}
+          <div class="task__attachment-item" data-id="{{attachment_link}}">
+            <a href="{{attachment_path}}" target="_blank" class="task__attachment-link" data-is-image="{{#if isImage}}true{{else}}false{{/if}}" title="{{display_name}}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+              {{#if isImage}}
+              <div class="task__attachment-preview-thumb">
+                <img src="{{attachment_path}}" alt="{{display_name}}" class="task__attachment-thumb-img">
+              </div>
+              {{else}}
+              <svg class="task__attachment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              {{/if}}
+              <span class="task__attachment-name">{{display_name}}</span>
+            </a>
+            <button class="icon-btn task__attachment-delete-btn" data-link="{{attachment_link}}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+          {{/each}}
+        </div>
+        <div class="task__attachment-upload mt-05">
+          <label for="task-file-input" class="task__attachment-upload-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="task__attachment-icon-svg">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span id="task-file-name">
+              {{#if isAttachmentsFull}}
+                Лимит файлов (5/5)
+              {{else}}
+                {{#if (eq attachmentsCount 0)}}
+                  Загрузить файл
+                {{else}}
+                  Загрузить файл ({{attachmentsCount}}/5)
+                {{/if}}
+              {{/if}}
+            </span>
+          </label>
+          <input type="file" id="task-file-input" class="hidden">
+        </div>
+      </div>
+
       <div class="task__comments-section">
         <h3 class="task__section-title">Комментарии ({{comments.length}})</h3>
 
         <div class="task__comments-list">
           {{#each comments}}
-          <div class="task__comment" data-id="{{comment_link}}">
-            {{#if author_avatar}}
-            <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar">
-            <div class="task__comment-avatar-fallback hidden">{{author_fallback}}</div>
-            {{else}}
-            <div class="task__comment-avatar-fallback">{{author_fallback}}</div>
-            {{/if}}
-            <div class="task__comment-content">
-              <div class="task__comment-header">
-                <span class="task__comment-author">{{author_name}}</span>
-                {{#if created_time}}<span class="task__comment-time">{{created_time}}</span>{{/if}}
-              </div>
-              <div class="task__comment-bubble">{{text}}</div>
-            </div>
-            {{#if is_mine}}
-            <div class="task__comment-menu-wrap">
-              <button class="task__comment-menu-btn icon-btn" title="Действия">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="5" cy="12" r="2"></circle>
-                  <circle cx="12" cy="12" r="2"></circle>
-                  <circle cx="19" cy="12" r="2"></circle>
+          {{#if show_date_header}}
+          <div class="task__comments-date">{{date_header}}</div>
+          {{/if}}
+
+          <div class="task__comment {{#if is_mine}}task__comment--mine{{else}}task__comment--others{{/if}}" data-id="{{comment_link}}">
+            {{#unless is_mine}}
+              {{#if author_avatar}}
+              <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar">
+              {{else}}
+              <div class="task__comment-avatar-fallback">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-              </button>
-              <div class="task__comment-dropdown hidden">
-                <button class="task__comment-dropdown-item task__comment-edit-btn">Редактировать</button>
-                <button class="task__comment-dropdown-item task__comment-delete-btn">Удалить</button>
               </div>
+              {{/if}}
+            {{/unless}}
+
+            <div class="task__comment-body-wrapper">
+              <div class="task__comment-bubble">
+                <div class="task__comment-author">{{author_name}}</div>
+                <div class="task__comment-text">{{text}}</div>
+              </div>
+
+              {{#if is_mine}}
+              <div class="task__comment-menu-wrap">
+                <button class="task__comment-menu-btn icon-btn" title="Действия">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="5" cy="12" r="2"></circle>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <circle cx="19" cy="12" r="2"></circle>
+                  </svg>
+                </button>
+                <div class="task__comment-dropdown hidden">
+                  <button class="task__comment-dropdown-item task__comment-edit-btn">Редактировать</button>
+                  <button class="task__comment-dropdown-item task__comment-delete-btn">Удалить</button>
+                </div>
+              </div>
+              {{/if}}
             </div>
+
+            {{#if created_time}}
+            <span class="task__comment-time">{{created_time}}</span>
+            {{/if}}
+
+            {{#if is_mine}}
+              {{#if author_avatar}}
+              <img src="{{author_avatar}}" alt="Avatar" class="task__comment-avatar">
+              {{else}}
+              <div class="task__comment-avatar-fallback">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              {{/if}}
             {{/if}}
           </div>
           {{/each}}
@@ -169,7 +240,7 @@
       <div class="task__comment-input-area">
         <input type="text" class="task__comment-input" placeholder="Комментарий...">
         <button class="icon-btn task__comment-send-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

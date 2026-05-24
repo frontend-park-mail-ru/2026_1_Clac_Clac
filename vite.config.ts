@@ -1,5 +1,4 @@
 import { defineConfig, Plugin } from 'vite';
-import babel from 'vite-plugin-babel';
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -45,8 +44,14 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'dist',
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+      },
+    },
+  },
   plugins: [
-    babel(),
     swPlugin(),
   ]
 });
