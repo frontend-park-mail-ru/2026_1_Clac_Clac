@@ -1,6 +1,7 @@
 import Handlebars from "handlebars";
 import taskTpl from "../../templates/task.hbs?raw";
 import { taskStore } from "./TaskStore";
+import { kanbanStore } from "../kanban/KanbanStore";
 import { TaskActions } from "./TaskActions";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
@@ -145,6 +146,9 @@ export class TaskView {
     const usersList = state.usersList;
 
     if (!taskData) return;
+
+    const kanbanState = kanbanStore.getState();
+    const isViewer = kanbanState.myRole === "viewer";
 
     const isDone = taskData.status === true || taskData.done === true || false;
 
@@ -306,6 +310,7 @@ export class TaskView {
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
+      isViewer: isViewer,
       task: {
         title: taskData.title || "Без названия",
         description: taskData.description || "",

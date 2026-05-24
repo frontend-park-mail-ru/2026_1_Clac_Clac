@@ -69,9 +69,12 @@ export class KanbanView {
       }
     });
 
+    const isViewer = state.myRole === "viewer";
+
     this.appDiv.innerHTML = template({
       board_name: state.boardName,
       sections: state.sections,
+      isViewer: isViewer,
     });
 
     const tabKanban = this.appDiv.querySelector("#tab-view-kanban");
@@ -495,6 +498,8 @@ export class KanbanView {
       }
     }
 
+    const isViewer = state.myRole === "viewer";
+
     state.sections.forEach((sec) => {
       const matchingTasks: any[] = [];
 
@@ -719,7 +724,9 @@ export class KanbanView {
           leftRow.classList.add("gantt-chart__row--done");
         }
 
-        iconHtml = `
+        iconHtml = isViewer
+          ? ""
+          : `
             <button class="kanban-card__status-checkmark gantt-chart__task-status-btn ${isTaskDone ? "kanban-card__status-checkmark--active" : ""}" title="Изменить статус задачи" type="button">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -764,6 +771,7 @@ export class KanbanView {
         );
         statusBtn?.addEventListener("click", async (ev) => {
           ev.stopPropagation();
+          if (isViewer) return;
           const nextDone = !isTaskDone;
           try {
             await kanbanApi.updateTaskStatus(item.id, { done: nextDone });
@@ -820,7 +828,7 @@ export class KanbanView {
         bar.style.cursor = isTaskDone ? "default" : "grab";
         bar.title = `${item.name}: ${formatDateRange(item.start, item.end)}`;
 
-        if (!isTaskDone) {
+        if (!isTaskDone && !isViewer) {
           const leftHandle = document.createElement("div");
           leftHandle.className =
             "gantt-chart__bar-handle gantt-chart__bar-handle--left";
@@ -1215,6 +1223,11 @@ export class KanbanView {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
+                <div class="invite-modal__member-role-dropdown hidden">
+                  <div class="invite-modal__member-role-option" data-role="viewer">Гость</div>
+                  <div class="invite-modal__member-role-option" data-role="editor">Участник</div>
+                  <div class="invite-modal__member-role-option" data-role="admin">Админ</div>
+                </div>
               </div>`
               : `<span class="invite-modal__member-role-static">${roleLabel}</span>`;
 
@@ -1530,7 +1543,9 @@ export class KanbanView {
       KanbanColumnManager.bind(this.appDiv, state, closeModals, signal);
       KanbanTaskCreation.bind(this.appDiv, state, closeModals, signal);
       KanbanContextMenus.bind(this.appDiv, state, signal);
-      KanbanDragAndDrop.bind(this.appDiv, state.boardId, signal);
+      if (state.myRole !== "viewer") {
+        KanbanDragAndDrop.bind(this.appDiv, state.boardId, signal);
+      }
     }
   }
 }

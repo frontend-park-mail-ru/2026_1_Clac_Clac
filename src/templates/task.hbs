@@ -12,7 +12,7 @@
       <div class="task__header-right">
         <button
           class="btn task__status-btn {{#if task.is_done}}task__status-btn--done{{else}}task__status-btn--pending{{/if}}"
-          id="btn-toggle-task-status" type="button">
+          id="btn-toggle-task-status" type="button" {{#if isViewer}}disabled style="cursor: default; opacity: 0.75;"{{/if}}>
           {{#if task.is_done}}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="20 6 9 17 4 12"></polyline>
@@ -22,6 +22,7 @@
           Выполнить
           {{/if}}
         </button>
+        {{#unless isViewer}}
         <button class="btn btn--primary task__save-btn" id="btn-save-task">Сохранить</button>
         <button class="icon-btn task__options-btn" id="btn-task-options">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -30,6 +31,7 @@
             <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
+        {{/unless}}
       </div>
     </div>
 
@@ -38,7 +40,7 @@
 
       <div class="task__title-container">
         <input type="text" class="task__title-input {{#if task.is_done}}task__title-input--done{{/if}}" id="task-title-input" value="{{task.title}}"
-          placeholder="Заголовок задачи" maxlength="100">
+          placeholder="Заголовок задачи" maxlength="100" {{#if isViewer}}disabled{{/if}}>
       </div>
 
       <div class="task__meta-list">
@@ -49,7 +51,7 @@
           </svg>
           <span class="task__meta-label">Исполнитель:</span>
           <button class="task__meta-value-btn task__meta-value-btn-flex" id="task-executor-btn"
-            data-id="{{task.executor_id}}">
+            data-id="{{task.executor_id}}" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
             {{#if task.executor_id}}
             {{#if task.executor_avatar}}
             <img src="{{task.executor_avatar}}" class="assignee__avatar-small">
@@ -71,7 +73,7 @@
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
           <span class="task__meta-label">Дата:</span>
-          <button class="task__meta-value-btn" id="task-date-btn" type="button">
+          <button class="task__meta-value-btn" id="task-date-btn" type="button" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
             {{#if task.due_date}}{{task.due_date}}{{else}}Не задана{{/if}}
           </button>
           <input type="hidden" id="task-date-input" value="{{task.raw_date}}">
@@ -83,7 +85,7 @@
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
           <span class="task__meta-label">Время:</span>
-          <button class="task__meta-value-btn" id="task-time-btn">
+          <button class="task__meta-value-btn" id="task-time-btn" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
             {{#if task.time}}{{task.time}}{{else}}Не задано{{/if}}
           </button>
           <input type="hidden" id="task-time-input" value="{{task.raw_time}}">
@@ -93,7 +95,7 @@
       <div class="task__description-section">
         <div class="task__description-box">
           <textarea class="task__description-textarea" id="task-desc-input"
-            placeholder="Добавить описание...">{{task.description}}</textarea>
+            placeholder="Добавить описание..." {{#if isViewer}}disabled style="background: transparent; border-color: transparent; padding: 0; resize: none; cursor: default; color: #ccc;"{{/if}}>{{task.description}}</textarea>
         </div>
       </div>
 
@@ -104,20 +106,23 @@
           <div class="task__subtask-row task__subtask-row-flex">
             <label class="custom-checkbox task__subtask-item task__subtask-item-flex">
               <input type="checkbox" class="subtask-checkbox" data-id="{{id}}" data-desc="{{description}}" {{#if
-                is_done}}checked{{/if}}>
+                is_done}}checked{{/if}} {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
               <span class="checkmark"></span>
               <input type="text" class="task__subtask-text-input {{#if is_done}}task__subtask-text-input--done{{/if}}"
-                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}">
+                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}" {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
             </label>
+            {{#unless ../../isViewer}}
             <button class="icon-btn task__subtask-delete-btn task__subtask-delete-btn-styled" data-id="{{id}}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </button>
+            {{/unless}}
           </div>
           {{/each}}
         </div>
+        {{#unless isViewer}}
         <div class="task__subtask-add mt-05">
           <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
           <button class="icon-btn task__subtask-add-btn" id="subtask-add-btn">
@@ -127,6 +132,7 @@
             </svg>
           </button>
         </div>
+        {{/unless}}
       </div>
 
       <div class="task__attachments-section">
@@ -150,6 +156,7 @@
               {{/if}}
               <span class="task__attachment-name">{{display_name}}</span>
             </a>
+            {{#unless ../isViewer}}
             <button class="icon-btn task__attachment-delete-btn" data-link="{{attachment_link}}">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -157,9 +164,11 @@
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </button>
+            {{/unless}}
           </div>
           {{/each}}
         </div>
+        {{#unless isViewer}}
         <div class="task__attachment-upload mt-05">
           <label for="task-file-input" class="task__attachment-upload-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -182,6 +191,7 @@
           </label>
           <input type="file" id="task-file-input" class="hidden">
         </div>
+        {{/unless}}
       </div>
 
       <div class="task__comments-section">
