@@ -75,6 +75,10 @@ export interface UpdateBoardRequest {
   name?: string;
 }
 export interface MemberInfo {
+  avatar_url: string;
+  description: string;
+  display_name: string;
+  email: string;
   link: string;
   role: string;
 }
@@ -170,21 +174,25 @@ export interface Card {
   title: string;
   position: number;
 }
+
+export interface CardsResponse {
+  cards: Card[];
+}
+
 export interface CardResponse {
   attachments?: AttachmentResponse[];
   card_link: string;
   deadline: string;
   description: string;
   executor_link: string;
+  start: string;
+  status: boolean;
   subtasks: SubtaskResponse[];
   title: string;
   position: number;
 }
-export interface CardsResponse {
-  cards: Card[];
-}
+
 export interface CreateCardRequest {
-  deadline?: string;
   description?: string;
   executor_link?: string;
   section_link: string;
@@ -198,12 +206,22 @@ export interface CreateCardResponse {
 export interface UpdateCardRequest {
   deadline?: string;
   description?: string;
-  executor_link?: string | null;
-  title: string;
+  executor_link?: string;
+  start?: string;
+  title?: string;
 }
 export interface ReorderCardsRequest {
   position: number;
   section_link: string;
+}
+
+export interface NewStatusTask {
+  done: boolean;
+}
+
+export interface NewTimeLine {
+  deadline: string;
+  start: string;
 }
 
 export interface CommentResponse {
@@ -227,7 +245,6 @@ export interface UpdateCommentRequest {
   text: string;
 }
 
-// --- Support / Appeals ---
 export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;

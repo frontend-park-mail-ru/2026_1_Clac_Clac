@@ -59,27 +59,6 @@ const formatDateWithSpace = (date: Date): string => {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
-const fetchBoardUsers = async (links: string[]): Promise<User[]> => {
-  const userPromises = links.map(async (link: string) => {
-    if (profileCache.has(link)) return profileCache.get(link)!;
-    try {
-      const pRes = await profileApi.getProfileByLink(link);
-      const pData = pRes.data;
-      const user: User = {
-        id: link,
-        name: pData.display_name || "Без имени",
-        email: pData.email || "",
-        avatarUrl: pData.avatar_url,
-      };
-      profileCache.set(link, user);
-      return user;
-    } catch {
-      return { id: link, name: "Пользователь", email: "" };
-    }
-  });
-  return Promise.all(userPromises);
-};
-
 const enrichComment = (
   c: ExtendedCommentResponse,
   users: User[],
@@ -150,8 +129,17 @@ export const TaskActions = {
       const boardName = boardRes.data.name || "Без названия";
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
-      const rawUsers = usersRes.data.members.map((m) => m.link);
-      const usersList = await fetchBoardUsers(rawUsers);
+
+      const usersList: User[] = usersRes.data.members.map((m) => {
+        const user: User = {
+          id: m.link,
+          name: m.display_name || "Без имени",
+          email: m.email || "",
+          avatarUrl: m.avatar_url,
+        };
+        profileCache.set(m.link, user);
+        return user;
+      });
 
       const [taskRes, meRes] = await Promise.all([
         kanbanApi.getTask(taskId),
