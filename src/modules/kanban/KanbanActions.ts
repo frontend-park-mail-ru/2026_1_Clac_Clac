@@ -158,6 +158,8 @@ export const KanbanActions = {
                 hasSubtasks,
                 position: t.position,
                 is_done: isDone,
+                start: (t as any).start || null,
+                deadline: dl || null,
               };
             })
             .sort((a, b) => a.position - b.position);

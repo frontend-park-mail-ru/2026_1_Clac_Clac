@@ -1,6 +1,5 @@
 import Handlebars from "handlebars";
 import kanbanTpl from "../../templates/kanban.hbs?raw";
-import { kanbanStore } from "./KanbanStore";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
 import { authApi, boardsApi, kanbanApi } from "../../api";
@@ -22,7 +21,6 @@ export class KanbanView {
   private currentView: "kanban" | "gantt" = "kanban";
 
   private collapsedSections = new Set<string>();
-  private collapsedTasks = new Set<string>();
 
   private ganttFilterEnabled = false;
   private ganttFilterStartDate: Date | null = null;
@@ -470,32 +468,10 @@ export class KanbanView {
     container.innerHTML = "";
 
     const flatItems: any[] = [];
-    const parseDueDate = (dueStr: string): Date | null => {
-      if (!dueStr) return null;
-      const months = [
-        "января",
-        "февраля",
-        "марта",
-        "апреля",
-        "мая",
-        "июня",
-        "июля",
-        "августа",
-        "сентября",
-        "октября",
-        "ноября",
-        "декабря",
-      ];
-      const parts = dueStr.replace(",", "").split(" ");
-      if (parts.length >= 3) {
-        const day = parseInt(parts[0], 10);
-        const monthIdx = months.indexOf(parts[1].toLowerCase());
-        const year = parseInt(parts[2], 10);
-        if (!isNaN(day) && monthIdx !== -1 && !isNaN(year)) {
-          return new Date(year, monthIdx, day);
-        }
-      }
-      return null;
+    const parseDate = (dateStr: string | null): Date | null => {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
     };
 
     const filterActive = this.ganttFilterEnabled;
@@ -522,39 +498,16 @@ export class KanbanView {
       const matchingTasks: any[] = [];
 
       sec.tasks.forEach((task) => {
-        const end =
-          parseDueDate(task.due_date || "") ||
-          new Date(Date.now() + (task.id.charCodeAt(0) % 5) * 86400000);
-        const start = new Date(end.getTime() - 4 * 86400000);
+        const rawStart = parseDate((task as any).start);
+        const rawEnd = parseDate((task as any).deadline);
 
-        const subtasks = task.subtasks || [];
-        const N = subtasks.length;
-        const formattedSubs: any[] = [];
-
-        subtasks.forEach((sub, i) => {
-          const step = N > 0 ? (end.getTime() - start.getTime()) / N : 0;
-          const subStart = new Date(start.getTime() + i * step);
-          const subEnd = new Date(start.getTime() + (i + 1) * step);
-
-          const overlaps =
-            !filterActive ||
-            (subStart.getTime() < tEnd && subEnd.getTime() > tStart);
-          if (overlaps) {
-            formattedSubs.push({
-              type: "subtask",
-              id: sub.link || (sub as any).id,
-              taskId: task.id,
-              name: sub.description,
-              start: subStart,
-              end: subEnd,
-              is_done: sub.is_done,
-            });
-          }
-        });
+        const end = rawEnd || rawStart || new Date();
+        const start = rawStart || new Date(end.getTime() - 4 * 86400000);
 
         const taskOverlaps =
           !filterActive || (start.getTime() < tEnd && end.getTime() > tStart);
-        if (taskOverlaps || formattedSubs.length > 0) {
+
+        if (taskOverlaps) {
           matchingTasks.push({
             type: "task",
             id: task.id,
@@ -563,9 +516,10 @@ export class KanbanView {
             start,
             end,
             due_date: task.due_date,
-            isExpanded: !this.collapsedTasks.has(task.id),
-            subtasks: task.subtasks || [],
-            subsRenderList: formattedSubs,
+            is_done: (task as any).is_done === true,
+            isExpanded: false,
+            subtasks: [],
+            subsRenderList: [],
           });
         }
       });
@@ -582,11 +536,6 @@ export class KanbanView {
         if (!this.collapsedSections.has(sec.id)) {
           matchingTasks.forEach((task) => {
             flatItems.push(task);
-            if (!this.collapsedTasks.has(task.id)) {
-              task.subsRenderList.forEach((sub: any) => {
-                flatItems.push(sub);
-              });
-            }
           });
         }
       }
@@ -623,55 +572,92 @@ export class KanbanView {
     const totalDays = Math.round(timelineDuration / 86400000);
 
     container.innerHTML = `
-      <div class="gantt-chart__left-pane">
-        <div class="gantt-chart__header-row">
-          <span>Название</span>
-          <span>Диапазон дат</span>
+        <div class="gantt-chart__left-pane">
+          <div class="gantt-chart__header-row">
+            <span>Название</span>
+            <span>Диапазон дат</span>
+          </div>
+          <div class="gantt-chart__list"></div>
         </div>
-        <div class="gantt-chart__list"></div>
-      </div>
-      <div class="gantt-chart__right-pane">
-        <div class="gantt-chart__timeline-header"></div>
-        <div class="gantt-chart__grid-body"></div>
-      </div>
-    `;
+        <div class="gantt-chart__right-pane">
+          <div class="gantt-chart__timeline-header">
+            <div class="gantt-chart__months-row"></div>
+            <div class="gantt-chart__days-row"></div>
+          </div>
+          <div class="gantt-chart__grid-body"></div>
+        </div>
+      `;
 
     const leftList = container.querySelector(
       ".gantt-chart__list",
     ) as HTMLElement;
-    const timelineHeader = container.querySelector(
-      ".gantt-chart__timeline-header",
+    const monthsRow = container.querySelector(
+      ".gantt-chart__months-row",
+    ) as HTMLElement;
+    const daysRow = container.querySelector(
+      ".gantt-chart__days-row",
     ) as HTMLElement;
     const gridBody = container.querySelector(
       ".gantt-chart__grid-body",
     ) as HTMLElement;
 
-    const months = [
-      "янв",
-      "фев",
-      "мар",
-      "апр",
-      "май",
-      "июн",
-      "июл",
-      "авг",
-      "сен",
-      "окт",
-      "ноя",
-      "дек",
+    const monthNames = [
+      "Январь",
+      "Февраль",
+      "Март",
+      "Апрель",
+      "Май",
+      "Июнь",
+      "Июль",
+      "Август",
+      "Сентябрь",
+      "Октябрь",
+      "Ноябрь",
+      "Декабрь",
     ];
     const cellWidth = 60;
-    timelineHeader.style.width = `${totalDays * cellWidth}px`;
+
+    monthsRow.style.width = `${totalDays * cellWidth}px`;
+    daysRow.style.width = `${totalDays * cellWidth}px`;
     gridBody.style.width = `${totalDays * cellWidth}px`;
+
+    let currentMonthKey = "";
+    let currentMonthWidth = 0;
+    let currentMonthLabel = "";
 
     for (let d = 0; d < totalDays; d++) {
       const date = new Date(timelineStart + d * 86400000);
-      const cell = document.createElement("div");
-      cell.className = "gantt-chart__timeline-cell";
-      cell.style.width = `${cellWidth}px`;
-      cell.textContent = `${date.getDate()}`;
-      cell.title = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-      timelineHeader.appendChild(cell);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+      if (monthKey !== currentMonthKey) {
+        if (currentMonthWidth > 0) {
+          const mCell = document.createElement("div");
+          mCell.className = "gantt-chart__month-cell";
+          mCell.style.width = `${currentMonthWidth}px`;
+          mCell.textContent = currentMonthLabel;
+          monthsRow.appendChild(mCell);
+        }
+        currentMonthKey = monthKey;
+        currentMonthWidth = cellWidth;
+        currentMonthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+      } else {
+        currentMonthWidth += cellWidth;
+      }
+
+      const dayCell = document.createElement("div");
+      dayCell.className = "gantt-chart__timeline-cell";
+      dayCell.style.width = `${cellWidth}px`;
+      dayCell.textContent = `${date.getDate()}`;
+      dayCell.title = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+      daysRow.appendChild(dayCell);
+    }
+
+    if (currentMonthWidth > 0) {
+      const mCell = document.createElement("div");
+      mCell.className = "gantt-chart__month-cell";
+      mCell.style.width = `${currentMonthWidth}px`;
+      mCell.textContent = currentMonthLabel;
+      monthsRow.appendChild(mCell);
     }
 
     leftList.addEventListener("scroll", () => {
@@ -711,13 +697,13 @@ export class KanbanView {
           ? "gantt-chart__chevron--expanded"
           : "";
         iconHtml = `
-              <span class="gantt-chart__chevron ${chevronClass}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </span>
-              <span class="gantt-chart__col-dot bg-${item.color}"></span>
-            `;
+            <span class="gantt-chart__chevron ${chevronClass}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+            <span class="gantt-chart__col-dot bg-${item.color}"></span>
+          `;
         leftRow.addEventListener("click", () => {
           if (this.collapsedSections.has(item.id)) {
             this.collapsedSections.delete(item.id);
@@ -727,114 +713,72 @@ export class KanbanView {
           this.renderGanttChart(state);
         });
       } else if (item.type === "task") {
-        const chevronClass = item.isExpanded
-          ? "gantt-chart__chevron--expanded"
-          : "";
-        iconHtml =
-          item.subtasks.length > 0
-            ? `
-              <span class="gantt-chart__chevron ${chevronClass}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </span>
-            `
-            : "";
+        const isTaskDone = item.is_done === true;
+        if (isTaskDone) {
+          leftRow.classList.add("gantt-chart__row--done");
+        }
+
+        iconHtml = `
+            <button class="kanban-card__status-checkmark gantt-chart__task-status-btn ${isTaskDone ? "kanban-card__status-checkmark--active" : ""}" title="Изменить статус задачи" type="button">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </button>
+          `;
         dateRangeHtml = `<span class="gantt-chart__item-date">${formatDateRange(item.start, item.end)}</span>`;
 
         leftRow.addEventListener("click", (e) => {
           const target = e.target as HTMLElement;
-          const isDetailsBtn = target.closest(".gantt-chart__open-details-btn");
+          if (target.closest(".gantt-chart__task-status-btn")) return;
 
+          const isDetailsBtn = target.closest(".gantt-chart__open-details-btn");
           if (isDetailsBtn) {
             e.stopPropagation();
             navigateTo(
               `/task?boardId=${state.boardId}&taskId=${item.id}&title=${encodeURIComponent(item.name)}`,
             );
-          } else {
-            if (item.subtasks.length > 0) {
-              if (this.collapsedTasks.has(item.id)) {
-                this.collapsedTasks.delete(item.id);
-              } else {
-                this.collapsedTasks.add(item.id);
-              }
-              this.renderGanttChart(state);
-            }
           }
         });
-      } else if (item.type === "subtask") {
-        iconHtml = `
-              <label class="custom-checkbox gantt-chart__subtask-checkbox">
-                <input type="checkbox" class="gantt-subtask-cb" data-id="${item.id}" data-task-id="${item.taskId}" data-desc="${item.name}" ${item.is_done ? "checked" : ""}>
-                <span class="checkmark"></span>
-              </label>
-            `;
-        dateRangeHtml = `<span class="gantt-chart__item-date">${formatDateRange(item.start, item.end)}</span>`;
       }
 
       if (item.type === "task") {
+        const isTaskDone = item.is_done === true;
         leftRow.innerHTML = `
-              <div class="gantt-chart__item-title">
-                ${iconHtml}
-                <span>${item.name}</span>
-              </div>
-              <button class="gantt-chart__open-details-btn" title="Открыть карточку">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15 3 21 3 21 9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
-              </button>
-              ${dateRangeHtml}
-            `;
-      } else {
-        leftRow.innerHTML = `
-              <div class="gantt-chart__item-title">
-                ${iconHtml}
-                <span>${item.name}</span>
-              </div>
-              ${dateRangeHtml}
-            `;
-      }
+            <div class="gantt-chart__item-title">
+              ${iconHtml}
+              <span class="${isTaskDone ? "kanban-card__title--done" : ""}">${item.name}</span>
+            </div>
+            <button class="gantt-chart__open-details-btn" title="Открыть карточку">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </button>
+            ${dateRangeHtml}
+          `;
 
-      if (item.type === "subtask") {
-        const cb = leftRow.querySelector(
-          ".gantt-subtask-cb",
-        ) as HTMLInputElement;
-        cb?.addEventListener("click", (ev) => ev.stopPropagation());
-        cb?.addEventListener("change", async () => {
-          const taskId = cb.getAttribute("data-task-id") || "";
-          const subtaskId = item.id;
-          const desc = item.name;
-
-          kanbanStore.updateSubtaskSilently(
-            taskId,
-            subtaskId,
-            cb.checked,
-            desc,
-          );
-          item.is_done = cb.checked;
-          this.renderGanttChart(state);
-
+        const statusBtn = leftRow.querySelector(
+          ".gantt-chart__task-status-btn",
+        );
+        statusBtn?.addEventListener("click", async (ev) => {
+          ev.stopPropagation();
+          const nextDone = !isTaskDone;
           try {
-            await kanbanApi.updateSubtask(subtaskId, {
-              is_done: cb.checked,
-              description: desc,
-            });
-            KanbanActions.fetchKanban(state.boardId!, true);
+            await kanbanApi.updateTaskStatus(item.id, { done: nextDone });
+            await KanbanActions.fetchKanban(state.boardId!, true);
           } catch {
-            kanbanStore.updateSubtaskSilently(
-              taskId,
-              subtaskId,
-              !cb.checked,
-              desc,
-            );
-            item.is_done = !cb.checked;
-            cb.checked = !cb.checked;
-            this.renderGanttChart(state);
-            Toast.error("Ошибка при обновлении подзадачи");
+            Toast.error("Не удалось обновить статус задачи");
           }
         });
+      } else {
+        leftRow.innerHTML = `
+            <div class="gantt-chart__item-title">
+              ${iconHtml}
+              <span>${item.name}</span>
+            </div>
+            ${dateRangeHtml}
+          `;
       }
 
       leftList.appendChild(leftRow);
@@ -859,21 +803,78 @@ export class KanbanView {
           ((item.end.getTime() - item.start.getTime()) / timelineDuration) *
           100;
 
-        const isPurple =
-          item.type === "subtask"
-            ? item.is_done
-            : item.type === "task" &&
-              (item.subtasks || []).length > 0 &&
-              item.subtasks.every((s: any) => s.is_done);
-        const barColorClass = isPurple
+        const isTaskDone = item.is_done === true;
+        const barColorClass = isTaskDone
           ? "gantt-chart__bar--purple"
           : "gantt-chart__bar--white";
 
         const bar = document.createElement("div");
         bar.className = `gantt-chart__bar ${barColorClass}`;
+        if (isTaskDone) {
+          bar.classList.add("gantt-chart__bar--done");
+        }
         bar.style.left = `${offsetLeft}%`;
         bar.style.width = `${barWidth}%`;
+
+        bar.style.cursor = isTaskDone ? "default" : "grab";
         bar.title = `${item.name}: ${formatDateRange(item.start, item.end)}`;
+
+        if (!isTaskDone) {
+          bar.addEventListener("mousedown", (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const startX = e.clientX;
+            const originalLeftPercent = parseFloat(bar.style.left);
+            const parentWidth = (
+              bar.parentElement as HTMLElement
+            ).getBoundingClientRect().width;
+            const msPerPixel = 86400000 / cellWidth;
+
+            bar.style.cursor = "grabbing";
+
+            const onMouseMove = (moveEv: MouseEvent) => {
+              const deltaX = moveEv.clientX - startX;
+              const deltaPercent = (deltaX / parentWidth) * 100;
+              let newLeft = originalLeftPercent + deltaPercent;
+
+              if (newLeft < 0) newLeft = 0;
+              if (newLeft + barWidth > 100) newLeft = 100 - barWidth;
+
+              bar.style.left = `${newLeft}%`;
+            };
+
+            const onMouseUp = async (upEv: MouseEvent) => {
+              document.removeEventListener("mousemove", onMouseMove);
+              document.removeEventListener("mouseup", onMouseUp);
+              bar.style.cursor = "grab";
+
+              const deltaX = upEv.clientX - startX;
+              const deltaTimeMs = deltaX * msPerPixel;
+
+              const newStartTime = item.start.getTime() + deltaTimeMs;
+              const newEndTime = item.end.getTime() + deltaTimeMs;
+
+              const newStart = new Date(newStartTime);
+              const newEnd = new Date(newEndTime);
+
+              try {
+                await kanbanApi.updateTaskTimeline(item.id, {
+                  start: newStart.toISOString(),
+                  deadline: newEnd.toISOString(),
+                });
+                Toast.success(`Период задачи "${item.name}" обновлен`);
+                await KanbanActions.fetchKanban(state.boardId!, true);
+              } catch {
+                Toast.error("Не удалось обновить отрезок задачи");
+                this.renderGanttChart(state);
+              }
+            };
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+          });
+        }
 
         barContainer.appendChild(bar);
         rightRow.appendChild(barContainer);

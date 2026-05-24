@@ -1454,3 +1454,76 @@
     }
   }
 }
+
+.gantt-chart {
+  &__timeline-header {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #2a2a2c;
+    background: #1a1a1c;
+    flex-shrink: 0;
+  }
+
+  &__months-row {
+    display: flex;
+    height: 26px;
+    border-bottom: 1px solid #2a2a2c;
+    background: #141416;
+    overflow: hidden;
+  }
+
+  &__month-cell {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 0.78rem;
+    color: #888;
+    font-weight: bold;
+    border-right: 1px solid #2a2a2c;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__days-row {
+    display: flex;
+    height: 24px;
+  }
+
+  &__timeline-cell {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    color: #666;
+    font-weight: 500;
+    border-right: 1px solid #1f1f21;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  &__row--done {
+    opacity: 0.5;
+  }
+
+  &__bar--done {
+    opacity: 0.5;
+    background: #10b981 !important;
+  }
+
+  &__task-status-btn {
+    position: static !important; // Сбрасываем абсолютное позиционирование карточки
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+    width: 18px !important;
+    height: 18px !important;
+
+    svg {
+      width: 10px !important;
+      height: 10px !important;
+    }
+  }
+}
