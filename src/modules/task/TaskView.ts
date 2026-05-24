@@ -72,6 +72,8 @@ export class TaskView {
     if (this.taskNode && this.appDiv.contains(this.taskNode)) {
       this.appDiv.removeChild(this.taskNode);
     }
+
+    TaskActions.clearStore();
   }
 
   private globalClickHandler(e: MouseEvent) {
@@ -124,6 +126,7 @@ export class TaskView {
     const state = taskStore.getState();
     clearKanbanCache();
     Toast.success(message || "Операция успешна");
+    this.destroy();
     navigateTo(`/board?id=${state.boardId}`);
   }
 
@@ -898,6 +901,7 @@ export class TaskView {
     }
 
     this.taskNode?.querySelector("#btn-back")?.addEventListener("click", () => {
+      this.destroy();
       navigateTo(`/board?id=${state.boardId}`);
     });
 
@@ -905,6 +909,7 @@ export class TaskView {
       ?.querySelector("#task-overlay")
       ?.addEventListener("click", (e) => {
         if (e.target === e.currentTarget) {
+          this.destroy();
           navigateTo(`/board?id=${state.boardId}`);
         }
       });
