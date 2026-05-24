@@ -32,7 +32,10 @@ const handleLogoutAndRedirect = (): void => {
   navigateTo("/login");
 };
 
-const uploadBoardBackground = async (boardId: string, file: File): Promise<void> => {
+const uploadBoardBackground = async (
+  boardId: string,
+  file: File,
+): Promise<void> => {
   const fd = new FormData();
   fd.append("background", file);
   try {
@@ -78,7 +81,7 @@ const fetchBoardMembersCount = async (boardLink: string): Promise<number> => {
 
 const fetchSectionStats = async (
   sec: SectionRaw,
-  isFirst: boolean
+  isFirst: boolean,
 ): Promise<{ backlogCount: number; hotCount: number }> => {
   try {
     const tasksRes = await kanbanApi.getTasks(sec.link);
@@ -95,7 +98,7 @@ const fetchSectionStats = async (
 };
 
 const fetchBoardTasksStats = async (
-  boardLink: string
+  boardLink: string,
 ): Promise<{ backlogCount: number; hotCount: number }> => {
   try {
     const sectionsRes = await kanbanApi.getSections(boardLink);
@@ -106,7 +109,7 @@ const fetchBoardTasksStats = async (
     }
 
     const statsPromises = sections.map((sec, idx) =>
-      fetchSectionStats(sec, idx === 0)
+      fetchSectionStats(sec, idx === 0),
     );
 
     const statsResults = await Promise.all(statsPromises);
@@ -117,7 +120,7 @@ const fetchBoardTasksStats = async (
         acc.hotCount += curr.hotCount;
         return acc;
       },
-      { backlogCount: 0, hotCount: 0 }
+      { backlogCount: 0, hotCount: 0 },
     );
   } catch (err) {
     console.error(`Failed to fetch sections for board ${boardLink}`, err);

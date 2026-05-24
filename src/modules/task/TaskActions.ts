@@ -33,6 +33,115 @@ const months = [
 let currentUserLink: string | null = null;
 const commentsCache = new Map<string, ExtendedCommentResponse[]>();
 
+const parseCreatedAt = (createdAt?: string): Date | null => {
+  if (!createdAt) return null;
+  const date = new Date(createdAt);
+  if (!isNaN(date.getTime())) return date;
+
+  const ts = parseFloat(createdAt);
+  if (!isNaN(ts)) {
+    return new Date(ts < 1e10 ? ts * 1000 : ts);
+  }
+  return null;
+};
+
+const formatTime = (date: Date): string => {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const formatDateWithComma = (date: Date): string => {
+  return `${date.getDate()} ${months[date.getMonth()]}, ${date.getFullYear()}`;
+};
+
+const formatDateWithSpace = (date: Date): string => {
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const fetchBoardUsers = async (links: string[]): Promise<User[]> => {
+  const userPromises = links.map(async (link: string) => {
+    if (profileCache.has(link)) return profileCache.get(link)!;
+    try {
+      const pRes = await profileApi.getProfileByLink(link);
+      const pData = pRes.data;
+      const user: User = {
+        id: link,
+        name: pData.display_name || "Без имени",
+        email: pData.email || "",
+        avatarUrl: pData.avatar_url,
+      };
+      profileCache.set(link, user);
+      return user;
+    } catch {
+      return { id: link, name: "Пользователь", email: "" };
+    }
+  });
+  return Promise.all(userPromises);
+};
+
+const enrichComment = (
+  c: ExtendedCommentResponse,
+  users: User[],
+): ExtendedCommentResponse => {
+  const u = users.find((user: User) => user.id === c.author_link);
+  if (u) {
+    c.author_name = u.name;
+    c.author_avatar = u.avatarUrl;
+    c.author_fallback = u.name.charAt(0).toUpperCase();
+  } else {
+    c.author_name = "Пользователь";
+    c.author_fallback = "U";
+  }
+
+  const date = parseCreatedAt(c.created_at);
+  c.created_time = date ? formatTime(date) : "";
+  c.is_mine = c.author_link === currentUserLink;
+
+  return c;
+};
+
+const fetchAndProcessComments = async (
+  taskId: string,
+  users: User[],
+): Promise<ExtendedCommentResponse[]> => {
+  const cached = commentsCache.get(taskId);
+  if (cached) return cached;
+
+  try {
+    const commentsRes = await kanbanApi.getComments(taskId);
+    const comments: ExtendedCommentResponse[] = commentsRes.data.comments;
+    let lastDate = "";
+
+    comments.forEach((c) => {
+      enrichComment(c, users);
+      const d = parseCreatedAt(c.created_at);
+      if (d) {
+        const dateStr = formatDateWithComma(d);
+        if (dateStr !== lastDate) {
+          c.show_date_header = true;
+          c.date_header = dateStr;
+          lastDate = dateStr;
+        }
+      }
+    });
+
+    commentsCache.set(taskId, comments);
+    return comments;
+  } catch (e) {
+    console.error("Failed to load comments", e);
+    return [];
+  }
+};
+
+const updateCachedComments = (
+  taskId: string,
+  updater: (comments: ExtendedCommentResponse[]) => ExtendedCommentResponse[],
+): void => {
+  const cached = commentsCache.get(taskId) ?? [];
+  commentsCache.set(taskId, updater(cached));
+};
+
 export const TaskActions = {
   async loadTaskData(boardId: string, taskId: string) {
     appDispatcher.dispatch({ type: TaskActionTypes.LOAD_DATA_START });
@@ -42,25 +151,7 @@ export const TaskActions = {
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
       const rawUsers = usersRes.data.members.map((m) => m.link);
-
-      const userPromises = rawUsers.map(async (link: string) => {
-        if (profileCache.has(link)) return profileCache.get(link)!;
-        try {
-          const pRes = await profileApi.getProfileByLink(link);
-          const pData = pRes.data;
-          const user = {
-            id: link,
-            name: pData.display_name || "Без имени",
-            email: pData.email || "",
-            avatarUrl: pData.avatar_url,
-          };
-          profileCache.set(link, user);
-          return user;
-        } catch {
-          return { id: link, name: "Пользователь", email: "" };
-        }
-      });
-      const usersList = await Promise.all(userPromises);
+      const usersList = await fetchBoardUsers(rawUsers);
 
       const [taskRes, meRes] = await Promise.all([
         kanbanApi.getTask(taskId),
@@ -76,67 +167,7 @@ export const TaskActions = {
         currentUserLink = meRes.data.link;
       }
 
-      const enrichComment = (c: ExtendedCommentResponse, users: User[]) => {
-        const u = users.find((user: User) => user.id === c.author_link);
-        if (u) {
-          c.author_name = u.name;
-          c.author_avatar = u.avatarUrl;
-          c.author_fallback = u.name.charAt(0).toUpperCase();
-        } else {
-          c.author_name = "Пользователь";
-          c.author_fallback = "U";
-        }
-        try {
-          let date: Date | null = null;
-          if (c.created_at) {
-            date = new Date(c.created_at);
-            if (isNaN(date.getTime())) {
-              const ts = parseFloat(c.created_at);
-              if (!isNaN(ts)) {
-                date = new Date(ts < 1e10 ? ts * 1000 : ts);
-              }
-            }
-          }
-          c.created_time =
-            date && !isNaN(date.getTime())
-              ? `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
-              : "";
-        } catch {
-          c.created_time = "";
-        }
-        c.is_mine = c.author_link === currentUserLink;
-        return c;
-      };
-
-      let comments: ExtendedCommentResponse[] = [];
-      const cached = commentsCache.get(taskId);
-      if (cached) {
-        comments = cached;
-      } else {
-        try {
-          const commentsRes = await kanbanApi.getComments(taskId);
-          comments = commentsRes.data.comments;
-          let lastDate = "";
-          comments.forEach((c) => {
-            enrichComment(c, usersList);
-            if (c.created_at) {
-              const d = new Date(c.created_at);
-              if (!isNaN(d.getTime())) {
-                const dateStr = `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
-                if (dateStr !== lastDate) {
-                  c.show_date_header = true;
-                  c.date_header = dateStr;
-                  lastDate = dateStr;
-                }
-              }
-            }
-          });
-
-          commentsCache.set(taskId, comments);
-        } catch (e) {
-          console.error("Failed to load comments", e);
-        }
-      }
+      const comments = await fetchAndProcessComments(taskId, usersList);
 
       appDispatcher.dispatch({
         type: TaskActionTypes.LOAD_DATA_SUCCESS,
@@ -194,23 +225,24 @@ export const TaskActions = {
       const me = usersList.find((u) => u.id === currentUserLink);
 
       const now = new Date();
-      const created_time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-      const dateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+      const created_time = formatTime(now);
+      const dateStr = formatDateWithSpace(now);
 
       let show_date_header = false;
       let date_header = "";
 
       const lastComment = comments[comments.length - 1];
-      if (lastComment && lastComment.created_at) {
-        const lastD = new Date(lastComment.created_at);
-        const lastDateStr = `${lastD.getDate()} ${months[lastD.getMonth()]} ${lastD.getFullYear()}`;
+      if (lastComment?.created_at) {
+        const lastD = parseCreatedAt(lastComment.created_at);
+        const lastDateStr = lastD ? formatDateWithSpace(lastD) : "";
+
         if (dateStr !== lastDateStr) {
           show_date_header = true;
-          date_header = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+          date_header = formatDateWithComma(now);
         }
       } else {
         show_date_header = true;
-        date_header = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+        date_header = formatDateWithComma(now);
       }
 
       const comment: ExtendedCommentResponse = {
@@ -228,8 +260,7 @@ export const TaskActions = {
         date_header,
       };
 
-      const cached = commentsCache.get(taskId) ?? [];
-      commentsCache.set(taskId, [...cached, comment]);
+      updateCachedComments(taskId, (cached) => [...cached, comment]);
 
       appDispatcher.dispatch({
         type: TaskActionTypes.APPEND_COMMENT,
@@ -244,9 +275,7 @@ export const TaskActions = {
   async deleteComment(commentLink: string, taskId: string) {
     try {
       await kanbanApi.deleteComment(commentLink);
-      const cached = commentsCache.get(taskId) ?? [];
-      commentsCache.set(
-        taskId,
+      updateCachedComments(taskId, (cached) =>
         cached.filter((c) => c.comment_link !== commentLink),
       );
       appDispatcher.dispatch({
@@ -262,9 +291,7 @@ export const TaskActions = {
   async updateComment(commentLink: string, text: string, taskId: string) {
     try {
       await kanbanApi.updateComment(commentLink, { text });
-      const cached = commentsCache.get(taskId) ?? [];
-      commentsCache.set(
-        taskId,
+      updateCachedComments(taskId, (cached) =>
         cached.map((c) =>
           c.comment_link === commentLink ? { ...c, text } : c,
         ),
@@ -339,8 +366,7 @@ export const TaskActions = {
       Toast.success(`Файл ${file.name} загружен`);
     } catch (e: any) {
       console.error("Upload attachment error", e);
-      const status = e?.status;
-      if (status === 413) {
+      if (e?.status === 413) {
         Toast.error("Файл слишком большой");
       } else {
         Toast.error(`Ошибка при загрузке ${file.name}`);
