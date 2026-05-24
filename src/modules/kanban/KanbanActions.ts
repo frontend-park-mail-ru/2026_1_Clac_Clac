@@ -1,8 +1,9 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, SectionInfo } from "../../api";
+import { boardsApi, kanbanApi, profileApi, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
+import { currentUser } from "../../main";
 import {
   BoardUser,
   Section,
@@ -12,6 +13,8 @@ import {
 } from "./kanban.types";
 
 export const profileCache = new Map<string, BoardUser>();
+
+let cachedMyEmail: string | null = null;
 
 export const KanbanActions = {
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
@@ -33,6 +36,23 @@ export const KanbanActions = {
       const boardName = boardRes.data.name;
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
+
+      let myEmail =
+        cachedMyEmail || (currentUser?.email || "").toLowerCase().trim();
+      if (!myEmail) {
+        try {
+          const profileRes = await profileApi.getProfile();
+          myEmail = (profileRes.data.email || "").toLowerCase().trim();
+          cachedMyEmail = myEmail;
+        } catch (err) {
+          console.error("Failed to load profile for role check", err);
+        }
+      }
+
+      const myMember = usersRes.data.members.find(
+        (m) => m.email.toLowerCase().trim() === myEmail,
+      );
+      const myRole = myMember?.role || "viewer";
 
       const users: BoardUser[] = usersRes.data.members.map((m) => {
         const userObj: BoardUser = {
@@ -74,7 +94,8 @@ export const KanbanActions = {
               const exUser = users.find((u) => u.id === exId);
               const dl = t.deadline;
 
-              const isDone = (t as any).status === true || (t as any).done === true || false;
+              const isDone =
+                (t as any).status === true || (t as any).done === true || false;
 
               let formattedDate = null;
               let formattedTime = null;
@@ -173,7 +194,7 @@ export const KanbanActions = {
 
       appDispatcher.dispatch({
         type: "FETCH_KANBAN_SUCCESS",
-        payload: { boardId, boardName, users, sections },
+        payload: { boardId, boardName, users, sections, myRole },
       });
     } catch (err: unknown) {
       appDispatcher.dispatch({
