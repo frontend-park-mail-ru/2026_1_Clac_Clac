@@ -4,10 +4,125 @@ import { navigateTo, setIsAuth } from "../../router";
 import { ApiError } from "./boards.types";
 import { Toast } from "../../utils/toast";
 
+interface BoardRaw {
+  link: string;
+  name?: string;
+  description?: string;
+  background?: string;
+}
+
+interface SectionRaw {
+  link: string;
+  name?: string;
+}
+
+interface TaskRaw {
+  deadline?: string | Date;
+}
+
 const bgUploadErrorMessage = (status: number): string => {
   if (status === 413) return "Изображение слишком большое";
   if (status === 415) return "Неверный формат изображения";
   return "Неверный формат изображения";
+};
+
+const handleLogoutAndRedirect = (): void => {
+  setIsAuth(false);
+  localStorage.removeItem("isAuth");
+  navigateTo("/login");
+};
+
+const uploadBoardBackground = async (boardId: string, file: File): Promise<void> => {
+  const fd = new FormData();
+  fd.append("background", file);
+  try {
+    await boardsApi.updateBoardBackground(boardId, fd);
+  } catch (bgErr: unknown) {
+    Toast.error(bgUploadErrorMessage((bgErr as ApiError).status));
+  }
+};
+
+const isDoneSection = (name?: string): boolean => {
+  if (!name) return false;
+  const lowerName = name.toLowerCase();
+  return lowerName.includes("готово") || lowerName.includes("done");
+};
+
+const getHotTasksCount = (tasks: TaskRaw[]): number => {
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  let count = 0;
+
+  tasks.forEach((t) => {
+    const dl = t.deadline;
+    if (dl) {
+      const dlTime = new Date(dl).getTime();
+      if (!isNaN(dlTime) && dlTime < now + oneDayMs) {
+        count++;
+      }
+    }
+  });
+
+  return count;
+};
+
+const fetchBoardMembersCount = async (boardLink: string): Promise<number> => {
+  try {
+    const res = await boardsApi.getBoardUsers(boardLink);
+    return res.data.members?.length || 0;
+  } catch (err) {
+    console.error(`Failed to fetch members for board ${boardLink}`, err);
+    return 0;
+  }
+};
+
+const fetchSectionStats = async (
+  sec: SectionRaw,
+  isFirst: boolean
+): Promise<{ backlogCount: number; hotCount: number }> => {
+  try {
+    const tasksRes = await kanbanApi.getTasks(sec.link);
+    const tasks: TaskRaw[] = tasksRes.data.cards || [];
+
+    const backlogCount = isFirst ? tasks.length : 0;
+    const hotCount = !isDoneSection(sec.name) ? getHotTasksCount(tasks) : 0;
+
+    return { backlogCount, hotCount };
+  } catch (err) {
+    console.error(`Failed to fetch tasks for section ${sec.link}`, err);
+    return { backlogCount: 0, hotCount: 0 };
+  }
+};
+
+const fetchBoardTasksStats = async (
+  boardLink: string
+): Promise<{ backlogCount: number; hotCount: number }> => {
+  try {
+    const sectionsRes = await kanbanApi.getSections(boardLink);
+    const sections: SectionRaw[] = sectionsRes.data || [];
+
+    if (sections.length === 0) {
+      return { backlogCount: 0, hotCount: 0 };
+    }
+
+    const statsPromises = sections.map((sec, idx) =>
+      fetchSectionStats(sec, idx === 0)
+    );
+
+    const statsResults = await Promise.all(statsPromises);
+
+    return statsResults.reduce(
+      (acc, curr) => {
+        acc.backlogCount += curr.backlogCount;
+        acc.hotCount += curr.hotCount;
+        return acc;
+      },
+      { backlogCount: 0, hotCount: 0 }
+    );
+  } catch (err) {
+    console.error(`Failed to fetch sections for board ${boardLink}`, err);
+    return { backlogCount: 0, hotCount: 0 };
+  }
 };
 
 export const BoardsActions = {
@@ -16,76 +131,21 @@ export const BoardsActions = {
 
     try {
       const res = await boardsApi.getBoards();
-      const rawBoards = res.data;
+      const rawBoards: BoardRaw[] = res.data;
 
       const boardsWithStatsPromises = rawBoards.map(async (board) => {
-        let backlogCount = 0;
-        let hotCount = 0;
-        let membersCount = 0;
-
-        try {
-          const membersRes = await boardsApi.getBoardUsers(board.link);
-          membersCount = membersRes.data.members?.length || 0;
-        } catch (err) {
-          console.error(`Failed to fetch members for board ${board.link}`, err);
-        }
-
-        try {
-          const sectionsRes = await kanbanApi.getSections(board.link);
-          const sections = sectionsRes.data || [];
-
-          if (sections.length > 0) {
-            const tasksPromises = sections.map(async (sec, idx) => {
-              try {
-                const tasksRes = await kanbanApi.getTasks(sec.link);
-                const tasks = tasksRes.data.cards || [];
-
-                if (idx === 0) {
-                  backlogCount = tasks.length;
-                }
-
-                const isDoneSection =
-                  sec.name?.toLowerCase().includes("готово") ||
-                  sec.name?.toLowerCase().includes("done");
-
-                if (!isDoneSection) {
-                  const now = Date.now();
-                  const oneDayMs = 24 * 60 * 60 * 1000;
-
-                  tasks.forEach((t) => {
-                    const dl = t.deadline;
-                    if (dl) {
-                      const dlTime = new Date(dl).getTime();
-                      if (!isNaN(dlTime) && dlTime < now + oneDayMs) {
-                        hotCount++;
-                      }
-                    }
-                  });
-                }
-              } catch (err) {
-                console.error(
-                  `Failed to fetch tasks for section ${sec.link}`,
-                  err,
-                );
-              }
-            });
-
-            await Promise.all(tasksPromises);
-          }
-        } catch (err) {
-          console.error(
-            `Failed to fetch sections for board ${board.link}`,
-            err,
-          );
-        }
+        const [membersCount, taskStats] = await Promise.all([
+          fetchBoardMembersCount(board.link),
+          fetchBoardTasksStats(board.link),
+        ]);
 
         return {
           id: board.link,
           board_name: board.name || "Без названия",
           description: board.description || "Без описания",
           background: board.background || "",
-          backlog: backlogCount,
-          hot: hotCount,
+          backlog: taskStats.backlogCount,
+          hot: taskStats.hotCount,
           members: membersCount,
         };
       });
@@ -104,9 +164,7 @@ export const BoardsActions = {
       });
 
       if (error.status === 401) {
-        setIsAuth(false);
-        localStorage.removeItem("isAuth");
-        navigateTo("/login");
+        handleLogoutAndRedirect();
       }
     }
   },
@@ -121,15 +179,7 @@ export const BoardsActions = {
       const newBoardId = res.data.link;
 
       if (file && newBoardId) {
-        const fd = new FormData();
-        fd.append("background", file);
-        try {
-          await boardsApi.updateBoardBackground(newBoardId, fd);
-        } catch (bgErr: unknown) {
-          Toast.error(bgUploadErrorMessage((bgErr as ApiError).status));
-          await this.fetchBoards();
-          return;
-        }
+        await uploadBoardBackground(newBoardId, file);
       }
       await this.fetchBoards();
     } catch (err: unknown) {
@@ -147,15 +197,7 @@ export const BoardsActions = {
       await boardsApi.updateBoard(id, { name, description, board_link: id });
 
       if (file) {
-        const fd = new FormData();
-        fd.append("background", file);
-        try {
-          await boardsApi.updateBoardBackground(id, fd);
-        } catch (bgErr: unknown) {
-          Toast.error(bgUploadErrorMessage((bgErr as ApiError).status));
-          await this.fetchBoards();
-          return;
-        }
+        await uploadBoardBackground(id, file);
       }
       await this.fetchBoards();
     } catch (err: unknown) {
@@ -179,8 +221,6 @@ export const BoardsActions = {
       console.error("Logout error", err);
     }
 
-    setIsAuth(false);
-    localStorage.removeItem("isAuth");
-    navigateTo("/login");
+    handleLogoutAndRedirect();
   },
 };
