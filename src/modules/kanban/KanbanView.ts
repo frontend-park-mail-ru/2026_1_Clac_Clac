@@ -3,6 +3,7 @@ import kanbanTpl from "../../templates/kanban.hbs?raw";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
 import { authApi, boardsApi, kanbanApi } from "../../api";
+import { currentUser } from "../../main";
 
 import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
@@ -1150,88 +1151,148 @@ export class KanbanView {
 
         generateLink(currentRole);
 
-        const renderMembersList = async (filter = "") => {
+        let cachedMembers: any[] = [];
+
+        const renderMembersList = (filter = "") => {
           const listContainer = inviteModal.querySelector(
             "#invite-members-list",
           );
           if (!listContainer) return;
 
-          listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1rem; font-size: 0.9rem;">Загрузка участников...</div>`;
+          const filtered = cachedMembers.filter((m) => {
+            const name = (m.display_name || "").toLowerCase();
+            const email = (m.email || "").toLowerCase();
+            const term = filter.toLowerCase().trim();
+            return name.includes(term) || email.includes(term);
+          });
 
-          try {
-            const res = await boardsApi.getBoardUsers(state.boardId!);
-            const members = res.data.members;
+          listContainer.innerHTML = "";
 
-            const filtered = members.filter((m) => {
-              const name = (m.display_name || "").toLowerCase();
-              const email = (m.email || "").toLowerCase();
-              const term = filter.toLowerCase();
-              return name.includes(term) || email.includes(term);
-            });
+          if (filtered.length === 0) {
+            listContainer.innerHTML = `<div style="text-align: center; color: #666; padding: 1.5rem; font-size: 0.9rem;">Ничего не найдено</div>`;
+            return;
+          }
 
-            listContainer.innerHTML = "";
+          const myMember = cachedMembers.find(
+            (m) => m.email === currentUser?.email,
+          );
+          const myRole = myMember?.role || "";
 
-            if (filtered.length === 0) {
-              listContainer.innerHTML = `<div style="text-align: center; color: #666; padding: 1rem; font-size: 0.9rem;">Участники не найдены</div>`;
-              return;
-            }
+          const canManage =
+            myRole === "admin" || myRole === "owner" || myRole === "creator";
 
-            filtered.forEach((m) => {
-              const item = document.createElement("div");
-              item.className = "invite-modal__member-item";
+          const roleLabels: Record<string, string> = {
+            admin: "Админ",
+            editor: "Участник",
+            viewer: "Гость",
+            owner: "Владелец",
+            creator: "Владелец",
+          };
 
-              const avatarHtml = m.avatar_url
-                ? `<img src="${m.avatar_url}" class="invite-modal__member-avatar" alt="Avatar">`
-                : `<div class="invite-modal__member-avatar-fallback">${(m.display_name || "U").charAt(0).toUpperCase()}</div>`;
+          filtered.forEach((m) => {
+            const item = document.createElement("div");
+            item.className = "invite-modal__member-item";
 
-              const isViewer = m.role === "viewer";
-              const isEditor = m.role === "editor";
-              const isAdmin = m.role === "admin";
+            const avatarHtml = m.avatar_url
+              ? `<img src="${m.avatar_url}" class="invite-modal__member-avatar" alt="Avatar">`
+              : `<div class="invite-modal__member-avatar-fallback">${(m.display_name || "U").charAt(0).toUpperCase()}</div>`;
 
-              item.innerHTML = `
-                        <div class="invite-modal__member-left">
-                          ${avatarHtml}
-                          <div class="invite-modal__member-info">
-                            <span class="invite-modal__member-name" title="${m.display_name || "Без имени"}">${m.display_name || "Без имени"}</span>
-                            <span class="invite-modal__member-email" title="${m.email}">${m.email}</span>
-                          </div>
-                        </div>
-                        <div class="invite-modal__member-right">
-                          <select class="invite-modal__member-role-select">
-                            <option value="viewer" ${isViewer ? "selected" : ""}>Гость</option>
-                            <option value="editor" ${isEditor ? "selected" : ""}>Участник</option>
-                            <option value="admin" ${isAdmin ? "selected" : ""}>Админ</option>
-                          </select>
-                          <button class="invite-modal__member-delete-btn" title="Удалить участника">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      `;
+            const isSelf = m.email === currentUser?.email;
+            const isOwner = m.role === "owner" || m.role === "creator";
 
-              const roleSelect = item.querySelector(
-                ".invite-modal__member-role-select",
-              ) as HTMLSelectElement;
-              roleSelect?.addEventListener("change", async () => {
-                const nextRole = roleSelect.value;
-                try {
-                  await boardsApi.updateMemberRole(state.boardId!, m.link, {
-                    new_role: nextRole,
+            const canDeleteThisMember = canManage && !isSelf && !isOwner;
+            const canEditThisMemberRole = canManage && !isSelf && !isOwner;
+
+            const roleLabel = roleLabels[m.role] || m.role || "Участник";
+
+            const roleSelectorHtml = canEditThisMemberRole
+              ? `
+              <div class="invite-modal__member-role-dropdown-container">
+                <button type="button" class="invite-modal__member-role-trigger">
+                  <span class="invite-modal__member-role-text">${roleLabel}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div class="invite-modal__member-role-dropdown hidden">
+                  <div class="invite-modal__member-role-option" data-role="viewer">Гость</div>
+                  <div class="invite-modal__member-role-option" data-role="editor">Участник</div>
+                  <div class="invite-modal__member-role-option" data-role="admin">Админ</div>
+                </div>
+              </div>`
+              : `<span class="invite-modal__member-role-static">${roleLabel}</span>`;
+
+            const deleteButtonHtml = canDeleteThisMember
+              ? `
+              <button class="invite-modal__member-delete-btn" title="Удалить участника">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>`
+              : "";
+
+            item.innerHTML = `
+              <div class="invite-modal__member-left">
+                ${avatarHtml}
+                <div class="invite-modal__member-info">
+                  <span class="invite-modal__member-name" title="${m.display_name || "Без имени"}">${m.display_name || "Без имени"}</span>
+                  <span class="invite-modal__member-email" title="${m.email}">${m.email}</span>
+                </div>
+              </div>
+              <div class="invite-modal__member-right">
+                ${roleSelectorHtml}
+                ${deleteButtonHtml}
+              </div>
+            `;
+
+            if (canEditThisMemberRole) {
+              const trigger = item.querySelector(
+                ".invite-modal__member-role-trigger",
+              ) as HTMLButtonElement;
+              const dropdown = item.querySelector(
+                ".invite-modal__member-role-dropdown",
+              ) as HTMLElement;
+
+              trigger?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                document
+                  .querySelectorAll(".invite-modal__member-role-dropdown")
+                  .forEach((dd) => {
+                    if (dd !== dropdown) dd.classList.add("hidden");
                   });
-                  Toast.success("Роль участника обновлена");
-                  KanbanActions.fetchKanban(state.boardId!, true);
-                } catch (err: any) {
-                  const msg =
-                    err?.data?.message ||
-                    err?.data?.error ||
-                    "Не удалось обновить роль";
-                  Toast.error(msg);
-                  roleSelect.value = m.role;
-                }
+                dropdown?.classList.toggle("hidden");
               });
 
+              const options = item.querySelectorAll(
+                ".invite-modal__member-role-option",
+              );
+              options.forEach((opt) => {
+                opt.addEventListener("click", async (e) => {
+                  e.stopPropagation();
+                  const nextRole = opt.getAttribute("data-role") || "editor";
+                  dropdown.classList.add("hidden");
+
+                  try {
+                    await boardsApi.updateMemberRole(state.boardId!, m.link, {
+                      new_role: nextRole,
+                    });
+                    Toast.success("Роль участника обновлена");
+                    m.role = nextRole;
+                    renderMembersList(searchInput?.value.trim() || "");
+                    KanbanActions.fetchKanban(state.boardId!, true);
+                  } catch (err: any) {
+                    const msg =
+                      err?.data?.message ||
+                      err?.data?.error ||
+                      "Не удалось обновить роль";
+                    Toast.error(msg);
+                  }
+                });
+              });
+            }
+
+            if (canDeleteThisMember) {
               const deleteBtn = item.querySelector(
                 ".invite-modal__member-delete-btn",
               ) as HTMLButtonElement;
@@ -1245,6 +1306,10 @@ export class KanbanView {
                       await boardsApi.removeMember(state.boardId!, m.link);
                       Toast.success("Участник удален с доски");
                       KanbanActions.fetchKanban(state.boardId!, true);
+
+                      cachedMembers = cachedMembers.filter(
+                        (member) => member.link !== m.link,
+                      );
                       renderMembersList(searchInput?.value.trim() || "");
                     } catch (err: any) {
                       const msg =
@@ -1256,11 +1321,27 @@ export class KanbanView {
                   },
                 });
               });
+            }
 
-              listContainer.appendChild(item);
-            });
+            listContainer.appendChild(item);
+          });
+        };
+
+        const loadMembersAndRender = async () => {
+          const listContainer = inviteModal.querySelector(
+            "#invite-members-list",
+          );
+          if (listContainer) {
+            listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1.5rem; font-size: 0.9rem;">Загрузка участников...</div>`;
+          }
+          try {
+            const res = await boardsApi.getBoardUsers(state.boardId!);
+            cachedMembers = res.data.members;
+            renderMembersList(searchInput?.value.trim() || "");
           } catch {
-            listContainer.innerHTML = `<div style="text-align: center; color: #ff5c5c; padding: 1rem; font-size: 0.9rem;">Ошибка при загрузке участников</div>`;
+            if (listContainer) {
+              listContainer.innerHTML = `<div style="text-align: center; color: #ff5c5c; padding: 1.5rem; font-size: 0.9rem;">Ошибка при загрузке участников</div>`;
+            }
           }
         };
 
@@ -1279,7 +1360,20 @@ export class KanbanView {
           newSearchInput.addEventListener("input", onSearchInput);
         }
 
-        renderMembersList();
+        loadMembersAndRender();
+
+        document.addEventListener("click", (e) => {
+          const target = e.target as HTMLElement;
+          if (
+            !target.closest(".invite-modal__member-role-dropdown-container")
+          ) {
+            document
+              .querySelectorAll(".invite-modal__member-role-dropdown")
+              .forEach((dd) => {
+                dd.classList.add("hidden");
+              });
+          }
+        });
 
         tabMember?.addEventListener("click", () => {
           tabMember.classList.add("active");
