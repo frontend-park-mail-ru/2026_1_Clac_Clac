@@ -92,12 +92,23 @@
         </div>
       </div>
 
-      <div class="task__description-section">
-        <div class="task__description-box">
-          <textarea class="task__description-textarea" id="task-desc-input"
-            placeholder="Добавить описание..." {{#if isViewer}}disabled style="background: transparent; border-color: transparent; padding: 0; resize: none; cursor: default; color: #ccc;"{{/if}}>{{task.description}}</textarea>
+      {{#if isViewer}}
+        {{#if task.description}}
+        <div class="task__description-section">
+          <div class="task__description-box">
+            <textarea class="task__description-textarea" id="task-desc-input"
+              disabled style="background: transparent; border-color: transparent; padding: 0; resize: none; cursor: default; color: #ccc;">{{task.description}}</textarea>
+          </div>
         </div>
-      </div>
+        {{/if}}
+      {{else}}
+        <div class="task__description-section">
+          <div class="task__description-box">
+            <textarea class="task__description-textarea" id="task-desc-input"
+              placeholder="Добавить описание...">{{task.description}}</textarea>
+          </div>
+        </div>
+      {{/if}}
 
       <div class="task__subtasks-section">
         <h3 class="task__section-title">Подзадачи</h3>
@@ -122,6 +133,13 @@
           </div>
           {{/each}}
         </div>
+
+        {{#if isViewer}}
+          {{#unless task.subtasks}}
+            <p style="color: #666; font-size: 0.95rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">Нет подзадач</p>
+          {{/unless}}
+        {{/if}}
+
         {{#unless isViewer}}
         <div class="task__subtask-add mt-05">
           <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
@@ -168,6 +186,13 @@
           </div>
           {{/each}}
         </div>
+
+        {{#if isViewer}}
+          {{#unless attachments}}
+            <p style="color: #666; font-size: 0.95rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">Нет вложений</p>
+          {{/unless}}
+        {{/if}}
+
         {{#unless isViewer}}
         <div class="task__attachment-upload mt-05">
           <label for="task-file-input" class="task__attachment-upload-btn">
