@@ -158,7 +158,7 @@ export const KanbanActions = {
                 hasSubtasks,
                 position: t.position,
                 is_done: isDone,
-                start: (t as any).start || null,
+                start: (t as any).Start || null,
                 deadline: dl || null,
               };
             })

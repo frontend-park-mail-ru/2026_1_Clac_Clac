@@ -1150,6 +1150,137 @@ export class KanbanView {
 
         generateLink(currentRole);
 
+        const renderMembersList = async (filter = "") => {
+          const listContainer = inviteModal.querySelector(
+            "#invite-members-list",
+          );
+          if (!listContainer) return;
+
+          listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1rem; font-size: 0.9rem;">Загрузка участников...</div>`;
+
+          try {
+            const res = await boardsApi.getBoardUsers(state.boardId!);
+            const members = res.data.members;
+
+            const filtered = members.filter((m) => {
+              const name = (m.display_name || "").toLowerCase();
+              const email = (m.email || "").toLowerCase();
+              const term = filter.toLowerCase();
+              return name.includes(term) || email.includes(term);
+            });
+
+            listContainer.innerHTML = "";
+
+            if (filtered.length === 0) {
+              listContainer.innerHTML = `<div style="text-align: center; color: #666; padding: 1rem; font-size: 0.9rem;">Участники не найдены</div>`;
+              return;
+            }
+
+            filtered.forEach((m) => {
+              const item = document.createElement("div");
+              item.className = "invite-modal__member-item";
+
+              const avatarHtml = m.avatar_url
+                ? `<img src="${m.avatar_url}" class="invite-modal__member-avatar" alt="Avatar">`
+                : `<div class="invite-modal__member-avatar-fallback">${(m.display_name || "U").charAt(0).toUpperCase()}</div>`;
+
+              const isViewer = m.role === "viewer";
+              const isEditor = m.role === "editor";
+              const isAdmin = m.role === "admin";
+
+              item.innerHTML = `
+                        <div class="invite-modal__member-left">
+                          ${avatarHtml}
+                          <div class="invite-modal__member-info">
+                            <span class="invite-modal__member-name" title="${m.display_name || "Без имени"}">${m.display_name || "Без имени"}</span>
+                            <span class="invite-modal__member-email" title="${m.email}">${m.email}</span>
+                          </div>
+                        </div>
+                        <div class="invite-modal__member-right">
+                          <select class="invite-modal__member-role-select">
+                            <option value="viewer" ${isViewer ? "selected" : ""}>Гость</option>
+                            <option value="editor" ${isEditor ? "selected" : ""}>Участник</option>
+                            <option value="admin" ${isAdmin ? "selected" : ""}>Админ</option>
+                          </select>
+                          <button class="invite-modal__member-delete-btn" title="Удалить участника">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      `;
+
+              const roleSelect = item.querySelector(
+                ".invite-modal__member-role-select",
+              ) as HTMLSelectElement;
+              roleSelect?.addEventListener("change", async () => {
+                const nextRole = roleSelect.value;
+                try {
+                  await boardsApi.updateMemberRole(state.boardId!, m.link, {
+                    new_role: nextRole,
+                  });
+                  Toast.success("Роль участника обновлена");
+                  KanbanActions.fetchKanban(state.boardId!, true);
+                } catch (err: any) {
+                  const msg =
+                    err?.data?.message ||
+                    err?.data?.error ||
+                    "Не удалось обновить роль";
+                  Toast.error(msg);
+                  roleSelect.value = m.role;
+                }
+              });
+
+              const deleteBtn = item.querySelector(
+                ".invite-modal__member-delete-btn",
+              ) as HTMLButtonElement;
+              deleteBtn?.addEventListener("click", () => {
+                showConfirmModal({
+                  title: "Удалить участника",
+                  text: `Вы уверены, что хотите удалить участника "${m.display_name || m.email}" с этой доски?`,
+                  confirmLabel: "Удалить",
+                  onConfirm: async () => {
+                    try {
+                      await boardsApi.removeMember(state.boardId!, m.link);
+                      Toast.success("Участник удален с доски");
+                      KanbanActions.fetchKanban(state.boardId!, true);
+                      renderMembersList(searchInput?.value.trim() || "");
+                    } catch (err: any) {
+                      const msg =
+                        err?.data?.message ||
+                        err?.data?.error ||
+                        "Не удалось удалить участника";
+                      Toast.error(msg);
+                    }
+                  },
+                });
+              });
+
+              listContainer.appendChild(item);
+            });
+          } catch {
+            listContainer.innerHTML = `<div style="text-align: center; color: #ff5c5c; padding: 1rem; font-size: 0.9rem;">Ошибка при загрузке участников</div>`;
+          }
+        };
+
+        const searchInput = inviteModal.querySelector(
+          "#invite-members-search",
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.value = "";
+          const onSearchInput = () => {
+            renderMembersList(searchInput.value.trim());
+          };
+          searchInput.replaceWith(searchInput.cloneNode(true));
+          const newSearchInput = inviteModal.querySelector(
+            "#invite-members-search",
+          ) as HTMLInputElement;
+          newSearchInput.addEventListener("input", onSearchInput);
+        }
+
+        renderMembersList();
+
         tabMember?.addEventListener("click", () => {
           tabMember.classList.add("active");
           tabGuest.classList.remove("active");

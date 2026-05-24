@@ -185,7 +185,7 @@ export interface CardResponse {
   deadline: string;
   description: string;
   executor_link: string;
-  start: string;
+  Start: string;
   status: boolean;
   subtasks: SubtaskResponse[];
   title: string;

@@ -1203,10 +1203,22 @@
 
     &--white {
       background: white;
+      .gantt-chart__bar-handle::after {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .gantt-chart__bar-handle:hover::after {
+        background: rgba(0, 0, 0, 0.75);
+      }
     }
 
     &--purple {
       background: #8b5cf6;
+      .gantt-chart__bar-handle::after {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .gantt-chart__bar-handle:hover::after {
+        background: rgba(255, 255, 255, 0.9);
+      }
     }
   }
 }
@@ -1456,6 +1468,20 @@
       display: none;
     }
   }
+
+  .gantt-filter-popover {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 2rem);
+    min-width: 0 !important;
+    max-width: 340px;
+    padding: 1rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 }
 
 .gantt-chart {
@@ -1525,10 +1551,19 @@
     cursor: ew-resize;
     z-index: 15;
     background: transparent;
-    transition: background 0.15s ease;
+    transition:
+      background 0.15s ease,
+      opacity 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.35);
+    &::after {
+      content: "";
+      width: 2px;
+      height: 8px;
+      border-radius: 1px;
+      transition: background 0.15s ease;
     }
 
     &--left {
@@ -1541,6 +1576,10 @@
       right: 0;
       border-top-right-radius: 8px;
       border-bottom-right-radius: 8px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
   }
 
