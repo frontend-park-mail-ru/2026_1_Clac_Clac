@@ -5,6 +5,7 @@ import { kanbanApi, pollsApi } from "../../../api";
 import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
+import { KanbanActions } from "../KanbanActions";
 
 const template = Handlebars.compile(pollTpl);
 
@@ -13,6 +14,7 @@ export class KanbanPoll {
   private static selectedVote: number | null = null;
   private static finalScore: number | null = null;
   private static notifiedPollId: string | null = null;
+  private static shouldAutoOpen = false;
 
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
     const poll = state.poll as PollState;
@@ -114,6 +116,11 @@ export class KanbanPoll {
       this.notifiedPollId = null;
       this.destroyOverlay();
     }
+
+    if (this.computeUserMode(state) === "admin" && this.shouldAutoOpen) {
+      this.shouldAutoOpen = false;
+      this.renderActivePoll(appDiv, state);
+    }
   }
 
   private static openStartModal(_appDiv: HTMLElement, state: any) {
@@ -183,7 +190,9 @@ export class KanbanPoll {
           invitees: invitees,
         });
         Toast.success("Голосование запущено!");
+        this.shouldAutoOpen = true;
         closeAll();
+        await KanbanActions.fetchPoll(state.boardId!);
       } catch (e: any) {
         Toast.error(e.data?.message || "Ошибка при создании голосования");
         confirmBtn.disabled = false;
@@ -382,6 +391,8 @@ export class KanbanPoll {
   private static showSummaryModal(_appDiv: HTMLElement, state: any) {
     const results = state.lastPollResults as PollState;
     if (!results) return;
+
+    if (this.overlay?.querySelector('#modal-poll-summary')) return;
 
     this.destroyOverlay();
 

@@ -27,6 +27,7 @@ async function handlePollSSE(type: string): Promise<void> {
 
   if (type === "poll_end") {
     appDispatcher.dispatch({ type: "KANBAN_POLL_FINISHED" });
+    await KanbanActions.fetchKanban(currentBoardId, true);
     return;
   }
 
