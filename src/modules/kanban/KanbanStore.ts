@@ -134,6 +134,7 @@ class KanbanStore extends Store {
       case "KANBAN_POLL_FETCHED": {
         const data = action.payload as GetPollResponse;
         this.state.poll = this.buildPollState(data, this.state.poll);
+        this.state.lastPollResults = null;
         this.state.isSelectionMode = false;
         this.state.selectedCards = new Set();
         this.emit("change");
@@ -142,6 +143,7 @@ class KanbanStore extends Store {
 
       case "KANBAN_POLL_CLEAR": {
         this.state.poll = null;
+        this.state.lastPollResults = null;
         this.state.isSelectionMode = false;
         this.state.selectedCards = new Set();
         this.emit("change");

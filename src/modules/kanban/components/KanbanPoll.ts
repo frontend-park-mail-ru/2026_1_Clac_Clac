@@ -304,6 +304,7 @@ export class KanbanPoll {
         try {
           await pollsApi.vote(state.boardId!, { points: this.selectedVote });
           this.selectedVote = null;
+          this.renderActivePoll(_appDiv, state);
         } catch {
           Toast.error("Ошибка при отправке голоса");
           submitVoteBtn.disabled = false;
