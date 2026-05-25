@@ -102,7 +102,17 @@
         ">
           <span style="color: white; font-weight: 500;">{{name}}</span>
           {{#if ../isRevealed}}
+            {{#if ../isAdmin}}
             <span style="color: #8b5cf6; font-weight: bold;">{{score}}</span>
+            {{else}}
+            {{#if hasVoted}}
+              <span style="color: #10b981; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
+                ✓ Готово
+              </span>
+            {{else}}
+              <span style="color: #666; font-style: italic;">Ожидание...</span>
+            {{/if}}
+            {{/if}}
           {{else}}
             {{#if hasVoted}}
               <span style="color: #10b981; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
@@ -117,9 +127,11 @@
       </div>
 
       {{#if isRevealed}}
-      <div style="margin-bottom: 2rem;">
-        <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.25rem;">Среднее: <span style="color: #8b5cf6; font-weight: bold; font-size: 1.4rem;">{{averageScore}}</span></p>
-      </div>
+        {{#if isAdmin}}
+        <div style="margin-bottom: 2rem;">
+          <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.25rem;">Среднее: <span style="color: #8b5cf6; font-weight: bold; font-size: 1.4rem;">{{averageScore}}</span></p>
+        </div>
+        {{/if}}
       {{/if}}
 
       {{#if isAdmin}}
@@ -171,12 +183,13 @@
       {{#if isAdmin}}
         {{#if isRevealed}}
           <button class="btn btn--primary" id="btn-poll-next" {{#unless finalScore}}disabled{{/unless}}>
-            Далее
+            {{#if isLastCard}}Завершить голосование{{else}}Далее{{/if}}
           </button>
+          {{#unless isLastCard}}<button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>{{/unless}}
         {{else}}
-          <button class="btn btn--danger-outline" id="btn-poll-reveal">Завершить голосование</button>
+          <button class="btn btn--danger-outline" id="btn-poll-reveal">Показать оценки</button>
+          <button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>
         {{/if}}
-        <button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>
       {{/if}}
 
       {{#if isVoter}}
