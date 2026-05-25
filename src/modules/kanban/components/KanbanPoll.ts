@@ -6,6 +6,7 @@ import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
 import { KanbanActions } from "../KanbanActions";
+import { currentUser } from "../../../main";
 
 const template = Handlebars.compile(pollTpl);
 
@@ -131,7 +132,11 @@ export class KanbanPoll {
     document.body.appendChild(this.overlay);
 
     const inviteesSet = new Set<string>();
-    const members = state.users;
+    const members = state.users.filter(
+      (m: any) =>
+        m.id !== currentUser?.link &&
+        m.email.toLowerCase().trim() !== currentUser?.email?.toLowerCase().trim(),
+    );
 
     this.overlay.innerHTML = template({
       isStartModal: true,
