@@ -49,6 +49,10 @@ export interface ProfileResponse {
   email: string;
   link: string;
 }
+export interface MeResponse {
+  user_link: string;
+  profile: ProfileResponse;
+}
 export interface UpdateProfileRequest {
   description_user: string;
   display_name: string;

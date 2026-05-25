@@ -2,6 +2,7 @@ import { appDispatcher } from "../../core/Dispatcher";
 import { authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
 import { Toast } from "../../utils/toast";
+import { setCurrentUser } from "../../main";
 
 export const LoginActions = {
 
@@ -56,6 +57,13 @@ export const LoginActions = {
       await authApi.login({ email, password });
 
       setIsAuth(true);
+      try {
+        const meRes = await authApi.checkAuth();
+        setCurrentUser(meRes.data.profile);
+      } catch (err) {
+        console.error("Failed to load user profile on login", err);
+      }
+
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
     } catch (err: unknown) {

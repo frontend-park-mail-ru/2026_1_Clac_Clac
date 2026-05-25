@@ -1,5 +1,5 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, pollsApi, profileApi, API_URL, SectionInfo } from "../../api";
+import { boardsApi, kanbanApi, pollsApi, API_URL, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
@@ -14,7 +14,6 @@ import {
 
 export const profileCache = new Map<string, BoardUser>();
 
-let cachedMyEmail: string | null = null;
 let boardEventSource: EventSource | null = null;
 let currentBoardId: string | null = null;
 
@@ -121,17 +120,7 @@ export const KanbanActions = {
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
 
-      let myEmail =
-        cachedMyEmail || (currentUser?.email || "").toLowerCase().trim();
-      if (!myEmail) {
-        try {
-          const profileRes = await profileApi.getProfile();
-          myEmail = (profileRes.data.email || "").toLowerCase().trim();
-          cachedMyEmail = myEmail;
-        } catch (err) {
-          console.error("Failed to load profile for role check", err);
-        }
-      }
+      const myEmail = (currentUser?.email || "").toLowerCase().trim();
 
       const myMember = usersRes.data.members.find(
         (m) => m.email.toLowerCase().trim() === myEmail,

@@ -3,7 +3,6 @@ import {
   boardsApi,
   CommentResponse,
   kanbanApi,
-  profileApi,
   API_URL,
 } from "../../api";
 import { TaskActionTypes, User } from "./task.types";
@@ -11,6 +10,7 @@ import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
 import { clearKanbanCache } from "../kanban";
+import { currentUser } from "../../main";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -250,19 +250,14 @@ export const TaskActions = {
         return user;
       });
 
-      const [taskRes, meRes] = await Promise.all([
-        kanbanApi.getTask(taskId),
-        profileApi.getProfile().catch(() => null),
-      ]);
+      const taskRes = await kanbanApi.getTask(taskId);
       const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
       }
 
-      if (meRes?.data?.link) {
-        currentUserLink = meRes.data.link;
-      }
+      currentUserLink = currentUser?.link || null;
 
       const comments = await fetchAndProcessComments(taskId, usersList);
 

@@ -8,10 +8,11 @@ import {
   PasswordRecoveryRequest,
   RecoveryCodeRequest,
   NewPasswordRequest,
+  MeResponse,
 } from "./types";
 
 export const authApi = {
-  checkAuth: () => apiClient.get<BaseResponse>("/me"),
+  checkAuth: () => apiClient.get<ApiResponse<MeResponse>>("/me"),
   login: (data: LogInRequest) =>
     apiClient.post<ApiResponse<UserInfoResponse>, LogInRequest>("/login", data),
   register: (data: RegisterRequest) =>

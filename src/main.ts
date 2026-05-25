@@ -37,10 +37,14 @@ initGlobalListeners();
 
 export let currentUser: any = null;
 
+export const setCurrentUser = (val: any) => {
+  currentUser = val;
+};
+
 const initApp = async () => {
   try {
     const res = await authApi.checkAuth();
-    currentUser = res;
+    currentUser = res.data.profile;
     setIsAuth(true);
   } catch (err) {
     setIsAuth(false);
@@ -51,6 +55,10 @@ const initApp = async () => {
   if (vkCode) {
     if (vkCode === "200") {
       setIsAuth(true);
+      try {
+        const res = await authApi.checkAuth();
+        currentUser = res.data.profile;
+      } catch {}
     }
     window.history.replaceState({}, "", "/boards");
   }

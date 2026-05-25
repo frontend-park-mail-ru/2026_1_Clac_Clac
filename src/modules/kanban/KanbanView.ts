@@ -2,7 +2,7 @@ import Handlebars from "handlebars";
 import kanbanTpl from "../../templates/kanban.hbs?raw";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
-import { authApi, boardsApi, kanbanApi, profileApi } from "../../api";
+import { authApi, boardsApi, kanbanApi } from "../../api";
 import { currentUser } from "../../main";
 
 import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
@@ -1377,12 +1377,6 @@ export class KanbanView {
           }
           try {
             myEmail = (currentUser?.email || "").toLowerCase().trim();
-            if (!myEmail) {
-              try {
-                const profileRes = await profileApi.getProfile();
-                myEmail = (profileRes.data.email || "").toLowerCase().trim();
-              } catch {}
-            }
 
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;

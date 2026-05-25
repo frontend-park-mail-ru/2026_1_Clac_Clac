@@ -3,6 +3,7 @@ import { ActionTypes } from './profile.types';
 import { authApi, profileApi } from '../../api';
 import { navigateTo, setIsAuth } from '../../router';
 import { Toast } from '../../utils/toast';
+import { setCurrentUser } from '../../main';
 
 export const ProfileActions = {
   resetState() {
@@ -14,6 +15,7 @@ export const ProfileActions = {
     try {
       const res = await profileApi.getProfile();
       const user = res.data;
+      setCurrentUser(user);
       appDispatcher.dispatch({ type: ActionTypes.SET_USER, payload: user });
     } catch (err: any) {
       console.error('Profile fetch error', err);
