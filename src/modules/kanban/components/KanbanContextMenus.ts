@@ -24,15 +24,14 @@ export class KanbanContextMenus {
           (e: MouseEvent) => {
             e.stopPropagation();
             this.closeMenu();
-            const target = e.currentTarget as HTMLElement;
-            const sectionId = target.getAttribute("data-id")!;
+            const sectionId = btn.getAttribute("data-id")!;
 
             const menu = this.createMenuNode(
               `
           <div class="context-menu__item" id="ctx-edit-list">Изменить</div>
           <div class="context-menu__item context-menu__item--danger" id="ctx-delete-list">Удалить колонку</div>
         `,
-              target,
+              btn,
             );
 
             menu
@@ -122,16 +121,15 @@ export class KanbanContextMenus {
           (e: MouseEvent) => {
             e.stopPropagation();
             this.closeMenu();
-            const target = e.currentTarget as HTMLElement;
-            const taskId = target.getAttribute("data-id")!;
-            const title = target.getAttribute("data-title") || "";
+            const taskId = btn.getAttribute("data-id")!;
+            const title = btn.getAttribute("data-title") || "";
 
             const menu = this.createMenuNode(
               `
           <div class="context-menu__item" id="ctx-edit-card">Открыть</div>
           <div class="context-menu__item context-menu__item--danger" id="ctx-delete-card">Удалить</div>
         `,
-              target,
+              btn,
             );
 
             menu
@@ -220,7 +218,8 @@ export class KanbanContextMenus {
             target.closest(".kanban-card__options-btn") ||
             target.closest(".assignee__select-btn") ||
             target.closest(".kanban-card__subtask-item") ||
-            target.closest(".kanban-card__status-checkmark")
+            target.closest(".kanban-card__status-checkmark") ||
+            target.closest(".kanban-card__select-checkbox")
           ) {
             return;
           }

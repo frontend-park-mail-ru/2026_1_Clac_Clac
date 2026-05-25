@@ -58,12 +58,23 @@ export class KanbanPoll {
 
     if (state.isSelectionMode) {
       appDiv
+        .querySelectorAll<HTMLElement>(".kanban-card__select-checkbox")
+        .forEach((el) => {
+          el.addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+            },
+            { signal },
+          );
+        });
+
+      appDiv
         .querySelectorAll<HTMLInputElement>(".kanban-card-select-checkbox")
         .forEach((cb) => {
           cb.addEventListener(
             "change",
-            (e) => {
-              e.stopPropagation();
+            () => {
               const cardId = cb.getAttribute("data-id")!;
               appDispatcher.dispatch({
                 type: "KANBAN_TOGGLE_CARD_SELECTION",
