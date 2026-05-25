@@ -77,6 +77,7 @@ export class KanbanView {
       ...sec,
       tasks: sec.tasks.map((task) => ({
         ...task,
+        hasPoints: task.points !== undefined && task.points !== null,
         isSelected: state.selectedCards
           ? state.selectedCards.has(task.id)
           : false,
