@@ -3,7 +3,6 @@ import pollTpl from "../../../templates/poll.hbs?raw";
 import { appDispatcher } from "../../../core/Dispatcher";
 import { kanbanApi, pollsApi } from "../../../api";
 import { Toast } from "../../../utils/toast";
-import { KanbanActions } from "../KanbanActions";
 import { currentUser } from "../../../main";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
@@ -16,7 +15,7 @@ export class KanbanPoll {
   private static finalScore: number | null = null;
   private static myUserLink: string = "";
 
-  private static getMyUserLink(state: any): string {
+  private static getMyUserLink(): string {
     if (this.myUserLink) return this.myUserLink;
     this.myUserLink = currentUser?.link || "";
     return this.myUserLink;
@@ -25,7 +24,7 @@ export class KanbanPoll {
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
     const poll = state.poll as PollState;
     if (!poll) return "observer";
-    const myLink = this.getMyUserLink(state);
+    const myLink = this.getMyUserLink();
     if (myLink && poll.adminLink === myLink) return "admin";
     if (myLink && poll.invitees.includes(myLink)) return "voter";
     return "observer";
@@ -242,7 +241,7 @@ export class KanbanPoll {
       averageScore = parseFloat((sum / votedCount).toFixed(1));
     }
 
-    const myId = this.getMyUserLink(state);
+    const myId = this.getMyUserLink();
     const myVote = currentTask.votes[myId];
 
     const deck = [1, 2, 3, 5, 8, 13, 21];

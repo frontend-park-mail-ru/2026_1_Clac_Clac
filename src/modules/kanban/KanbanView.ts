@@ -1150,8 +1150,12 @@ export class KanbanView {
         const tabGuest = newInviteModal.querySelector(
           "#tab-invite-guest",
         ) as HTMLButtonElement;
+        const copyBtn = newInviteModal.querySelector(
+          "#btn-copy-invite-link",
+        ) as HTMLButtonElement;
 
         if (linkInput) linkInput.value = "Загрузка ссылки...";
+        if (copyBtn) copyBtn.disabled = true;
         if (emailInput) emailInput.value = "";
         if (confirmBtn) {
           confirmBtn.disabled = true;
@@ -1170,8 +1174,10 @@ export class KanbanView {
             if (linkInput) {
               linkInput.value = `${window.location.origin}/invite/${res.data.invite_link}`;
             }
+            if (copyBtn) copyBtn.disabled = false;
           } catch {
-            if (linkInput) linkInput.value = "Ошибка при генерации ссылки";
+            if (linkInput) linkInput.value = "Нет прав";
+            if (copyBtn) copyBtn.disabled = true;
           }
         };
 
