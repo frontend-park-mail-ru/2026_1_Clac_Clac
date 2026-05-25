@@ -1,5 +1,5 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, profileApi, SectionInfo } from "../../api";
+import { boardsApi, kanbanApi, pollsApi, profileApi, API_URL, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
@@ -15,8 +15,92 @@ import {
 export const profileCache = new Map<string, BoardUser>();
 
 let cachedMyEmail: string | null = null;
+let boardEventSource: EventSource | null = null;
+let currentBoardId: string | null = null;
+
+function isPollEvent(type: string): boolean {
+  return type === "poll_start" || type === "next_card" || type === "poll_end";
+}
+
+async function handlePollSSE(type: string): Promise<void> {
+  if (!currentBoardId) return;
+
+  if (type === "poll_end") {
+    appDispatcher.dispatch({ type: "KANBAN_POLL_FINISHED" });
+    await KanbanActions.fetchKanban(currentBoardId, true);
+    return;
+  }
+
+  if (type === "poll_start" || type === "next_card") {
+    await KanbanActions.fetchPoll(currentBoardId);
+  }
+}
 
 export const KanbanActions = {
+  connectSSE(boardId: string) {
+    currentBoardId = boardId;
+
+    if (boardEventSource) {
+      boardEventSource.close();
+    }
+
+    const sseUrl = `${API_URL}/events/${boardId}`;
+    boardEventSource = new EventSource(sseUrl, { withCredentials: true });
+
+    boardEventSource.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data);
+
+        if (isPollEvent(parsed.type)) {
+          handlePollSSE(parsed.type);
+          return;
+        }
+
+        appDispatcher.dispatch({
+          type: "KANBAN_SSE_EVENT",
+          payload: parsed,
+        });
+      } catch (e) {
+        console.error("Failed to parse Kanban SSE event", e);
+      }
+    };
+
+    boardEventSource.onerror = (err) => {
+      console.error("Kanban SSE connection error", err);
+      setTimeout(async () => {
+        if (currentBoardId === boardId && boardEventSource?.readyState === EventSource.OPEN) {
+          await KanbanActions.fetchPoll(boardId);
+        }
+      }, 2000);
+    };
+  },
+
+  disconnectSSE() {
+    currentBoardId = null;
+    if (boardEventSource) {
+      boardEventSource.close();
+      boardEventSource = null;
+    }
+  },
+
+  async fetchPoll(boardId: string): Promise<void> {
+    try {
+      const res = await pollsApi.getActivePoll(boardId);
+      if (res && res.data) {
+        appDispatcher.dispatch({
+          type: "KANBAN_POLL_FETCHED",
+          payload: res.data,
+        });
+      }
+    } catch (err: any) {
+      if (err?.status === 404) {
+        appDispatcher.dispatch({ type: "KANBAN_POLL_CLEAR" });
+      } else {
+        console.error("Failed to fetch poll state", err);
+      }
+    }
+  },
+
   async fetchKanban(boardId: string, forceFetch = false): Promise<void> {
     const currentState = kanbanStore.getState();
 
@@ -53,6 +137,7 @@ export const KanbanActions = {
         (m) => m.email.toLowerCase().trim() === myEmail,
       );
       const myRole = myMember?.role || "viewer";
+      const myLink = myMember?.link || "";
 
       const users: BoardUser[] = usersRes.data.members.map((m) => {
         const userObj: BoardUser = {
@@ -94,8 +179,7 @@ export const KanbanActions = {
               const exUser = users.find((u) => u.id === exId);
               const dl = t.deadline;
 
-              const isDone =
-                (t as any).status === true || (t as any).done === true || false;
+              const isDone = t.status === true || false;
 
               let formattedDate = null;
               let formattedTime = null;
@@ -166,6 +250,7 @@ export const KanbanActions = {
               return {
                 id: t.link,
                 title: t.title || "Без названия",
+                description: t.description || null,
                 due_date: formattedDate,
                 time: formattedTime,
                 executor: exUser ? exUser.name : "",
@@ -179,8 +264,9 @@ export const KanbanActions = {
                 hasSubtasks,
                 position: t.position,
                 is_done: isDone,
-                start: (t as any).Start || null,
+                start: t.start || null,
                 deadline: dl || null,
+                points: t.points,
               };
             })
             .sort((a, b) => a.position - b.position);
@@ -194,7 +280,7 @@ export const KanbanActions = {
 
       appDispatcher.dispatch({
         type: "FETCH_KANBAN_SUCCESS",
-        payload: { boardId, boardName, users, sections, myRole },
+        payload: { boardId, boardName, users, sections, myRole, myLink },
       });
     } catch (err: unknown) {
       appDispatcher.dispatch({

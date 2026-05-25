@@ -1,5 +1,11 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, CommentResponse, kanbanApi, profileApi } from "../../api";
+import {
+  boardsApi,
+  CommentResponse,
+  kanbanApi,
+  profileApi,
+  API_URL,
+} from "../../api";
 import { TaskActionTypes, User } from "./task.types";
 import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
@@ -33,6 +39,9 @@ const months = [
 
 let currentUserLink: string | null = null;
 const commentsCache = new Map<string, ExtendedCommentResponse[]>();
+
+let eventSource: EventSource | null = null;
+let currentTaskId: string | null = null;
 
 const parseCreatedAt = (createdAt?: string): Date | null => {
   if (!createdAt) return null;
@@ -125,6 +134,105 @@ const updateCachedComments = (
 export const TaskActions = {
   async loadTaskData(boardId: string, taskId: string) {
     appDispatcher.dispatch({ type: TaskActionTypes.LOAD_DATA_START });
+
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+
+    currentTaskId = taskId;
+
+    const sseUrl = `${API_URL}/events/${boardId}`;
+    eventSource = new EventSource(sseUrl, { withCredentials: true });
+
+    eventSource.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed.type === "new_comment" && parsed.payload) {
+          const { user_link, data } = parsed.payload;
+          if (!data) return;
+
+          if (user_link && currentUserLink && user_link === currentUserLink) {
+            return;
+          }
+
+          const commentTaskLink =
+            data.card_link || data.parent_link || data.task_link;
+          if (
+            commentTaskLink &&
+            currentTaskId &&
+            commentTaskLink !== currentTaskId
+          ) {
+            return;
+          }
+
+          const state = taskStore.getState();
+          const exists = state.comments.some(
+            (c) => c.comment_link === data.link,
+          );
+          if (exists) return;
+
+          const created_at = data.created_at || new Date().toISOString();
+
+          const comment: ExtendedCommentResponse = {
+            comment_link: data.link,
+            author_link: user_link ?? "",
+            parent_link: "",
+            text: data.text,
+            created_at: created_at,
+            author_name: "Пользователь",
+            author_fallback: "U",
+            created_time: "",
+            is_mine: false,
+            show_date_header: false,
+            date_header: "",
+          };
+
+          enrichComment(comment, state.usersList);
+
+          const now = new Date(created_at);
+          const dateStr = formatDateWithSpace(now);
+          let show_date_header = false;
+          let date_header = "";
+
+          const lastComment = state.comments[state.comments.length - 1];
+          if (lastComment?.created_at) {
+            const lastD = parseCreatedAt(lastComment.created_at);
+            const lastDateStr = lastD ? formatDateWithSpace(lastD) : "";
+
+            if (dateStr !== lastDateStr) {
+              show_date_header = true;
+              date_header = formatDateWithComma(now);
+            }
+          } else {
+            show_date_header = true;
+            date_header = formatDateWithComma(now);
+          }
+
+          comment.show_date_header = show_date_header;
+          comment.date_header = date_header;
+
+          if (currentTaskId) {
+            updateCachedComments(currentTaskId, (cached) => [
+              ...cached,
+              comment,
+            ]);
+          }
+
+          appDispatcher.dispatch({
+            type: TaskActionTypes.APPEND_COMMENT,
+            payload: { comment },
+          });
+        }
+      } catch (err) {
+        console.error("Failed to parse SSE event data", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE connection error", err);
+    };
+
     try {
       const boardRes = await boardsApi.getBoard(boardId);
       const boardName = boardRes.data.name || "Без названия";
@@ -200,6 +308,11 @@ export const TaskActions = {
   },
 
   clearStore() {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    currentTaskId = null;
     commentsCache.clear();
     currentUserLink = null;
     appDispatcher.dispatch({ type: TaskActionTypes.CLEAR_STORE });
@@ -378,24 +491,24 @@ export const TaskActions = {
   },
 
   async toggleTaskStatus(taskId: string, isDone: boolean) {
-      appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
-      try {
-        await kanbanApi.updateTaskStatus(taskId, { done: isDone });
-        
-        appDispatcher.dispatch({
-          type: "TASK_UPDATE_STATUS_SUCCESS",
-          payload: { is_done: isDone }
-        });
-        
-        clearKanbanCache();
-        Toast.success(isDone ? "Задача выполнена" : "Статус задачи изменен");
-      } catch (err) {
-        console.error("Failed to update status", err);
-        Toast.error("Ошибка при обновлении статуса");
-        appDispatcher.dispatch({
-          type: TaskActionTypes.SAVE_TASK_ERROR,
-          payload: { error: "Ошибка при изменении статуса" }
-        });
-      }
-    },
+    appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
+    try {
+      await kanbanApi.updateTaskStatus(taskId, { done: isDone });
+
+      appDispatcher.dispatch({
+        type: "TASK_UPDATE_STATUS_SUCCESS",
+        payload: { is_done: isDone },
+      });
+
+      clearKanbanCache();
+      Toast.success(isDone ? "Задача выполнена" : "Статус задачи изменен");
+    } catch (err) {
+      console.error("Failed to update status", err);
+      Toast.error("Ошибка при обновлении статуса");
+      appDispatcher.dispatch({
+        type: TaskActionTypes.SAVE_TASK_ERROR,
+        payload: { error: "Ошибка при изменении статуса" },
+      });
+    }
+  },
 };

@@ -170,9 +170,12 @@ export interface Card {
   description: string;
   executor_link: string;
   link: string;
+  points?: number;
+  position: number;
+  start?: string;
+  status?: boolean;
   subtasks: SubtaskInfo[];
   title: string;
-  position: number;
 }
 
 export interface CardsResponse {
@@ -185,11 +188,12 @@ export interface CardResponse {
   deadline: string;
   description: string;
   executor_link: string;
-  Start: string;
+  points?: number;
+  position: number;
+  start: string;
   status: boolean;
   subtasks: SubtaskResponse[];
   title: string;
-  position: number;
 }
 
 export interface CreateCardRequest {
@@ -278,4 +282,28 @@ export interface AppealsStats {
 }
 export interface UploadAttachmentResponse {
   attachment_url: string;
+}
+
+export interface UpdateCardPointsRequest {
+  points: number;
+}
+
+export interface PollTaskData {
+  card_link: string;
+}
+
+export interface GetPollResponse {
+  admin_link: string;
+  current_idx?: number;
+  tasks: PollTaskData[];
+  invitees: string[];
+}
+
+export interface CreatePollRequest {
+  card_links: string[];
+  invitees: string[];
+}
+
+export interface VotePollRequest {
+  points: number;
 }

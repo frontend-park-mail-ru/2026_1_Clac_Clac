@@ -10,6 +10,7 @@ export interface BoardUser {
 export interface Task {
   id: string;
   title: string;
+  description?: string | null;
   due_date: string | null;
   time: string | null;
   executor: string | null;
@@ -22,6 +23,7 @@ export interface Task {
   progressPercentStyle?: string;
   hasSubtasks?: boolean;
   position: number;
+  points?: number;
 }
 
 export interface Section {
@@ -35,6 +37,22 @@ export interface Section {
   position?: number;
 }
 
+export interface PollState {
+  isActive: boolean;
+  adminLink: string;
+  currentIdx: number;
+  tasks: PollTask[];
+  invitees: string[];
+  isRevealed: boolean;
+  finalPoints?: number;
+}
+
+export interface PollTask {
+  cardLink: string;
+  title: string;
+  votes: Record<string, number>;
+}
+
 export interface KanbanState {
   boardId: string | null;
   boardName: string;
@@ -43,6 +61,11 @@ export interface KanbanState {
   isLoading: boolean;
   error: string | null;
   myRole?: string;
+  myLink?: string;
+  poll?: PollState | null;
+  lastPollResults?: PollState | null;
+  isSelectionMode?: boolean;
+  selectedCards?: Set<string>;
 }
 
 export const KANBAN_COLORS: Record<string, string> = {
@@ -103,6 +126,7 @@ export interface FetchKanbanSuccessPayload {
   users: BoardUser[];
   sections: Section[];
   myRole?: string;
+  myLink?: string;
 }
 
 export interface FetchKanbanErrorPayload {

@@ -38,29 +38,22 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api")) {
     event.respondWith(
       caches.open(API_CACHE_NAME).then((cache) =>
-        cache.match(request).then((cached) => {
-          const networkFetch = fetch(request.clone())
-            .then((response) => {
-              if (response && response.ok) {
-                cache.put(request, response.clone());
-              }
-              return response;
-            })
-            .catch(() => null);
-
-          if (cached) {
-            event.waitUntil(networkFetch);
-            return cached;
-          }
-          return networkFetch.then(
-            (r) =>
-              r ||
-              new Response(JSON.stringify({ error: "offline" }), {
+        fetch(request.clone())
+          .then((response) => {
+            if (response && response.ok) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          })
+          .catch(() =>
+            cache.match(request).then((cached) => {
+              if (cached) return cached;
+              return new Response(JSON.stringify({ error: "offline" }), {
                 status: 503,
                 headers: { "Content-Type": "application/json" },
-              }),
-          );
-        }),
+              });
+            }),
+          ),
       ),
     );
     return;

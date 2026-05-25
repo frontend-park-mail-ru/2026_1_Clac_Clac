@@ -2,13 +2,15 @@ import { Store } from "../../core/Store";
 import { appDispatcher, Action } from "../../core/Dispatcher";
 import {
   KanbanState,
+  PollState,
+  PollTask,
   FetchKanbanSuccessPayload,
   FetchKanbanErrorPayload,
   Section,
   Task,
   KANBAN_COLORS,
 } from "./kanban.types";
-import { SectionInfo } from "../../api";
+import { SectionInfo, GetPollResponse } from "../../api";
 
 class KanbanStore extends Store {
   private state: KanbanState = {
@@ -19,6 +21,11 @@ class KanbanStore extends Store {
     isLoading: true,
     error: null,
     myRole: "viewer",
+    myLink: "",
+    poll: null,
+    lastPollResults: null,
+    isSelectionMode: false,
+    selectedCards: new Set(),
   };
 
   public getState(): KanbanState {
@@ -30,6 +37,11 @@ class KanbanStore extends Store {
     this.state.sections = [];
     this.state.users = [];
     this.state.myRole = "viewer";
+    this.state.myLink = "";
+    this.state.poll = null;
+    this.state.lastPollResults = null;
+    this.state.isSelectionMode = false;
+    this.state.selectedCards = new Set();
   }
 
   public updateSubtaskSilently(
@@ -43,8 +55,7 @@ class KanbanStore extends Store {
       if (!task || !task.subtasks) continue;
 
       const subtask = task.subtasks.find((st) => {
-        const id =
-          (st as any).id || (st as any).subtask_link || (st as any).link || "";
+        const id = st.link || "";
         return String(id) === String(subtaskId);
       });
 
@@ -65,6 +76,32 @@ class KanbanStore extends Store {
     }
   }
 
+  private resolveCardTitle(cardLink: string): string {
+    for (const section of this.state.sections) {
+      const task = section.tasks.find((t) => t.id === cardLink);
+      if (task) return task.title;
+    }
+    return "Без названия";
+  }
+
+  private buildPollState(data: GetPollResponse, existing?: PollState | null): PollState {
+    const tasks: PollTask[] = data.tasks.map((t, idx) => ({
+      cardLink: t.card_link,
+      title: this.resolveCardTitle(t.card_link),
+      votes: existing?.tasks?.[idx]?.votes ?? {},
+    }));
+
+    return {
+      isActive: true,
+      adminLink: data.admin_link,
+      currentIdx: data.current_idx ?? 0,
+      tasks,
+      invitees: data.invitees,
+      isRevealed: false,
+      finalPoints: undefined,
+    };
+  }
+
   private handleAction(action: Action): void {
     switch (action.type) {
       case "FETCH_KANBAN_START":
@@ -80,6 +117,7 @@ class KanbanStore extends Store {
         this.state.users = payload.users;
         this.state.sections = payload.sections;
         this.state.myRole = payload.myRole || "viewer";
+        this.state.myLink = payload.myLink || "";
         this.state.isLoading = false;
         this.emit("change");
         break;
@@ -89,6 +127,36 @@ class KanbanStore extends Store {
         const payload = action.payload as FetchKanbanErrorPayload;
         this.state.error = payload.error;
         this.state.isLoading = false;
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_FETCHED": {
+        const data = action.payload as GetPollResponse;
+        this.state.poll = this.buildPollState(data, this.state.poll);
+        this.state.lastPollResults = null;
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_CLEAR": {
+        this.state.poll = null;
+        this.state.lastPollResults = null;
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_FINISHED": {
+        this.state.lastPollResults = this.state.poll
+          ? JSON.parse(JSON.stringify(this.state.poll))
+          : null;
+        this.state.poll = null;
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
         this.emit("change");
         break;
       }
@@ -191,6 +259,64 @@ class KanbanStore extends Store {
           }
           if (data.max_tasks) section.max_tasks = data.max_tasks;
           if (data.is_mandatory) section.is_mandatory = data.is_mandatory;
+          this.emit("change");
+        }
+        break;
+      }
+
+      case "KANBAN_SSE_EVENT": {
+        const { type, payload } = action.payload as {
+          type: string;
+          payload: any;
+        };
+        if (!payload || payload.board_link !== this.state.boardId) break;
+
+        switch (type) {
+          case "new_answer":
+            if (this.state.poll && this.state.poll.isActive) {
+              const task = this.state.poll.tasks[this.state.poll.currentIdx];
+              if (task) {
+                const points =
+                  payload.data?.points ?? payload.points ?? 0;
+                const userLink = payload.data?.user_link ?? payload.user_link;
+                if (userLink) {
+                  task.votes = {
+                    ...task.votes,
+                    [userLink]: points,
+                  };
+                  this.emit("change");
+                }
+              }
+            }
+            break;
+        }
+        break;
+      }
+
+      case "KANBAN_SET_SELECTION_MODE": {
+        this.state.isSelectionMode = action.payload as boolean;
+        if (!this.state.isSelectionMode) {
+          this.state.selectedCards = new Set();
+        }
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_TOGGLE_CARD_SELECTION": {
+        const cardId = action.payload as string;
+        if (!this.state.selectedCards) this.state.selectedCards = new Set();
+        if (this.state.selectedCards.has(cardId)) {
+          this.state.selectedCards.delete(cardId);
+        } else {
+          this.state.selectedCards.add(cardId);
+        }
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_REVEAL_POLL": {
+        if (this.state.poll) {
+          this.state.poll.isRevealed = true;
           this.emit("change");
         }
         break;

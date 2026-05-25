@@ -1,0 +1,262 @@
+<div id="modal-overlay-poll" class="modal__overlay" style="z-index: 2005;">
+  
+  {{#if isStartModal}}
+  <div id="modal-start-poll" class="modal" style="display: block; width: 440px;">
+    <div class="modal__header">
+      <h2 class="modal__title">Голосование</h2>
+      <button class="modal__close-btn" id="btn-close-poll-start">×</button>
+    </div>
+    <div class="modal__body" style="display: flex; flex-direction: column; gap: 1rem;">
+      <p class="modal__text" style="margin-bottom: 0.5rem; color: #aaa;">Выберите, кто будет оценивать задачи</p>
+      
+      <div class="invite-modal__members-list" style="max-height: 250px; width: 100%;">
+        {{#each members}}
+        <label class="custom-checkbox" style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: #18181a;
+          padding: 0.75rem 1rem;
+          border-radius: 12px;
+          border: 1px solid #333;
+          margin-bottom: 0.5rem;
+          cursor: pointer;
+          width: 100%;
+        ">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            {{#if avatar_url}}
+            <img src="{{avatar_url}}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+            {{else}}
+            <div style="
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #8b5cf6;
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              font-size: 0.9rem;
+            ">{{display_name.[0]}}</div>
+            {{/if}}
+            <div style="display: flex; flex-direction: column;">
+              <span style="color: white; font-size: 0.9rem; font-weight: 500;">{{display_name}}</span>
+              <span style="color: #666; font-size: 0.75rem;">{{role}}</span>
+            </div>
+          </div>
+          <input type="checkbox" class="poll-invitee-checkbox" data-link="{{link}}">
+          <span class="checkmark" style="margin-left: auto;"></span>
+        </label>
+        {{/each}}
+      </div>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn--cancel" id="btn-cancel-poll-start">Отменить</button>
+      <button class="btn btn--primary" id="btn-confirm-poll-start" disabled>Начать</button>
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if isVoteModal}}
+  <div id="modal-active-poll" class="modal" style="display: block; width: 520px;">
+    <div class="modal__header">
+      <h2 class="modal__title">Голосование <span style="font-size: 0.9rem; color: #888;">{{roleLabel}}</span></h2>
+      <button class="modal__close-btn" id="btn-close-poll-vote">×</button>
+    </div>
+    <div class="modal__body" style="text-align: center;">
+      <p style="color: #888; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin-bottom: 0.5rem;">
+        Задача {{currentCardIndex}} из {{totalCards}}
+      </p>
+      <h1 style="color: white; font-size: 1.8rem; font-weight: bold; margin-bottom: 0.5rem; word-break: break-word;">
+        {{activeCardTitle}}
+      </h1>
+      {{#if activeCardDescription}}
+      <p style="color: #888; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; padding: 0 1rem; word-break: break-word;">{{activeCardDescription}}</p>
+      {{/if}}
+      <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Проголосовало {{votedCount}} из {{totalInvitees}}
+      </p>
+
+      {{#if isObserver}}
+      <div style="
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        padding: 1rem;
+        border-radius: 12px;
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      ">
+        Вы не приглашены в это голосование. Вы можете наблюдать за результатами.
+      </div>
+      {{/if}}
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; max-height: 180px; overflow-y: auto; padding-right: 4px;">
+        {{#each inviteesList}}
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #18181a;
+          padding: 0.6rem 1rem;
+          border-radius: 8px;
+          font-size: 0.95rem;
+        ">
+          <span style="color: white; font-weight: 500;">{{name}}</span>
+          {{#if ../isRevealed}}
+            {{#if ../isAdmin}}
+            <span style="color: #8b5cf6; font-weight: bold;">{{score}}</span>
+            {{else}}
+            {{#if hasVoted}}
+              <span style="color: #10b981; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
+                ✓ Готово
+              </span>
+            {{else}}
+              <span style="color: #666; font-style: italic;">Ожидание...</span>
+            {{/if}}
+            {{/if}}
+          {{else}}
+            {{#if hasVoted}}
+              <span style="color: #10b981; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
+                ✓ Готово
+              </span>
+            {{else}}
+              <span style="color: #666; font-style: italic;">Ожидание...</span>
+            {{/if}}
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+
+      {{#if isRevealed}}
+        {{#if isAdmin}}
+        <div style="margin-bottom: 2rem;">
+          <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.25rem;">Среднее: <span style="color: #8b5cf6; font-weight: bold; font-size: 1.4rem;">{{averageScore}}</span></p>
+        </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if isAdmin}}
+        {{#if isRevealed}}
+          <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Итоговая оценка:</p>
+          <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
+            {{#each deck}}
+            <button class="btn btn--secondary poll-deck-btn" 
+              data-points="{{this}}" 
+              style="
+                width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
+                {{#if (eq ../finalScore this)}}background: #8b5cf6; color: white; border-color: #8b5cf6;{{/if}}
+              ">{{this}}</button>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if isVoter}}
+        {{#if myVote}}
+          <div style="
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            margin-bottom: 2rem;
+          ">
+            Вы проголосовали — <span style="color: #8b5cf6; font-weight: bold; font-size: 1.25rem;">{{myVote}}</span>
+          </div>
+        {{else}}
+          <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Ваша оценка:</p>
+          <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
+            {{#each deck}}
+            <button class="btn btn--secondary poll-deck-btn" 
+              data-points="{{this}}" 
+              style="
+                width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
+                {{#if (eq ../selectedVote this)}}background: #8b5cf6; color: white; border-color: #8b5cf6;{{/if}}
+              ">{{this}}</button>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+    </div>
+    <div class="modal__actions-vertical">
+      {{#if isAdmin}}
+        {{#if isRevealed}}
+          <button class="btn btn--primary" id="btn-poll-next" {{#unless finalScore}}disabled{{/unless}}>
+            {{#if isLastCard}}Завершить голосование{{else}}Далее{{/if}}
+          </button>
+          {{#unless finalScore}}<p style="color: #888; font-size: 0.8rem; margin-top: 0.25rem;">Выберите итоговую оценку выше</p>{{/unless}}
+          {{#unless isLastCard}}<button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>{{/unless}}
+        {{else}}
+          <button class="btn btn--danger-outline" id="btn-poll-reveal">Показать оценки</button>
+          <button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>
+        {{/if}}
+      {{/if}}
+
+      {{#if isVoter}}
+        {{#unless myVote}}
+          <button class="btn btn--primary" id="btn-poll-submit-vote" {{#unless selectedVote}}disabled{{/unless}}>Проголосовать</button>
+        {{/unless}}
+      {{/if}}
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if isSummaryModal}}
+  <div id="modal-poll-summary" class="modal" style="display: block; width: 480px;">
+    <div class="modal__header">
+      <h2 class="modal__title">Голосование завершено</h2>
+      <button class="modal__close-btn" id="btn-close-poll-summary">×</button>
+    </div>
+    <div class="modal__body" style="text-align: center;">
+      <p style="color: #888; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Итоги по всем задачам ({{totalTasks}})
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 300px; overflow-y: auto; padding-right: 4px;">
+        {{#each tasksSummary}}
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #18181a;
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          border: 1px solid #2a2a2d;
+        ">
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+            max-width: 300px;
+          ">
+            <span style="color: white; font-size: 0.95rem; font-weight: 500; text-align: left; word-break: break-word;">{{title}}</span>
+            <span style="color: #666; font-size: 0.8rem;">
+              {{voteCount}} из {{totalInvitees}} голосов
+            </span>
+          </div>
+          <div style="
+            background: rgba(139, 92, 246, 0.15);
+            color: #a5b4fc;
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+          ">
+            {{average}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn--primary" id="btn-ok-poll-summary">Понятно</button>
+    </div>
+  </div>
+  {{/if}}
+
+</div>
