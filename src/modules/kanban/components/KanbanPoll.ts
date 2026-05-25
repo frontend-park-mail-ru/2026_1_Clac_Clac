@@ -43,7 +43,10 @@ export class KanbanPoll {
             ? Array.from(state.selectedCards as Set<string>)
             : [];
           if (selectedCards.length === 0) {
-            Toast.error("Выберите хотя бы одну задачу для оценки");
+            appDispatcher.dispatch({
+              type: "KANBAN_SET_SELECTION_MODE",
+              payload: false,
+            });
             return;
           }
           this.openStartModal(appDiv, state);

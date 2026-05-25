@@ -84,12 +84,15 @@ export class KanbanView {
       })),
     }));
 
+    const hasSelectedCards = state.selectedCards && state.selectedCards.size > 0;
+
     this.appDiv.innerHTML = template({
       board_name: state.boardName,
       sections: sectionsWithSelection,
       isViewer: isViewer,
       pollActive: isPollActive,
       isSelectionMode: state.isSelectionMode,
+      hasSelectedCards: hasSelectedCards,
     });
 
     const tabKanban = this.appDiv.querySelector("#tab-view-kanban");
