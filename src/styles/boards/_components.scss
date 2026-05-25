@@ -50,6 +50,16 @@
     }
   }
 
+  &--danger-outline {
+    background: transparent;
+    color: #ff5c5c;
+    border: 1px solid #ff5c5c;
+
+    &:hover {
+      background: rgba(255, 92, 92, 0.08);
+    }
+  }
+
   &--create {
     padding: 0.6rem 1.2rem;
     border-radius: 12px;

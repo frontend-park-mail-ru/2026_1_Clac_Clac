@@ -13,6 +13,7 @@ export class KanbanPoll {
   private static selectedVote: number | null = null;
   private static finalScore: number | null = null;
   private static notifiedPollId: string | null = null;
+  private static wasPollModalOpen = false;
 
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
     const poll = state.poll as PollState;
@@ -101,6 +102,9 @@ export class KanbanPoll {
     }
 
     if (state.poll && state.poll.isActive) {
+      if (this.wasPollModalOpen) {
+        this.renderActivePoll(appDiv, state);
+      }
       const poll = state.poll as PollState;
       const myLink = state.myLink as string;
       if (poll.adminLink !== myLink && poll.adminLink !== this.notifiedPollId) {
@@ -196,11 +200,13 @@ export class KanbanPoll {
   private static renderActivePoll(appDiv: HTMLElement, state: any) {
     if (!state.poll) return;
 
-    if (!this.overlay) {
+    if (!this.overlay || !this.overlay.isConnected) {
       this.overlay = document.createElement("div");
       this.overlay.id = "poll-overlay-container";
       appDiv.appendChild(this.overlay);
     }
+
+    this.wasPollModalOpen = true;
 
     const poll = state.poll as PollState;
     const userMode = this.computeUserMode(state);
@@ -427,5 +433,6 @@ export class KanbanPoll {
     }
     this.selectedVote = null;
     this.finalScore = null;
+    this.wasPollModalOpen = false;
   }
 }
