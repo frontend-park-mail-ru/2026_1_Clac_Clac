@@ -195,6 +195,7 @@ export class KanbanPoll {
     }
 
     const poll = state.poll;
+    console.log(poll);
     const activeCardLink = poll.activeCardLink;
     const myEmail = (currentUser?.email || "").toLowerCase().trim();
     const me = state.users.find(
