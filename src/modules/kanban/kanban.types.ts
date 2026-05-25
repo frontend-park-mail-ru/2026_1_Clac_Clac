@@ -60,6 +60,7 @@ export interface KanbanState {
   isLoading: boolean;
   error: string | null;
   myRole?: string;
+  myLink?: string;
   poll?: PollState | null;
   lastPollResults?: PollState | null;
   isSelectionMode?: boolean;
@@ -124,6 +125,7 @@ export interface FetchKanbanSuccessPayload {
   users: BoardUser[];
   sections: Section[];
   myRole?: string;
+  myLink?: string;
 }
 
 export interface FetchKanbanErrorPayload {

@@ -3,7 +3,6 @@ import pollTpl from "../../../templates/poll.hbs?raw";
 import { appDispatcher } from "../../../core/Dispatcher";
 import { kanbanApi, pollsApi } from "../../../api";
 import { Toast } from "../../../utils/toast";
-import { currentUser } from "../../../main";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
 
@@ -15,23 +14,10 @@ export class KanbanPoll {
   private static finalScore: number | null = null;
   private static notifiedPollId: string | null = null;
 
-  private static getMyUserLink(state: any): string {
-    const myEmail = (
-      currentUser?.data?.email ||
-      currentUser?.email ||
-      ""
-    ).toLowerCase().trim();
-    if (!myEmail) return "";
-    const me = state.users.find(
-      (u: any) => u.email.toLowerCase().trim() === myEmail,
-    );
-    return me ? me.id : "";
-  }
-
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
     const poll = state.poll as PollState;
     if (!poll) return "observer";
-    const myLink = this.getMyUserLink(state);
+    const myLink = state.myLink as string;
     if (myLink && poll.adminLink === myLink) return "admin";
     if (myLink && poll.invitees.includes(myLink)) return "voter";
     return "observer";
@@ -116,7 +102,7 @@ export class KanbanPoll {
 
     if (state.poll && state.poll.isActive) {
       const poll = state.poll as PollState;
-      const myLink = this.getMyUserLink(state);
+      const myLink = state.myLink as string;
       if (poll.adminLink !== myLink && poll.adminLink !== this.notifiedPollId) {
         this.notifiedPollId = poll.adminLink;
         Toast.info("Началось голосование! Нажмите «Подключиться к голосованию» чтобы присоединиться.");
@@ -254,7 +240,7 @@ export class KanbanPoll {
       averageScore = parseFloat((sum / votedCount).toFixed(1));
     }
 
-    const myId = this.getMyUserLink(state);
+    const myId = state.myLink as string;
     const myVote = currentTask.votes[myId];
 
     const deck = [1, 2, 3, 5, 8, 13, 21];

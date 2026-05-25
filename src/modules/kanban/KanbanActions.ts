@@ -136,6 +136,7 @@ export const KanbanActions = {
         (m) => m.email.toLowerCase().trim() === myEmail,
       );
       const myRole = myMember?.role || "viewer";
+      const myLink = myMember?.link || "";
 
       const users: BoardUser[] = usersRes.data.members.map((m) => {
         const userObj: BoardUser = {
@@ -277,7 +278,7 @@ export const KanbanActions = {
 
       appDispatcher.dispatch({
         type: "FETCH_KANBAN_SUCCESS",
-        payload: { boardId, boardName, users, sections, myRole },
+        payload: { boardId, boardName, users, sections, myRole, myLink },
       });
     } catch (err: unknown) {
       appDispatcher.dispatch({

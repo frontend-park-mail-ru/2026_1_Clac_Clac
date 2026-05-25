@@ -21,6 +21,7 @@ class KanbanStore extends Store {
     isLoading: true,
     error: null,
     myRole: "viewer",
+    myLink: "",
     poll: null,
     lastPollResults: null,
     isSelectionMode: false,
@@ -36,6 +37,7 @@ class KanbanStore extends Store {
     this.state.sections = [];
     this.state.users = [];
     this.state.myRole = "viewer";
+    this.state.myLink = "";
     this.state.poll = null;
     this.state.lastPollResults = null;
     this.state.isSelectionMode = false;
@@ -115,6 +117,7 @@ class KanbanStore extends Store {
         this.state.users = payload.users;
         this.state.sections = payload.sections;
         this.state.myRole = payload.myRole || "viewer";
+        this.state.myLink = payload.myLink || "";
         this.state.isLoading = false;
         this.emit("change");
         break;
