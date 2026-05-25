@@ -66,8 +66,6 @@ export const KanbanActions = {
 
     boardEventSource.onerror = (err) => {
       console.error("Kanban SSE connection error", err);
-      // Reconnection: EventSource auto-reconnects by default.
-      // After reconnection, sync poll state.
       setTimeout(async () => {
         if (currentBoardId === boardId && boardEventSource?.readyState === EventSource.OPEN) {
           await KanbanActions.fetchPoll(boardId);
