@@ -196,7 +196,7 @@ export class KanbanPoll {
       } catch (e: any) {
         Toast.error(e.data?.message || "Ошибка при создании голосования");
         confirmBtn.disabled = false;
-        confirmBtn.textContent = "Начать голосование";
+        confirmBtn.textContent = "Начать";
       }
     });
   }
@@ -250,6 +250,9 @@ export class KanbanPoll {
         0,
       );
       averageScore = parseFloat((sum / votedCount).toFixed(1));
+      if (this.finalScore === null) {
+        this.finalScore = Math.round(averageScore);
+      }
     }
 
     const myId = state.myLink as string;
@@ -333,16 +336,17 @@ export class KanbanPoll {
       const terminateBtn = this.overlay.querySelector("#btn-poll-terminate");
       terminateBtn?.addEventListener("click", () => {
         showConfirmModal({
-          title: "Завершить досрочно",
-          text: "Вы действительно хотите закрыть комнату оценки до завершения всех задач?",
+          title: "Завершить голосование",
+          text: "Голосование будет закрыто. Оценки, которые вы уже выставили, сохранятся.",
           confirmLabel: "Завершить",
           onConfirm: async () => {
               try {
                 await pollsApi.closePoll(state.boardId!);
-                Toast.success("Голосование досрочно закрыто");
                 this.destroyOverlay();
+                Toast.success("Голосование закрыто");
+                await KanbanActions.fetchKanban(state.boardId!, true);
               } catch {
-              Toast.error("Не удалось закрыть комнату");
+              Toast.error("Не удалось закрыть голосование");
             }
           },
         });
@@ -373,8 +377,9 @@ export class KanbanPoll {
           try {
             if (isLastCard) {
               await pollsApi.closePoll(state.boardId!);
-              Toast.success("Все задачи оценены!");
               this.destroyOverlay();
+              Toast.success("Все задачи оценены!");
+              await KanbanActions.fetchKanban(state.boardId!, true);
             } else {
               await pollsApi.nextCard(state.boardId!);
             }
