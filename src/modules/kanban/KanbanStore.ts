@@ -2,13 +2,15 @@ import { Store } from "../../core/Store";
 import { appDispatcher, Action } from "../../core/Dispatcher";
 import {
   KanbanState,
+  PollState,
+  PollTask,
   FetchKanbanSuccessPayload,
   FetchKanbanErrorPayload,
   Section,
   Task,
   KANBAN_COLORS,
 } from "./kanban.types";
-import { SectionInfo } from "../../api";
+import { SectionInfo, GetPollResponse } from "../../api";
 
 class KanbanStore extends Store {
   private state: KanbanState = {
@@ -20,6 +22,7 @@ class KanbanStore extends Store {
     error: null,
     myRole: "viewer",
     poll: null,
+    lastPollResults: null,
     isSelectionMode: false,
     selectedCards: new Set(),
   };
@@ -34,6 +37,7 @@ class KanbanStore extends Store {
     this.state.users = [];
     this.state.myRole = "viewer";
     this.state.poll = null;
+    this.state.lastPollResults = null;
     this.state.isSelectionMode = false;
     this.state.selectedCards = new Set();
   }
@@ -70,6 +74,32 @@ class KanbanStore extends Store {
     }
   }
 
+  private resolveCardTitle(cardLink: string): string {
+    for (const section of this.state.sections) {
+      const task = section.tasks.find((t) => t.id === cardLink);
+      if (task) return task.title;
+    }
+    return "Без названия";
+  }
+
+  private buildPollState(data: GetPollResponse): PollState {
+    const tasks: PollTask[] = data.tasks.map((t) => ({
+      cardLink: t.card_link,
+      title: this.resolveCardTitle(t.card_link),
+      votes: {},
+    }));
+
+    return {
+      isActive: true,
+      adminLink: data.admin_link,
+      currentIdx: data.current_idx ?? 0,
+      tasks,
+      invitees: data.invitees,
+      isRevealed: false,
+      finalPoints: undefined,
+    };
+  }
+
   private handleAction(action: Action): void {
     switch (action.type) {
       case "FETCH_KANBAN_START":
@@ -94,6 +124,34 @@ class KanbanStore extends Store {
         const payload = action.payload as FetchKanbanErrorPayload;
         this.state.error = payload.error;
         this.state.isLoading = false;
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_FETCHED": {
+        const data = action.payload as GetPollResponse;
+        this.state.poll = this.buildPollState(data);
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_CLEAR": {
+        this.state.poll = null;
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_POLL_FINISHED": {
+        this.state.lastPollResults = this.state.poll
+          ? JSON.parse(JSON.stringify(this.state.poll))
+          : null;
+        this.state.poll = null;
+        this.state.isSelectionMode = false;
+        this.state.selectedCards = new Set();
         this.emit("change");
         break;
       }
@@ -209,42 +267,21 @@ class KanbanStore extends Store {
         if (!payload || payload.board_link !== this.state.boardId) break;
 
         switch (type) {
-          case "poll_start":
-            this.state.poll = {
-              isActive: true,
-              cardLinks: payload.card_links || [],
-              invitees: payload.invitees || payload.users || [],
-              activeCardLink: payload.active_card_link || "",
-              answers: {},
-              isRevealed: false,
-            };
-            this.state.isSelectionMode = false;
-            this.state.selectedCards = new Set();
-            this.emit("change");
-            break;
-
-          case "poll_end":
-            this.state.poll = null;
-            this.emit("change");
-            break;
-
           case "new_answer":
-            if (this.state.poll) {
-              this.state.poll.answers = {
-                ...this.state.poll.answers,
-                [payload.user_link]: payload.points,
-              };
-              this.emit("change");
-            }
-            break;
-
-          case "next_card":
-            if (this.state.poll) {
-              this.state.poll.activeCardLink = payload.active_card_link;
-              this.state.poll.answers = {};
-              this.state.poll.isRevealed = false;
-              this.state.poll.finalPoints = undefined;
-              this.emit("change");
+            if (this.state.poll && this.state.poll.isActive) {
+              const task = this.state.poll.tasks[this.state.poll.currentIdx];
+              if (task) {
+                const points =
+                  payload.data?.points ?? payload.points ?? 0;
+                const userLink = payload.data?.user_link ?? payload.user_link;
+                if (userLink) {
+                  task.votes = {
+                    ...task.votes,
+                    [userLink]: points,
+                  };
+                  this.emit("change");
+                }
+              }
             }
             break;
         }

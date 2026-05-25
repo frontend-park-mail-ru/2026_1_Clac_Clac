@@ -6,6 +6,7 @@ import { Toast } from "../../../utils/toast";
 import { KanbanActions } from "../KanbanActions";
 import { currentUser } from "../../../main";
 import { showConfirmModal } from "../../../utils/confirmModal";
+import { PollState } from "../kanban.types";
 
 const template = Handlebars.compile(pollTpl);
 
@@ -13,6 +14,22 @@ export class KanbanPoll {
   private static overlay: HTMLElement | null = null;
   private static selectedVote: number | null = null;
   private static finalScore: number | null = null;
+  private static myUserLink: string = "";
+
+  private static getMyUserLink(state: any): string {
+    if (this.myUserLink) return this.myUserLink;
+    this.myUserLink = currentUser?.link || "";
+    return this.myUserLink;
+  }
+
+  private static computeUserMode(state: any): "admin" | "voter" | "observer" {
+    const poll = state.poll as PollState;
+    if (!poll) return "observer";
+    const myLink = this.getMyUserLink(state);
+    if (myLink && poll.adminLink === myLink) return "admin";
+    if (myLink && poll.invitees.includes(myLink)) return "voter";
+    return "observer";
+  }
 
   public static bind(
     appDiv: HTMLElement,
@@ -86,20 +103,13 @@ export class KanbanPoll {
         });
     }
 
-    if (state.poll && state.poll.isActive) {
-      const myEmail = (currentUser?.email || "").toLowerCase().trim();
-      const me = state.users.find(
-        (u: any) => u.email.toLowerCase().trim() === myEmail,
-      );
-      const isInvited = me && state.poll.invitees.includes(me.id);
-      const isAdmin =
-        state.myRole === "admin" ||
-        state.myRole === "owner" ||
-        state.myRole === "creator";
+    if (state.lastPollResults) {
+      this.showSummaryModal(appDiv, state);
+      return;
+    }
 
-      if (isInvited || isAdmin) {
-        this.renderActivePoll(appDiv, state);
-      }
+    if (state.poll && state.poll.isActive) {
+      this.renderActivePoll(appDiv, state);
     } else {
       this.destroyOverlay();
     }
@@ -194,31 +204,20 @@ export class KanbanPoll {
       appDiv.appendChild(this.overlay);
     }
 
-    const poll = state.poll;
-    console.log(poll);
-    const activeCardLink = poll.activeCardLink;
-    const myEmail = (currentUser?.email || "").toLowerCase().trim();
-    const me = state.users.find(
-      (u: any) => u.email.toLowerCase().trim() === myEmail,
-    );
-    const myId = me ? me.id : "";
+    const poll = state.poll as PollState;
+    const userMode = this.computeUserMode(state);
+    const currentTask = poll.tasks[poll.currentIdx];
+    if (!currentTask) return;
 
-    let cardTitle = "Без названия";
-    for (const section of state.sections) {
-      const t = section.tasks.find((task: any) => task.id === activeCardLink);
-      if (t) {
-        cardTitle = t.title;
-        break;
-      }
-    }
-
-    const totalCards = poll.cardLinks.length;
-    const currentCardIndex = poll.cardLinks.indexOf(activeCardLink) + 1;
+    const cardLink = currentTask.cardLink;
+    const cardTitle = currentTask.title || "Без названия";
+    const totalCards = poll.tasks.length;
+    const currentCardIndex = poll.currentIdx + 1;
     const totalInvitees = poll.invitees.length;
 
     const inviteesList = poll.invitees.map((inviteeId: string) => {
       const userObj = state.users.find((u: any) => u.id === inviteeId);
-      const points = poll.answers[inviteeId];
+      const points = currentTask.votes[inviteeId];
       const hasVoted = points !== undefined;
       return {
         id: inviteeId,
@@ -230,32 +229,38 @@ export class KanbanPoll {
 
     const votedCount = inviteesList.filter((i: any) => i.hasVoted).length;
 
-    // Авто-раскрытие результатов, когда все проголосовали
-    const allVoted = votedCount === totalInvitees;
+    // Auto-reveal when all invited have voted
+    const allVoted = totalInvitees > 0 && votedCount === totalInvitees;
     const isRevealed = poll.isRevealed || allVoted;
 
     let averageScore = 0;
     if (isRevealed && votedCount > 0) {
-      const sum = Object.values(poll.answers).reduce(
-        (acc: number, val: any) => acc + (Number(val) || 0),
+      const sum = Object.values(currentTask.votes).reduce(
+        (acc: number, val) => acc + (Number(val) || 0),
         0,
       );
       averageScore = parseFloat((sum / votedCount).toFixed(1));
     }
 
-    const isAdmin =
-      state.myRole === "admin" ||
-      state.myRole === "owner" ||
-      state.myRole === "creator";
-    const roleLabel = isAdmin ? "Администратор" : "Участник";
+    const myId = this.getMyUserLink(state);
+    const myVote = currentTask.votes[myId];
 
     const deck = [1, 2, 3, 5, 8, 13, 21];
-    const myVote = poll.answers[myId];
+    const isLastCard = currentCardIndex === totalCards;
 
-    this.overlay.innerHTML = template({
+    const roleLabels: Record<string, string> = {
+      admin: "Администратор",
+      voter: "Участник",
+      observer: "Наблюдатель",
+    };
+
+    const ctx = {
       isVoteModal: true,
-      roleLabel,
-      isAdmin,
+      userMode,
+      roleLabel: roleLabels[userMode],
+      isAdmin: userMode === "admin",
+      isVoter: userMode === "voter",
+      isObserver: userMode === "observer",
       currentCardIndex,
       totalCards,
       activeCardTitle: cardTitle,
@@ -268,14 +273,16 @@ export class KanbanPoll {
       myVote,
       selectedVote: this.selectedVote,
       finalScore: this.finalScore,
-      isLastCard: currentCardIndex === totalCards,
-    });
+      isLastCard,
+    };
+
+    this.overlay.innerHTML = template(ctx);
 
     const closeBtn = this.overlay.querySelector("#btn-close-poll-vote");
     closeBtn?.addEventListener("click", () => this.destroyOverlay());
 
-    // Логика обычного участника
-    if (!isAdmin && !myVote) {
+    // Voter: deck buttons + submit
+    if (userMode === "voter" && myVote === undefined) {
       const deckBtns = this.overlay.querySelectorAll(".poll-deck-btn");
       deckBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -294,7 +301,6 @@ export class KanbanPoll {
         try {
           await pollsApi.vote(state.boardId!, { points: this.selectedVote });
           this.selectedVote = null;
-          this.renderActivePoll(appDiv, state);
         } catch {
           Toast.error("Ошибка при отправке голоса");
           submitVoteBtn.disabled = false;
@@ -302,7 +308,8 @@ export class KanbanPoll {
       });
     }
 
-    if (isAdmin) {
+    // Admin controls
+    if (userMode === "admin") {
       const revealBtn = this.overlay.querySelector("#btn-poll-reveal");
       revealBtn?.addEventListener("click", () => {
         appDispatcher.dispatch({
@@ -320,8 +327,7 @@ export class KanbanPoll {
             try {
               await pollsApi.closePoll(state.boardId!);
               Toast.success("Голосование досрочно закрыто");
-              this.destroyOverlay();
-              KanbanActions.fetchKanban(state.boardId!, true);
+              // SSE poll_end will trigger state change and show summary modal.
             } catch {
               Toast.error("Не удалось закрыть комнату");
             }
@@ -330,6 +336,7 @@ export class KanbanPoll {
       });
 
       if (isRevealed) {
+        // Final score deck
         const deckBtns = this.overlay.querySelectorAll(".poll-deck-btn");
         deckBtns.forEach((btn) => {
           btn.addEventListener("click", async () => {
@@ -338,7 +345,7 @@ export class KanbanPoll {
             this.renderActivePoll(appDiv, state);
 
             try {
-              await kanbanApi.updateTaskPoints(activeCardLink, { points });
+              await kanbanApi.updateTaskPoints(cardLink, { points });
               Toast.success(`Оценка ${points} SP установлена`);
             } catch {
               Toast.error("Не удалось отправить итоговую оценку");
@@ -351,17 +358,16 @@ export class KanbanPoll {
         ) as HTMLButtonElement;
         nextBtn?.addEventListener("click", async () => {
           nextBtn.disabled = true;
-          const isLast = currentCardIndex === totalCards;
           try {
-            if (isLast) {
+            if (isLastCard) {
               await pollsApi.closePoll(state.boardId!);
               Toast.success("Все задачи оценены!");
-              this.destroyOverlay();
+              // SSE poll_end will trigger state change and show summary modal.
+              // Don't call destroyOverlay() here — let the store update handle it.
             } else {
               await pollsApi.nextCard(state.boardId!);
             }
             this.finalScore = null;
-            KanbanActions.fetchKanban(state.boardId!, true);
           } catch {
             Toast.error("Ошибка переключения на следующую задачу");
             nextBtn.disabled = false;
@@ -369,6 +375,52 @@ export class KanbanPoll {
         });
       }
     }
+  }
+
+  private static showSummaryModal(appDiv: HTMLElement, state: any) {
+    const results = state.lastPollResults as PollState;
+    if (!results) return;
+
+    this.destroyOverlay();
+
+    const tasksSummary = results.tasks.map((t) => {
+      const votes = Object.values(t.votes);
+      const avg =
+        votes.length > 0
+          ? parseFloat(
+              (
+                votes.reduce((a, b) => a + b, 0) / votes.length
+              ).toFixed(1),
+            )
+          : 0;
+      return {
+        title: t.title,
+        average: avg,
+        voteCount: votes.length,
+        totalInvitees: results.invitees.length,
+      };
+    });
+
+    this.overlay = document.createElement("div");
+    this.overlay.id = "poll-overlay-container";
+    appDiv.appendChild(this.overlay);
+
+    this.overlay.innerHTML = template({
+      isSummaryModal: true,
+      tasksSummary,
+      totalTasks: tasksSummary.length,
+    });
+
+    const closeBtn = this.overlay.querySelector("#btn-close-poll-summary");
+    const okBtn = this.overlay.querySelector("#btn-ok-poll-summary");
+
+    const close = () => {
+      appDispatcher.dispatch({ type: "KANBAN_POLL_CLEAR" });
+      this.destroyOverlay();
+    };
+
+    closeBtn?.addEventListener("click", close);
+    okBtn?.addEventListener("click", close);
   }
 
   private static destroyOverlay() {

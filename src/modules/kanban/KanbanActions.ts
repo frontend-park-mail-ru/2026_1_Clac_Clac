@@ -1,5 +1,5 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, profileApi, API_URL, SectionInfo } from "../../api";
+import { boardsApi, kanbanApi, pollsApi, profileApi, API_URL, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
@@ -16,9 +16,29 @@ export const profileCache = new Map<string, BoardUser>();
 
 let cachedMyEmail: string | null = null;
 let boardEventSource: EventSource | null = null;
+let currentBoardId: string | null = null;
+
+function isPollEvent(type: string): boolean {
+  return type === "poll_start" || type === "next_card" || type === "poll_end";
+}
+
+async function handlePollSSE(type: string): Promise<void> {
+  if (!currentBoardId) return;
+
+  if (type === "poll_end") {
+    appDispatcher.dispatch({ type: "KANBAN_POLL_FINISHED" });
+    return;
+  }
+
+  if (type === "poll_start" || type === "next_card") {
+    await KanbanActions.fetchPoll(currentBoardId);
+  }
+}
 
 export const KanbanActions = {
   connectSSE(boardId: string) {
+    currentBoardId = boardId;
+
     if (boardEventSource) {
       boardEventSource.close();
     }
@@ -29,6 +49,12 @@ export const KanbanActions = {
     boardEventSource.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data);
+
+        if (isPollEvent(parsed.type)) {
+          handlePollSSE(parsed.type);
+          return;
+        }
+
         appDispatcher.dispatch({
           type: "KANBAN_SSE_EVENT",
           payload: parsed,
@@ -40,13 +66,39 @@ export const KanbanActions = {
 
     boardEventSource.onerror = (err) => {
       console.error("Kanban SSE connection error", err);
+      // Reconnection: EventSource auto-reconnects by default.
+      // After reconnection, sync poll state.
+      setTimeout(async () => {
+        if (currentBoardId === boardId && boardEventSource?.readyState === EventSource.OPEN) {
+          await KanbanActions.fetchPoll(boardId);
+        }
+      }, 2000);
     };
   },
 
   disconnectSSE() {
+    currentBoardId = null;
     if (boardEventSource) {
       boardEventSource.close();
       boardEventSource = null;
+    }
+  },
+
+  async fetchPoll(boardId: string): Promise<void> {
+    try {
+      const res = await pollsApi.getActivePoll(boardId);
+      if (res && res.data) {
+        appDispatcher.dispatch({
+          type: "KANBAN_POLL_FETCHED",
+          payload: res.data,
+        });
+      }
+    } catch (err: any) {
+      if (err?.status === 404) {
+        appDispatcher.dispatch({ type: "KANBAN_POLL_CLEAR" });
+      } else {
+        console.error("Failed to fetch poll state", err);
+      }
     }
   },
 

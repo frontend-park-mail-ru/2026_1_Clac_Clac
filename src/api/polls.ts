@@ -1,7 +1,12 @@
 import { apiClient } from "./client";
-import { BaseResponse, CreatePollRequest, VotePollRequest } from "./types";
+import { BaseResponse, ApiResponse, CreatePollRequest, VotePollRequest, GetPollResponse } from "./types";
 
 export const pollsApi = {
+  getActivePoll: (boardLink: string) =>
+    apiClient.get<ApiResponse<GetPollResponse>>(
+      `/boards/${boardLink}/polls`,
+    ),
+
   createPoll: (boardLink: string, data: CreatePollRequest) =>
     apiClient.post<BaseResponse, CreatePollRequest>(
       `/boards/${boardLink}/polls`,

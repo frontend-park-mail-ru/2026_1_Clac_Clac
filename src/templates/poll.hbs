@@ -59,7 +59,7 @@
   {{/if}}
 
   {{#if isVoteModal}}
-  <div id="modal-active-poll" class="modal" style="display: block; width: 480px;">
+  <div id="modal-active-poll" class="modal" style="display: block; width: 520px;">
     <div class="modal__header">
       <h2 class="modal__title">Голосование <span style="font-size: 0.9rem; color: #888;">{{roleLabel}}</span></h2>
       <button class="modal__close-btn" id="btn-close-poll-vote">×</button>
@@ -74,6 +74,20 @@
       <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1.5rem;">
         Проголосовало {{votedCount}} из {{totalInvitees}}
       </p>
+
+      {{#if isObserver}}
+      <div style="
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        padding: 1rem;
+        border-radius: 12px;
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      ">
+        Вы не приглашены в это голосование. Вы можете наблюдать за результатами.
+      </div>
+      {{/if}}
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; max-height: 180px; overflow-y: auto; padding-right: 4px;">
         {{#each inviteesList}}
@@ -122,7 +136,9 @@
             {{/each}}
           </div>
         {{/if}}
-      {{else}}
+      {{/if}}
+
+      {{#if isVoter}}
         {{#if myVote}}
           <div style="
             background: rgba(139, 92, 246, 0.1);
@@ -161,11 +177,67 @@
           <button class="btn btn--primary" id="btn-poll-reveal">Завершить голосование по карточке</button>
         {{/if}}
         <button class="btn btn--danger" id="btn-poll-terminate">Завершить голосование досрочно</button>
-      {{else}}
+      {{/if}}
+
+      {{#if isVoter}}
         {{#unless myVote}}
           <button class="btn btn--primary" id="btn-poll-submit-vote" {{#unless selectedVote}}disabled{{/unless}}>Проголосовать</button>
         {{/unless}}
       {{/if}}
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if isSummaryModal}}
+  <div id="modal-poll-summary" class="modal" style="display: block; width: 480px;">
+    <div class="modal__header">
+      <h2 class="modal__title">Голосование завершено</h2>
+      <button class="modal__close-btn" id="btn-close-poll-summary">×</button>
+    </div>
+    <div class="modal__body" style="text-align: center;">
+      <p style="color: #888; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Итоги по всем задачам ({{totalTasks}})
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 300px; overflow-y: auto; padding-right: 4px;">
+        {{#each tasksSummary}}
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #18181a;
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          border: 1px solid #2a2a2d;
+        ">
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+            max-width: 300px;
+          ">
+            <span style="color: white; font-size: 0.95rem; font-weight: 500; text-align: left; word-break: break-word;">{{title}}</span>
+            <span style="color: #666; font-size: 0.8rem;">
+              {{voteCount}} из {{totalInvitees}} голосов
+            </span>
+          </div>
+          <div style="
+            background: rgba(139, 92, 246, 0.15);
+            color: #a5b4fc;
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+          ">
+            {{average}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn--primary" id="btn-ok-poll-summary">Понятно</button>
     </div>
   </div>
   {{/if}}

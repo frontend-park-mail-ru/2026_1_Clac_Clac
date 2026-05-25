@@ -38,12 +38,18 @@ export interface Section {
 
 export interface PollState {
   isActive: boolean;
-  cardLinks: string[];
+  adminLink: string;
+  currentIdx: number;
+  tasks: PollTask[];
   invitees: string[];
-  activeCardLink: string;
-  answers: Record<string, number>;
   isRevealed: boolean;
   finalPoints?: number;
+}
+
+export interface PollTask {
+  cardLink: string;
+  title: string;
+  votes: Record<string, number>;
 }
 
 export interface KanbanState {
@@ -55,6 +61,7 @@ export interface KanbanState {
   error: string | null;
   myRole?: string;
   poll?: PollState | null;
+  lastPollResults?: PollState | null;
   isSelectionMode?: boolean;
   selectedCards?: Set<string>;
 }

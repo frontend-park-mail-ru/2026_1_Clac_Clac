@@ -1556,9 +1556,9 @@ export class KanbanView {
       KanbanColumnManager.bind(this.appDiv, state, closeModals, signal);
       KanbanTaskCreation.bind(this.appDiv, state, closeModals, signal);
       KanbanContextMenus.bind(this.appDiv, state, signal);
+      KanbanPoll.bind(this.appDiv, state, closeModals, signal);
       if (state.myRole !== "viewer") {
         KanbanDragAndDrop.bind(this.appDiv, state.boardId, signal);
-        KanbanPoll.bind(this.appDiv, state, closeModals, signal);
       }
     }
   }

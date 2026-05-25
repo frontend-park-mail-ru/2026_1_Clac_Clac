@@ -18,15 +18,6 @@
         <h1 class="kanban__board-title">{{board_name}}</h1>
       </div>
       <div class="kanban__actions">
-        {{#unless isViewer}}
-        <button class="btn btn--primary kanban__action-btn" id="btn-new-task">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Новая задача
-        </button>
-
         {{#if pollActive}}
         <button class="btn btn--secondary kanban__action-btn btn-poll-pulse" id="btn-connect-poll" style="background: rgba(139, 92, 246, 0.15); border: 1.5px solid #8b5cf6; color: #a5b4fc;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
@@ -38,7 +29,18 @@
           </svg>
           Подключиться к голосованию
         </button>
-        {{else}}
+        {{/if}}
+
+        {{#unless isViewer}}
+        <button class="btn btn--primary kanban__action-btn" id="btn-new-task">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Новая задача
+        </button>
+
+        {{#unless pollActive}}
         <button class="btn btn--secondary kanban__action-btn {{#if isSelectionMode}}btn-selection-active{{/if}}" id="btn-start-poll">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -49,7 +51,7 @@
           </svg>
           {{#if isSelectionMode}}Начать голосование{{else}}Оценка задач{{/if}}
         </button>
-        {{/if}}
+        {{/unless}}
 
         <button class="btn btn--secondary kanban__action-btn" id="btn-manage-columns">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

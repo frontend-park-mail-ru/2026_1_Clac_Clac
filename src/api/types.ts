@@ -288,6 +288,17 @@ export interface UpdateCardPointsRequest {
   points: number;
 }
 
+export interface PollTaskData {
+  card_link: string;
+}
+
+export interface GetPollResponse {
+  admin_link: string;
+  current_idx?: number;
+  tasks: PollTaskData[];
+  invitees: string[];
+}
+
 export interface CreatePollRequest {
   card_links: string[];
   invitees: string[];

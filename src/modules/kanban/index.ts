@@ -36,5 +36,6 @@ export const renderKanbanModule = async (
   kanbanStore.on("change", handleStoreChange);
 
   await KanbanActions.fetchKanban(boardId, forceFetch);
+  await KanbanActions.fetchPoll(boardId);
   KanbanActions.connectSSE(boardId);
 };
