@@ -13,7 +13,6 @@ export class KanbanPoll {
   private static selectedVote: number | null = null;
   private static finalScore: number | null = null;
   private static notifiedPollId: string | null = null;
-  private static wasPollModalOpen = false;
 
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
     const poll = state.poll as PollState;
@@ -102,7 +101,7 @@ export class KanbanPoll {
     }
 
     if (state.poll && state.poll.isActive) {
-      if (this.wasPollModalOpen) {
+      if (this.overlay?.isConnected) {
         this.renderActivePoll(appDiv, state);
       }
       const poll = state.poll as PollState;
@@ -117,12 +116,12 @@ export class KanbanPoll {
     }
   }
 
-  private static openStartModal(appDiv: HTMLElement, state: any) {
+  private static openStartModal(_appDiv: HTMLElement, state: any) {
     this.destroyOverlay();
 
     this.overlay = document.createElement("div");
     this.overlay.id = "poll-overlay-container";
-    appDiv.appendChild(this.overlay);
+    document.body.appendChild(this.overlay);
 
     const inviteesSet = new Set<string>();
     const members = state.users;
@@ -193,20 +192,18 @@ export class KanbanPoll {
     });
   }
 
-  private static openActivePollModal(appDiv: HTMLElement, state: any) {
-    this.renderActivePoll(appDiv, state);
+  private static openActivePollModal(_appDiv: HTMLElement, state: any) {
+    this.renderActivePoll(_appDiv, state);
   }
 
-  private static renderActivePoll(appDiv: HTMLElement, state: any) {
+  private static renderActivePoll(_appDiv: HTMLElement, state: any) {
     if (!state.poll) return;
 
     if (!this.overlay || !this.overlay.isConnected) {
       this.overlay = document.createElement("div");
       this.overlay.id = "poll-overlay-container";
-      appDiv.appendChild(this.overlay);
+      document.body.appendChild(this.overlay);
     }
-
-    this.wasPollModalOpen = true;
 
     const poll = state.poll as PollState;
     const userMode = this.computeUserMode(state);
@@ -294,7 +291,7 @@ export class KanbanPoll {
         btn.addEventListener("click", () => {
           const points = parseInt(btn.getAttribute("data-points")!);
           this.selectedVote = points;
-          this.renderActivePoll(appDiv, state);
+          this.renderActivePoll(_appDiv, state);
         });
       });
 
@@ -333,6 +330,7 @@ export class KanbanPoll {
               try {
                 await pollsApi.closePoll(state.boardId!);
                 Toast.success("Голосование досрочно закрыто");
+                this.destroyOverlay();
               } catch {
               Toast.error("Не удалось закрыть комнату");
             }
@@ -347,11 +345,10 @@ export class KanbanPoll {
           btn.addEventListener("click", async () => {
             const points = parseInt(btn.getAttribute("data-points")!);
             this.finalScore = points;
-            this.renderActivePoll(appDiv, state);
+            this.renderActivePoll(_appDiv, state);
 
             try {
               await kanbanApi.updateTaskPoints(cardLink, { points });
-              Toast.success(`Оценка ${points} SP установлена`);
             } catch {
               Toast.error("Не удалось отправить итоговую оценку");
             }
@@ -367,6 +364,7 @@ export class KanbanPoll {
             if (isLastCard) {
               await pollsApi.closePoll(state.boardId!);
               Toast.success("Все задачи оценены!");
+              this.destroyOverlay();
             } else {
               await pollsApi.nextCard(state.boardId!);
             }
@@ -380,7 +378,7 @@ export class KanbanPoll {
     }
   }
 
-  private static showSummaryModal(appDiv: HTMLElement, state: any) {
+  private static showSummaryModal(_appDiv: HTMLElement, state: any) {
     const results = state.lastPollResults as PollState;
     if (!results) return;
 
@@ -406,7 +404,7 @@ export class KanbanPoll {
 
     this.overlay = document.createElement("div");
     this.overlay.id = "poll-overlay-container";
-    appDiv.appendChild(this.overlay);
+    document.body.appendChild(this.overlay);
 
     this.overlay.innerHTML = template({
       isSummaryModal: true,
@@ -433,6 +431,5 @@ export class KanbanPoll {
     }
     this.selectedVote = null;
     this.finalScore = null;
-    this.wasPollModalOpen = false;
   }
 }

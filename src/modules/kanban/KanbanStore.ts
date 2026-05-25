@@ -84,11 +84,11 @@ class KanbanStore extends Store {
     return "Без названия";
   }
 
-  private buildPollState(data: GetPollResponse): PollState {
-    const tasks: PollTask[] = data.tasks.map((t) => ({
+  private buildPollState(data: GetPollResponse, existing?: PollState | null): PollState {
+    const tasks: PollTask[] = data.tasks.map((t, idx) => ({
       cardLink: t.card_link,
       title: this.resolveCardTitle(t.card_link),
-      votes: {},
+      votes: existing?.tasks?.[idx]?.votes ?? {},
     }));
 
     return {
@@ -133,7 +133,7 @@ class KanbanStore extends Store {
 
       case "KANBAN_POLL_FETCHED": {
         const data = action.payload as GetPollResponse;
-        this.state.poll = this.buildPollState(data);
+        this.state.poll = this.buildPollState(data, this.state.poll);
         this.state.isSelectionMode = false;
         this.state.selectedCards = new Set();
         this.emit("change");
