@@ -51,6 +51,12 @@
     font-size: 0.95rem;
     width: auto;
 
+    &#btn-start-poll {
+      width: 220px;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
     &--share {
       background: #252525;
       border: none;

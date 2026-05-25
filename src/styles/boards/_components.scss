@@ -60,6 +60,16 @@
     }
   }
 
+  &--primary-outline {
+    background: transparent;
+    color: var(--primary, #8b5cf6);
+    border: 1px solid var(--primary, #8b5cf6);
+
+    &:hover {
+      background: rgba(139, 92, 246, 0.08);
+    }
+  }
+
   &--create {
     padding: 0.6rem 1.2rem;
     border-radius: 12px;

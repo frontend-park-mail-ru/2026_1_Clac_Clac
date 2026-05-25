@@ -41,7 +41,7 @@
         </button>
 
         {{#unless pollActive}}
-        <button class="btn {{#if isSelectionMode}}btn--primary btn-selection-active{{else}}btn--secondary{{/if}} kanban__action-btn" id="btn-start-poll">
+        <button class="btn {{#if isSelectionMode}}{{#if hasSelectedCards}}btn--primary-outline btn-selection-active{{else}}btn--danger-outline btn-selection-active{{/if}}{{else}}btn--secondary{{/if}} kanban__action-btn" id="btn-start-poll">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <circle cx="8.5" cy="8.5" r="1.5"></circle>
