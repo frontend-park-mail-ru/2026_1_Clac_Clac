@@ -13,12 +13,11 @@ export class KanbanPoll {
   private static overlay: HTMLElement | null = null;
   private static selectedVote: number | null = null;
   private static finalScore: number | null = null;
-  private static myUserLink: string = "";
+  private static dismissed = false;
+  private static lastSeenCardLink: string | null = null;
 
   private static getMyUserLink(): string {
-    if (this.myUserLink) return this.myUserLink;
-    this.myUserLink = currentUser?.link || "";
-    return this.myUserLink;
+    return currentUser?.link || "";
   }
 
   private static computeUserMode(state: any): "admin" | "voter" | "observer" {
@@ -67,6 +66,7 @@ export class KanbanPoll {
     btnConnectPoll?.addEventListener(
       "click",
       () => {
+        this.dismissed = false;
         this.openActivePollModal(appDiv, state);
       },
       { signal },
@@ -108,8 +108,21 @@ export class KanbanPoll {
     }
 
     if (state.poll && state.poll.isActive) {
-      this.renderActivePoll(appDiv, state);
+      const poll = state.poll as PollState;
+      const currentTask = poll.tasks[poll.currentIdx];
+      const currentLink = currentTask?.cardLink || null;
+
+      if (currentLink !== this.lastSeenCardLink) {
+        this.dismissed = false;
+        this.lastSeenCardLink = currentLink;
+      }
+
+      if (!this.dismissed) {
+        this.renderActivePoll(appDiv, state);
+      }
     } else {
+      this.lastSeenCardLink = null;
+      this.dismissed = false;
       this.destroyOverlay();
     }
   }
@@ -278,7 +291,10 @@ export class KanbanPoll {
     this.overlay.innerHTML = template(ctx);
 
     const closeBtn = this.overlay.querySelector("#btn-close-poll-vote");
-    closeBtn?.addEventListener("click", () => this.destroyOverlay());
+    closeBtn?.addEventListener("click", () => {
+      this.dismissed = true;
+      this.destroyOverlay();
+    });
 
     // Voter: deck buttons + submit
     if (userMode === "voter" && myVote === undefined) {
