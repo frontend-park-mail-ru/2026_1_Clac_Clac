@@ -21,6 +21,7 @@ import {
   CreateSubtaskRequest,
   UpdateSubtaskRequest,
   AttachmentResponse,
+  UpdateCardPointsRequest,
 } from "./types";
 
 export const kanbanApi = {
@@ -73,6 +74,12 @@ export const kanbanApi = {
   updateTaskTimeline: (taskLink: string, data: NewTimeLine) =>
     apiClient.patch<BaseResponse, NewTimeLine>(
       `/cards/${taskLink}/timeline`,
+      data,
+    ),
+
+  updateTaskPoints: (taskLink: string, data: UpdateCardPointsRequest) =>
+    apiClient.put<BaseResponse, UpdateCardPointsRequest>(
+      `/cards/${taskLink}/points`,
       data,
     ),
 

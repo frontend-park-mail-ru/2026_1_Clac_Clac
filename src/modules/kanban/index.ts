@@ -10,10 +10,14 @@ const handleStoreChange = (): void => {
 };
 
 export const clearKanbanCache = (): void => {
+  KanbanActions.disconnectSSE();
   kanbanStore.clearCache();
 };
 
-export const renderKanbanModule = async (appDiv: HTMLElement, forceFetch = false): Promise<void> => {
+export const renderKanbanModule = async (
+  appDiv: HTMLElement,
+  forceFetch = false,
+): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const boardId = urlParams.get("id") || urlParams.get("boardId");
 
@@ -32,4 +36,5 @@ export const renderKanbanModule = async (appDiv: HTMLElement, forceFetch = false
   kanbanStore.on("change", handleStoreChange);
 
   await KanbanActions.fetchKanban(boardId, forceFetch);
+  KanbanActions.connectSSE(boardId);
 };

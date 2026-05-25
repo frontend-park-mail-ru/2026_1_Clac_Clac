@@ -39,8 +39,8 @@ export let currentUser: any = null;
 
 const initApp = async () => {
   try {
-    const res = await authApi.checkAuth() as any;
-    currentUser = res?.data || res;
+    const res = await authApi.checkAuth();
+    currentUser = res;
     setIsAuth(true);
   } catch (err) {
     setIsAuth(false);

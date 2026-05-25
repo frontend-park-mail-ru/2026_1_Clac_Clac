@@ -22,6 +22,7 @@ export interface Task {
   progressPercentStyle?: string;
   hasSubtasks?: boolean;
   position: number;
+  points?: number;
 }
 
 export interface Section {
@@ -35,6 +36,16 @@ export interface Section {
   position?: number;
 }
 
+export interface PollState {
+  isActive: boolean;
+  cardLinks: string[];
+  invitees: string[];
+  activeCardLink: string;
+  answers: Record<string, number>;
+  isRevealed: boolean;
+  finalPoints?: number;
+}
+
 export interface KanbanState {
   boardId: string | null;
   boardName: string;
@@ -43,6 +54,9 @@ export interface KanbanState {
   isLoading: boolean;
   error: string | null;
   myRole?: string;
+  poll?: PollState | null;
+  isSelectionMode?: boolean;
+  selectedCards?: Set<string>;
 }
 
 export const KANBAN_COLORS: Record<string, string> = {

@@ -9,6 +9,7 @@ import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
 import { KanbanTaskCreation } from "./components/KanbanTaskCreation";
 import { KanbanColumnManager } from "./components/KanbanColumnManager";
+import { KanbanPoll } from "./components/KanbanPoll";
 import { showConfirmModal } from "../../utils/confirmModal";
 import { Toast } from "../../utils/toast";
 import { KanbanActions } from "./KanbanActions";
@@ -70,11 +71,24 @@ export class KanbanView {
     });
 
     const isViewer = state.myRole === "viewer";
+    const isPollActive = state.poll && state.poll.isActive ? true : false;
+
+    const sectionsWithSelection = state.sections.map((sec) => ({
+      ...sec,
+      tasks: sec.tasks.map((task) => ({
+        ...task,
+        isSelected: state.selectedCards
+          ? state.selectedCards.has(task.id)
+          : false,
+      })),
+    }));
 
     this.appDiv.innerHTML = template({
       board_name: state.boardName,
-      sections: state.sections,
+      sections: sectionsWithSelection,
       isViewer: isViewer,
+      pollActive: isPollActive,
+      isSelectionMode: state.isSelectionMode,
     });
 
     const tabKanban = this.appDiv.querySelector("#tab-view-kanban");
@@ -1544,6 +1558,7 @@ export class KanbanView {
       KanbanContextMenus.bind(this.appDiv, state, signal);
       if (state.myRole !== "viewer") {
         KanbanDragAndDrop.bind(this.appDiv, state.boardId, signal);
+        KanbanPoll.bind(this.appDiv, state, closeModals, signal);
       }
     }
   }

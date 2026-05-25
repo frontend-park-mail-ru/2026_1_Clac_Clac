@@ -19,6 +19,9 @@ class KanbanStore extends Store {
     isLoading: true,
     error: null,
     myRole: "viewer",
+    poll: null,
+    isSelectionMode: false,
+    selectedCards: new Set(),
   };
 
   public getState(): KanbanState {
@@ -30,6 +33,9 @@ class KanbanStore extends Store {
     this.state.sections = [];
     this.state.users = [];
     this.state.myRole = "viewer";
+    this.state.poll = null;
+    this.state.isSelectionMode = false;
+    this.state.selectedCards = new Set();
   }
 
   public updateSubtaskSilently(
@@ -43,8 +49,7 @@ class KanbanStore extends Store {
       if (!task || !task.subtasks) continue;
 
       const subtask = task.subtasks.find((st) => {
-        const id =
-          (st as any).id || (st as any).subtask_link || (st as any).link || "";
+        const id = st.link || "";
         return String(id) === String(subtaskId);
       });
 
@@ -191,6 +196,85 @@ class KanbanStore extends Store {
           }
           if (data.max_tasks) section.max_tasks = data.max_tasks;
           if (data.is_mandatory) section.is_mandatory = data.is_mandatory;
+          this.emit("change");
+        }
+        break;
+      }
+
+      case "KANBAN_SSE_EVENT": {
+        const { type, payload } = action.payload as {
+          type: string;
+          payload: any;
+        };
+        if (!payload || payload.board_link !== this.state.boardId) break;
+
+        switch (type) {
+          case "poll_start":
+            this.state.poll = {
+              isActive: true,
+              cardLinks: payload.card_links || [],
+              invitees: payload.invitees || payload.users || [],
+              activeCardLink: payload.active_card_link || "",
+              answers: {},
+              isRevealed: false,
+            };
+            this.state.isSelectionMode = false;
+            this.state.selectedCards = new Set();
+            this.emit("change");
+            break;
+
+          case "poll_end":
+            this.state.poll = null;
+            this.emit("change");
+            break;
+
+          case "new_answer":
+            if (this.state.poll) {
+              this.state.poll.answers = {
+                ...this.state.poll.answers,
+                [payload.user_link]: payload.points,
+              };
+              this.emit("change");
+            }
+            break;
+
+          case "next_card":
+            if (this.state.poll) {
+              this.state.poll.activeCardLink = payload.active_card_link;
+              this.state.poll.answers = {};
+              this.state.poll.isRevealed = false;
+              this.state.poll.finalPoints = undefined;
+              this.emit("change");
+            }
+            break;
+        }
+        break;
+      }
+
+      case "KANBAN_SET_SELECTION_MODE": {
+        this.state.isSelectionMode = action.payload as boolean;
+        if (!this.state.isSelectionMode) {
+          this.state.selectedCards = new Set();
+        }
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_TOGGLE_CARD_SELECTION": {
+        const cardId = action.payload as string;
+        if (!this.state.selectedCards) this.state.selectedCards = new Set();
+        if (this.state.selectedCards.has(cardId)) {
+          this.state.selectedCards.delete(cardId);
+        } else {
+          this.state.selectedCards.add(cardId);
+        }
+        this.emit("change");
+        break;
+      }
+
+      case "KANBAN_REVEAL_POLL": {
+        if (this.state.poll) {
+          this.state.poll.isRevealed = true;
           this.emit("change");
         }
         break;
