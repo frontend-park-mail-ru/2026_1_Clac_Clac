@@ -6,6 +6,7 @@ export function showConfirmModal(options: {
 }): void {
   const overlay = document.createElement("div");
   overlay.className = "modal__overlay";
+  overlay.style.zIndex = "2010";
   overlay.style.opacity = "0";
   overlay.style.pointerEvents = "auto";
 

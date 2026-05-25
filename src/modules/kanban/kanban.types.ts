@@ -10,6 +10,7 @@ export interface BoardUser {
 export interface Task {
   id: string;
   title: string;
+  description?: string | null;
   due_date: string | null;
   time: string | null;
   executor: string | null;

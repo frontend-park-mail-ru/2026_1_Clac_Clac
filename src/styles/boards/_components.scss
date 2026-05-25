@@ -156,11 +156,14 @@
   }
 
   &__close-btn {
+    cursor: pointer;
+  }
+
+  &__header &__close-btn {
     background: transparent;
     border: none;
     color: #aaa;
     font-size: 1.5rem;
-    cursor: pointer;
     padding: 0;
 
     &:hover {

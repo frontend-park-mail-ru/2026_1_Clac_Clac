@@ -221,6 +221,14 @@ export class KanbanPoll {
 
     const cardLink = currentTask.cardLink;
     const cardTitle = currentTask.title || "Без названия";
+    let cardDescription = "";
+    for (const section of state.sections) {
+      const task = (section.tasks as any[]).find((t: any) => t.id === cardLink);
+      if (task?.description) {
+        cardDescription = task.description;
+        break;
+      }
+    }
     const totalCards = poll.tasks.length;
     const currentCardIndex = poll.currentIdx + 1;
     const totalInvitees = poll.invitees.length;
@@ -277,6 +285,7 @@ export class KanbanPoll {
       currentCardIndex,
       totalCards,
       activeCardTitle: cardTitle,
+      activeCardDescription: cardDescription,
       votedCount,
       totalInvitees,
       inviteesList,

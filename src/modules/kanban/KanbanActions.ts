@@ -250,6 +250,7 @@ export const KanbanActions = {
               return {
                 id: t.link,
                 title: t.title || "Без названия",
+                description: t.description || null,
                 due_date: formattedDate,
                 time: formattedTime,
                 executor: exUser ? exUser.name : "",
