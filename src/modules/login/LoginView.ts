@@ -60,11 +60,11 @@ export class LoginView {
   private initValidation(): void {
     const loginSchema: ValidationSchema = {
       email: [
-        { required: true, message: "Введите адрес электронной почты" },
+        { required: true, message: "Введите email, например, name@domain.com" },
         {
           customValidator: (value: string) =>
-            validateEmail(value) ? null : "Неверный формат email",
-          message: "Неверный формат email",
+            validateEmail(value) ? null : "Неверный email, например, name@domain.com",
+          message: "Неверный email, например, name@domain.com",
         },
       ],
       password: [{ required: true, message: "Введите пароль" }],

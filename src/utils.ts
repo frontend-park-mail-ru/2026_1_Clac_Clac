@@ -97,7 +97,7 @@ export const validatePassword = (password: string): string | null => {
   }
   for (let i = 0; i < password.length; i++) {
     if (password.charCodeAt(i) > 127) {
-      return 'Разрешены только латинские буквы, цифры и спецсимволы';
+      return 'Только латиница, цифры и знаки (!, @, #)';
     }
   }
   return null;
