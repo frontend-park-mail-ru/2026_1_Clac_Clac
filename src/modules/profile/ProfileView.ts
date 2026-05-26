@@ -6,6 +6,7 @@ import { navigateTo } from '../../router';
 import { showConfirmModal } from '../../utils/confirmModal';
 import { UserProfile } from './profile.types';
 import { setInputError } from '../../utils';
+import { Toast } from '../../utils/toast';
 
 const template = Handlebars.compile(profileTpl);
 
@@ -107,8 +108,14 @@ export class ProfileView {
 
     const avatarUpload = document.getElementById('avatar-upload') as HTMLInputElement;
     avatarUpload?.addEventListener('change', (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
       if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          Toast.error("Размер файла не должен превышать 10 МБ");
+          input.value = "";
+          return;
+        }
         ProfileActions.updateAvatar(file);
       }
     });

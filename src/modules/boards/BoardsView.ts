@@ -4,6 +4,7 @@ import { BoardsState } from "./boards.types";
 import { navigateTo } from "../../router";
 import { BoardsActions } from "./BoardsActions";
 import { showConfirmModal } from "../../utils/confirmModal";
+import { Toast } from "../../utils/toast";
 
 const template = Handlebars.compile(boardsTpl);
 
@@ -90,7 +91,7 @@ export class BoardsView {
       if (inputNewBoard) inputNewBoard.value = "";
       if (inputNewBoardDesc) inputNewBoardDesc.value = "";
       if (createImgInput) createImgInput.value = "";
-      if (createImgName) createImgName.textContent = "Изображение доски";
+      if (createImgName) createImgName.textContent = "Изображение доски (макс. 10 МБ)";
       if (newBoardNameLimit) newBoardNameLimit.textContent = "0 / 128";
       if (newBoardDescLimit) newBoardDescLimit.textContent = "0 / 500";
       if (btnConfirmCreate) btnConfirmCreate.disabled = true;
@@ -100,8 +101,17 @@ export class BoardsView {
     this.appDiv.querySelector("#btn-create-board-empty")?.addEventListener("click", openCreateModal, { signal });
 
     createImgInput?.addEventListener("change", (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file && createImgName) createImgName.textContent = file.name;
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          Toast.error("Размер файла не должен превышать 10 МБ");
+          input.value = "";
+          if (createImgName) createImgName.textContent = "Изображение доски (макс. 10 МБ)";
+          return;
+        }
+        if (createImgName) createImgName.textContent = file.name;
+      }
     }, { signal });
 
     inputNewBoard?.addEventListener("input", () => {
@@ -152,8 +162,18 @@ export class BoardsView {
     };
 
     editImgInput?.addEventListener("change", (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file && editImgName) editImgName.textContent = file.name;
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          Toast.error("Размер файла не должен превышать 10 МБ");
+          input.value = "";
+          if (editImgName) editImgName.textContent = "Изображение доски (макс. 10 МБ)";
+          checkEditChanges();
+          return;
+        }
+        if (editImgName) editImgName.textContent = file.name;
+      }
       checkEditChanges();
     }, { signal });
 
@@ -168,7 +188,7 @@ export class BoardsView {
 
         if (editBoardNameInput) editBoardNameInput.value = this.currentBoardName || "";
         if (editImgInput) editImgInput.value = "";
-        if (editImgName) editImgName.textContent = "Изображение доски";
+        if (editImgName) editImgName.textContent = "Изображение доски (макс. 10 МБ)";
         if (btnConfirmEdit) btnConfirmEdit.disabled = true;
 
         modalOverlay?.classList.remove("hidden");

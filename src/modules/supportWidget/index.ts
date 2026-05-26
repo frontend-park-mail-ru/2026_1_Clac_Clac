@@ -135,8 +135,15 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       let selectedFile: File | null = null;
 
       fileInput?.addEventListener('change', (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
         if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            Toast.error("Размер файла не должен превышать 10 МБ");
+            input.value = '';
+            selectedFile = null;
+            return;
+          }
           selectedFile = file;
 
           if (fileName) fileName.textContent = file.name;

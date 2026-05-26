@@ -797,6 +797,11 @@ export class TaskView {
       fileInput.addEventListener("change", async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            Toast.error("Размер файла не должен превышать 10 МБ");
+            fileInput.value = "";
+            return;
+          }
           const state = taskStore.getState();
           if (state.attachments.length >= 5) {
             Toast.error("Максимум 5 файлов на задачу");
