@@ -46,6 +46,17 @@
       color: var(--primary);
     }
 
+    &--disabled {
+      color: #3e3e42;
+      cursor: not-allowed;
+      pointer-events: none;
+
+      &:hover {
+        background-color: transparent;
+        color: #3e3e42;
+      }
+    }
+
     &--logout:hover {
       background-color: #3b1f1f;
       color: var(--text-error);

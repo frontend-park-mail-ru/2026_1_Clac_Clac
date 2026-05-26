@@ -50,6 +50,7 @@ export class BoardsView {
       );
     };
 
+    document.getElementById("nav-logo")?.addEventListener("click", () => navigateTo("/boards"), { signal });
     document.getElementById("nav-profile")?.addEventListener("click", () => navigateTo("/profile"), { signal });
     document.getElementById("logout-btn")?.addEventListener("click", () => {
       showConfirmModal({
