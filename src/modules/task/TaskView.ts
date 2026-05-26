@@ -1074,8 +1074,12 @@ export class TaskView {
       "#task-title-input",
     ) as HTMLInputElement;
     if (saveBtn && titleInput) {
+      titleInput.maxLength = 128;
       saveBtn.disabled = !titleInput.value.trim();
       titleInput.addEventListener("input", () => {
+        if (titleInput.value.length > 128) {
+          titleInput.value = titleInput.value.slice(0, 128);
+        }
         saveBtn.disabled = !titleInput.value.trim();
       });
     }
