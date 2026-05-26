@@ -40,7 +40,7 @@
 
       <div class="task__title-container">
         <input type="text" class="task__title-input {{#if task.is_done}}task__title-input--done{{/if}}" id="task-title-input" value="{{task.title}}"
-          placeholder="Заголовок задачи" maxlength="100" {{#if isViewer}}disabled{{/if}}>
+          placeholder="Название задачи" maxlength="128" {{#if isViewer}}disabled{{/if}}>
       </div>
 
       <div class="task__meta-list">
@@ -115,7 +115,7 @@
         {{#if task.description}}
         <div class="task__description-section">
           <div class="task__description-box">
-            <textarea class="task__description-textarea" id="task-desc-input"
+            <textarea class="task__description-textarea" id="task-desc-input" maxlength="500"
               disabled style="background: transparent; border-color: transparent; padding: 0; resize: none; cursor: default; color: #ccc;">{{task.description}}</textarea>
           </div>
         </div>
@@ -124,10 +124,10 @@
         <div class="task__description-section">
           <div class="task__description-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <span class="task__description-label" style="color: #ccc; font-size: 0.85rem;">Описание</span>
-            <span class="task__char-limit" id="task-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 1000</span>
+            <span class="task__char-limit" id="task-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 500</span>
           </div>
           <div class="task__description-box" style="margin-top: 0; position: relative;">
-            <textarea class="task__description-textarea" id="task-desc-input" maxlength="1000"
+            <textarea class="task__description-textarea" id="task-desc-input" maxlength="500"
               placeholder="Добавить описание...">{{task.description}}</textarea>
             <span class="input-group__error-msg" id="task-desc-input-error"></span>
           </div>
@@ -144,7 +144,7 @@
                 is_done}}checked{{/if}} {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
               <span class="checkmark"></span>
               <input type="text" class="task__subtask-text-input {{#if is_done}}task__subtask-text-input--done{{/if}}"
-                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}" {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
+                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}" maxlength="500" {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
             </label>
             {{#unless ../../isViewer}}
             <button class="icon-btn task__subtask-delete-btn task__subtask-delete-btn-styled" data-id="{{id}}">
@@ -166,7 +166,7 @@
 
         {{#unless isViewer}}
         <div class="task__subtask-add mt-05">
-          <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
+          <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу..." maxlength="500">
           <button class="icon-btn task__subtask-add-btn" id="subtask-add-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -316,15 +316,21 @@
         </div>
       </div>
 
-      <div class="task__comment-input-area">
-        <input type="text" class="task__comment-input" placeholder="Комментарий...">
-        <button class="icon-btn task__comment-send-btn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
+      <div class="task__comment-input-area" style="position: relative; flex-direction: column; align-items: stretch; gap: 0.5rem; border: none; padding: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span style="font-size: 0.85rem; color: #ccc;">Комментарии</span>
+          <span class="task__char-limit" id="task-comment-limit" style="font-size: 0.75rem; color: #666;">0 / 2000</span>
+        </div>
+        <div style="display: flex; align-items: center; width: 100%; border: 1px solid #2a2a2c; border-radius: 8px; padding: 0.5rem 0.75rem; background-color: #1e1e20;">
+          <input type="text" class="task__comment-input" placeholder="Комментарий..." maxlength="2000" style="flex: 1; border: none; background: transparent; color: white; outline: none; margin-right: 0.5rem;">
+          <button class="icon-btn task__comment-send-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
 
     </div>

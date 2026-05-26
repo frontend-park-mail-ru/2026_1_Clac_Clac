@@ -80,12 +80,19 @@ export class BoardsView {
     const createImgInput = this.appDiv.querySelector<HTMLInputElement>("#create-board-image");
     const createImgName = this.appDiv.querySelector<HTMLElement>("#create-board-image-name");
 
+    const inputNewBoardDesc = this.appDiv.querySelector<HTMLTextAreaElement>("#new-board-desc");
+    const newBoardNameLimit = this.appDiv.querySelector<HTMLElement>("#new-board-name-limit");
+    const newBoardDescLimit = this.appDiv.querySelector<HTMLElement>("#new-board-desc-limit");
+
     const openCreateModal = (): void => {
       modalOverlay?.classList.remove("hidden");
       modalCreate?.classList.remove("hidden");
       if (inputNewBoard) inputNewBoard.value = "";
+      if (inputNewBoardDesc) inputNewBoardDesc.value = "";
       if (createImgInput) createImgInput.value = "";
       if (createImgName) createImgName.textContent = "Изображение доски";
+      if (newBoardNameLimit) newBoardNameLimit.textContent = "0 / 128";
+      if (newBoardDescLimit) newBoardDescLimit.textContent = "0 / 500";
       if (btnConfirmCreate) btnConfirmCreate.disabled = true;
     };
 
@@ -99,6 +106,9 @@ export class BoardsView {
 
     inputNewBoard?.addEventListener("input", () => {
       const val = inputNewBoard.value.trim();
+      if (newBoardNameLimit) {
+        newBoardNameLimit.textContent = `${inputNewBoard.value.length} / 128`;
+      }
       if (val) {
         errorNewBoard?.classList.remove("modal__input-error--visible");
         inputNewBoard.classList.remove("modal__input-field--error");
@@ -110,14 +120,21 @@ export class BoardsView {
       }
     }, { signal });
 
+    inputNewBoardDesc?.addEventListener("input", () => {
+      if (newBoardDescLimit) {
+        newBoardDescLimit.textContent = `${inputNewBoardDesc.value.length} / 500`;
+      }
+    }, { signal });
+
     btnConfirmCreate?.addEventListener("click", async () => {
       const name = inputNewBoard?.value.trim();
       if (!name) return;
 
       btnConfirmCreate.disabled = true;
       const file = createImgInput?.files?.[0];
+      const desc = inputNewBoardDesc?.value.trim() || "";
 
-      await BoardsActions.createBoard(name, "Создаём аналог Trello", file);
+      await BoardsActions.createBoard(name, desc, file);
       closeModals();
     }, { signal });
 

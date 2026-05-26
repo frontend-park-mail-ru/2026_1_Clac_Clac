@@ -393,8 +393,12 @@
       <button class="modal__close-btn">×</button>
     </div>
     <div class="modal__body">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <label class="modal__input-label" style="margin-bottom: 0;">Название задачи</label>
+        <span class="modal__char-limit" id="new-task-title-limit" style="font-size: 0.75rem; color: #666;">0 / 128</span>
+      </div>
       <input type="text" id="new-task-title" class="kanban__modal-input" placeholder="Введите название задачи..."
-        autofocus>
+        maxlength="128" autofocus style="margin-bottom: 1rem;">
       <div class="kanban__assignee-block">
         <span class="kanban__assignee-label">Исполнитель:</span>
         <button id="assignee-select-btn" class="assignee__select-btn" type="button">Выбрать...</button>
@@ -418,8 +422,12 @@
     </div>
     <div class="modal__body create-column-form">
       <div class="create-column-form__input-wrap">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="create-column-form__label" style="margin-bottom: 0;">Название колонки</label>
+          <span class="modal__char-limit" id="create-col-name-limit" style="font-size: 0.75rem; color: #666;">0 / 128</span>
+        </div>
         <input type="text" id="create-col-name" class="kanban__modal-input"
-          placeholder="Новая колонка" maxlength="50">
+          placeholder="Новая колонка" maxlength="128">
       </div>
 
       <label class="create-column-form__label">Цвета</label>

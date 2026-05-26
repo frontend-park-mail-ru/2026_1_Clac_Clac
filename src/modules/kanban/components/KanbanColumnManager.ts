@@ -33,6 +33,8 @@ export class KanbanColumnManager {
     const btnCreate = appDiv.querySelector<HTMLButtonElement>("#btn-confirm-create-column");
     let selectedColor = "white";
 
+    const colNameLimit = appDiv.querySelector<HTMLElement>("#create-col-name-limit");
+
     const openCreateColumn = () => {
       closeModals();
       modalOverlay?.classList.remove("hidden");
@@ -40,6 +42,7 @@ export class KanbanColumnManager {
       if (inputName) inputName.value = "";
       if (inputMax) inputMax.value = "";
       if (inputMandatory) inputMandatory.checked = false;
+      if (colNameLimit) colNameLimit.textContent = "0 / 128";
       if (btnCreate) btnCreate.disabled = true;
       setTimeout(() => inputName?.focus(), 100);
     };
@@ -48,6 +51,9 @@ export class KanbanColumnManager {
     appDiv.querySelector("#btn-add-column-modal")?.addEventListener("click", openCreateColumn, { signal });
 
     inputName?.addEventListener("input", () => {
+      if (colNameLimit) {
+        colNameLimit.textContent = `${inputName.value.length} / 128`;
+      }
       if (btnCreate) btnCreate.disabled = !inputName.value.trim();
     }, { signal });
 
@@ -62,10 +68,25 @@ export class KanbanColumnManager {
     btnCreate?.addEventListener("click", () => {
       const name = inputName?.value.trim();
       if (!name) return;
-      const max = parseInt(inputMax?.value || "", 10);
+
+      const maxVal = inputMax?.value.trim() || "";
+      let max = parseInt(maxVal, 10);
+      if (maxVal === "") {
+        max = 100;
+      } else if (isNaN(max)) {
+        max = 100;
+      } else if (max === 0) {
+        max = 100;
+      } else if (max < 0) {
+        Toast.error("Лимит задач не может быть отрицательным");
+        return;
+      } else if (max > 200) {
+        Toast.error("Лимит задач не может быть больше 200");
+        return;
+      }
 
       btnCreate.disabled = true;
-      KanbanActions.createSection(boardId, name, isNaN(max) || max <= 0 ? 100 : max, inputMandatory?.checked || false, selectedColor);
+      KanbanActions.createSection(boardId, name, max, inputMandatory?.checked || false, selectedColor);
       closeModals();
     }, { signal });
   }

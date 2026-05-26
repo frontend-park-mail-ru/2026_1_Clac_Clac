@@ -107,10 +107,20 @@
         <input type="file" id="create-board-image" class="hidden" accept="image/*" />
       </label>
       <div class="input-group modal__input-group">
-        <label class="modal__input-label">Название доски</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="modal__input-label" style="margin-bottom: 0;">Название доски</label>
+          <span class="modal__char-limit" id="new-board-name-limit" style="font-size: 0.75rem; color: #666;">0 / 128</span>
+        </div>
         <input type="text" id="new-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
-          autocomplete="off" />
+          autocomplete="off" maxlength="128" />
         <span class="modal__input-error" id="new-board-name-error">Введите имя доски</span>
+      </div>
+      <div class="input-group modal__input-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="modal__input-label" style="margin-bottom: 0;">Описание доски</label>
+          <span class="modal__char-limit" id="new-board-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 500</span>
+        </div>
+        <textarea id="new-board-desc" class="modal__input-field" placeholder="Введите описание доски..." maxlength="500" style="resize: vertical; min-height: 80px;"></textarea>
       </div>
     </div>
     <button class="btn btn--primary modal__action-btn" id="btn-confirm-create" disabled>Создать</button>
@@ -141,7 +151,7 @@
       <div class="input-group modal__input-group">
         <label class="modal__input-label">Другое название доски</label>
         <input type="text" id="edit-board-name" class="modal__input-field" placeholder="Например, Запуск продукта"
-          autocomplete="off" />
+          autocomplete="off" maxlength="128" />
       </div>
     </div>
     <div class="modal__actions-vertical">

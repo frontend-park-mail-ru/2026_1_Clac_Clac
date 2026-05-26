@@ -24,6 +24,8 @@ export class KanbanTaskCreation {
       btnConfirmCreateTask.disabled = disabled;
     };
 
+    const titleLimit = appDiv.querySelector<HTMLElement>("#new-task-title-limit");
+
     const openCreateModal = (sectionId?: string) => {
       if (state.sections.length === 0) return;
       activeSectionId = sectionId ?? state.sections[0].id;
@@ -32,14 +34,18 @@ export class KanbanTaskCreation {
       modalCreateTask?.classList.remove("hidden");
       if (taskTitleInput) {
         taskTitleInput.value = "";
-        taskTitleInput.focus();
+        setTimeout(() => taskTitleInput.focus(), 100);
       }
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
       selectedAssigneeId = undefined!;
+      if (titleLimit) titleLimit.textContent = "0 / 128";
       setConfirmDisabled(true);
     };
 
     taskTitleInput?.addEventListener("input", () => {
+      if (titleLimit) {
+        titleLimit.textContent = `${taskTitleInput.value.length} / 128`;
+      }
       setConfirmDisabled(!taskTitleInput.value.trim());
     }, { signal });
 
@@ -139,7 +145,7 @@ export class KanbanTaskCreation {
           return;
         }
 
-        parent.innerHTML = `<div class="kanban__add-card-form"><textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea></div>`;
+        parent.innerHTML = `<div class="kanban__add-card-form"><textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="128" autofocus></textarea></div>`;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
         input.focus();
 

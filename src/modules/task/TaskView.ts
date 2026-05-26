@@ -767,13 +767,14 @@ export class TaskView {
     if (descInput) {
       const updateCharLimit = () => {
         if (descLimit) {
-          descLimit.textContent = `${descInput.value.length} / 1000`;
+          descLimit.textContent = `${descInput.value.length} / 500`;
         }
       };
       descInput.addEventListener("input", () => {
         setInputError("task-desc-input", null);
         updateCharLimit();
       });
+      updateCharLimit();
     }
 
     this.taskNode
@@ -1225,11 +1226,23 @@ export class TaskView {
       ".task__comment-send-btn",
     ) as HTMLButtonElement;
 
+    const commentLimit = this.taskNode?.querySelector("#task-comment-limit");
+    if (commentInput) {
+      const updateCommentLimit = () => {
+        if (commentLimit) {
+          commentLimit.textContent = `${commentInput.value.length} / 2000`;
+        }
+      };
+      commentInput.addEventListener("input", updateCommentLimit);
+      updateCommentLimit();
+    }
+
     const submitComment = () => {
       const text = commentInput?.value.trim();
       if (text && state.taskId) {
         this.scrollToNewComment = true;
         commentInput.value = "";
+        if (commentLimit) commentLimit.textContent = "0 / 2000";
         TaskActions.addComment(state.taskId, text);
       }
     };

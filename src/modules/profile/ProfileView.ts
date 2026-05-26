@@ -88,7 +88,7 @@ export class ProfileView {
     const descLimit = document.getElementById('profile-desc-limit');
     const updateCharLimit = () => {
       if (descInput && descLimit) {
-        descLimit.textContent = `${descInput.value.length} / 1000`;
+        descLimit.textContent = `${descInput.value.length} / 500`;
       }
     };
     updateCharLimit();
