@@ -166,7 +166,15 @@ export const KanbanActions = {
             .map((t) => {
               const exId = t.executor_link;
               const exUser = users.find((u) => u.id === exId);
-              const dl = t.deadline;
+              const dl =
+                (t as any).dead_line ||
+                (t as any).data_dead_line ||
+                t.deadline;
+              const startVal =
+                t.start ||
+                (t as any).start_date ||
+                (t as any).data_start ||
+                null;
 
               const isDone = t.status === true || false;
 
@@ -253,7 +261,7 @@ export const KanbanActions = {
                 hasSubtasks,
                 position: t.position,
                 is_done: isDone,
-                start: t.start || null,
+                start: startVal,
                 deadline: dl || null,
                 points: t.points,
               };

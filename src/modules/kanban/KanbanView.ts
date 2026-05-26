@@ -539,7 +539,10 @@ export class KanbanView {
         const rawStart = parseDate((task as any).start);
         const rawEnd = parseDate((task as any).deadline);
 
-        const end = rawEnd || rawStart || new Date();
+        const end =
+          rawEnd ||
+          (rawStart ? new Date(rawStart.getTime() + 4 * 86400000) : null) ||
+          new Date();
         const start = rawStart || new Date(end.getTime() - 4 * 86400000);
 
         const taskOverlaps =

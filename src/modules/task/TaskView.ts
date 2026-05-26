@@ -881,6 +881,11 @@ export class TaskView {
           description: description,
           executor_link: this.currentExecuterId || null,
           deadline: finalDeadline,
+          start:
+            (state.taskData as any)?.start ||
+            (state.taskData as any)?.start_date ||
+            (state.taskData as any)?.data_start ||
+            null,
           max_tasks: state.taskData?.max_tasks || 100,
         };
 
