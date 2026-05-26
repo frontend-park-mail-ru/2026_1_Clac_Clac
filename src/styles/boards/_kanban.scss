@@ -170,6 +170,14 @@
     gap: 0.6rem;
     font-size: 1.15rem;
     font-weight: 600;
+    min-width: 0;
+  }
+
+  &__column-title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
   &__col-dot {
@@ -177,6 +185,7 @@
     height: 12px;
     border-radius: 50%;
     display: inline-block;
+    flex-shrink: 0;
   }
 
   &__btn-col-options {

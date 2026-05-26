@@ -717,6 +717,7 @@ a {
         padding: 0.75rem 1.25rem;
         border-radius: 12px;
         gap: 1rem;
+        min-width: 0;
     }
 
     &__left {
@@ -724,6 +725,7 @@ a {
         align-items: center;
         gap: 0.75rem;
         flex: 1;
+        min-width: 0;
     }
 
     &__dot {
@@ -754,6 +756,7 @@ a {
         font-weight: 500;
         outline: none;
         width: 100%;
+        min-width: 0;
 
         &::placeholder {
             color: #666;
