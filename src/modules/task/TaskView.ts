@@ -718,8 +718,9 @@ export class TaskView {
       const num = document.createElement("div");
       num.className =
         "time-picker__num" +
-        (idx === selectedIdx ? " time-picker__num--selected" : "");
-      num.textContent = val === 0 ? "-" : String(val);
+        (idx === selectedIdx ? " time-picker__num--selected" : "") +
+        (val === 0 ? " time-picker__num--dash" : "");
+      num.textContent = val === 0 ? "—" : String(val);
       num.dataset.value = String(val);
       num.addEventListener("click", () => {
         scroll
