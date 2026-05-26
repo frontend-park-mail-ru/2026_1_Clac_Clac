@@ -710,15 +710,16 @@ export class TaskView {
     const scroll = document.createElement("div");
     scroll.className = "time-picker__scroll";
 
-    const values = [1, 2, 3, 5, 8, 13, 21];
-    const selectedIdx = values.indexOf(currentPoints) !== -1 ? values.indexOf(currentPoints) : 0;
+    const values = [0, 1, 2, 3, 5, 8, 13, 21];
+    const normalizedPoints = currentPoints || 0;
+    const selectedIdx = values.indexOf(normalizedPoints) !== -1 ? values.indexOf(normalizedPoints) : 0;
 
     values.forEach((val, idx) => {
       const num = document.createElement("div");
       num.className =
         "time-picker__num" +
         (idx === selectedIdx ? " time-picker__num--selected" : "");
-      num.textContent = String(val);
+      num.textContent = val === 0 ? "-" : String(val);
       num.dataset.value = String(val);
       num.addEventListener("click", () => {
         scroll
@@ -994,7 +995,7 @@ export class TaskView {
 
     const commitPointsPicker = (pickerEl: Element, inputEl: HTMLInputElement) => {
       const selected = pickerEl.querySelector(".time-picker__num--selected") as HTMLElement;
-      const val = selected?.dataset.value ?? "1";
+      const val = selected?.dataset.value ?? "0";
       inputEl.value = val;
       this.updatePointsBtn(parseInt(val));
       pickerEl.remove();

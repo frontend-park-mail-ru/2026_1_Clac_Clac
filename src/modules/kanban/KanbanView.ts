@@ -77,10 +77,11 @@ export class KanbanView {
       ...sec,
       tasks: sec.tasks.map((task) => {
         let pointsColor = "";
-        if (task.points !== undefined && task.points !== null) {
-          if (task.points <= 8) {
+        const pointsSet = task.points !== undefined && task.points !== null && task.points !== 0;
+        if (pointsSet) {
+          if (task.points! <= 8) {
             pointsColor = "#a78bfa";
-          } else if (task.points <= 13) {
+          } else if (task.points! <= 13) {
             pointsColor = "#fb923c";
           } else {
             pointsColor = "#ff6b6b";
@@ -88,7 +89,7 @@ export class KanbanView {
         }
         return {
           ...task,
-          hasPoints: task.points !== undefined && task.points !== null,
+          hasPoints: pointsSet,
           pointsColor,
           isSelected: state.selectedCards
             ? state.selectedCards.has(task.id)
