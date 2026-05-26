@@ -373,16 +373,10 @@ export class KanbanPoll {
         // Final score deck
         const deckBtns = this.overlay.querySelectorAll(".poll-deck-btn");
         deckBtns.forEach((btn) => {
-          btn.addEventListener("click", async () => {
+          btn.addEventListener("click", () => {
             const points = parseInt(btn.getAttribute("data-points")!);
             this.finalScore = points;
             this.renderActivePoll(_appDiv, state);
-
-            try {
-              await kanbanApi.updateTaskPoints(cardLink, { points });
-            } catch {
-              Toast.error("Не удалось отправить итоговую оценку");
-            }
           });
         });
 
@@ -392,6 +386,10 @@ export class KanbanPoll {
         nextBtn?.addEventListener("click", async () => {
           nextBtn.disabled = true;
           try {
+            if (this.finalScore !== null) {
+              await kanbanApi.updateTaskPoints(cardLink, { points: this.finalScore });
+            }
+
             if (isLastCard) {
               await pollsApi.closePoll(state.boardId!);
               this.destroyOverlay();
@@ -402,7 +400,7 @@ export class KanbanPoll {
             }
             this.finalScore = null;
           } catch {
-            Toast.error("Ошибка переключения на следующую задачу");
+            Toast.error("Ошибка при сохранении оценки или переходе");
             nextBtn.disabled = false;
           }
         });

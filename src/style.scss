@@ -1600,3 +1600,9 @@ a {
     align-items: center;
     margin-top: 20px;
 }
+
+.poll-deck-btn {
+    &:hover:not(:disabled) {
+        background-color: rgba(139, 92, 246, 0.15) !important;
+    }
+}
