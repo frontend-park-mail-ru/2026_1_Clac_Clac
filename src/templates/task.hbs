@@ -122,9 +122,14 @@
         {{/if}}
       {{else}}
         <div class="task__description-section">
-          <div class="task__description-box">
-            <textarea class="task__description-textarea" id="task-desc-input"
+          <div class="task__description-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span class="task__description-label" style="color: #ccc; font-size: 0.85rem;">Описание</span>
+            <span class="task__char-limit" id="task-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 1000</span>
+          </div>
+          <div class="task__description-box" style="margin-top: 0; position: relative;">
+            <textarea class="task__description-textarea" id="task-desc-input" maxlength="1000"
               placeholder="Добавить описание...">{{task.description}}</textarea>
+            <span class="input-group__error-msg" id="task-desc-input-error"></span>
           </div>
         </div>
       {{/if}}

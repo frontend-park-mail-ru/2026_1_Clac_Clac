@@ -284,9 +284,23 @@ export const TaskActions = {
       appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_SUCCESS });
     } catch (err: any) {
       console.error("Save task error", err);
+      let errorMsg = "Ошибка при сохранении";
+      if (err?.status === 400) {
+        errorMsg = "Превышен лимит символов или неверный формат";
+      } else if (err?.status === 403) {
+        errorMsg = "Отказано в доступе";
+      } else if (err?.status === 404) {
+        errorMsg = "Задача не найдена";
+      } else if (err?.status === 409) {
+        errorMsg = "Конфликт при сохранении задачи";
+      } else if (err?.status === 429) {
+        errorMsg = "Слишком много запросов, попробуйте позже";
+      } else if (err?.status === 500) {
+        errorMsg = "Ошибка сервера, попробуйте позже";
+      }
       appDispatcher.dispatch({
         type: TaskActionTypes.SAVE_TASK_ERROR,
-        payload: { error: "Ошибка при сохранении" },
+        payload: { error: errorMsg },
       });
     }
   },

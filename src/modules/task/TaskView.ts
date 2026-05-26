@@ -7,6 +7,7 @@ import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { clearKanbanCache } from "../../modules/kanban";
 import { showConfirmModal } from "../../utils/confirmModal";
+import { setInputError } from "../../utils";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -133,6 +134,9 @@ export class TaskView {
   private onStoreError() {
     const state = taskStore.getState();
     Toast.error(state.error || "Произошла ошибка");
+    if (state.error) {
+      setInputError("task-desc-input", state.error);
+    }
 
     const btnSave = this.taskNode?.querySelector(
       "#btn-save-task",
@@ -412,6 +416,12 @@ export class TaskView {
       ) as HTMLInputElement;
       if (el) el.value = val;
     });
+
+    const descInput = this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement;
+    const descLimit = this.taskNode.querySelector("#task-desc-limit");
+    if (descInput && descLimit) {
+      descLimit.textContent = `${descInput.value.length} / 1000`;
+    }
 
     this.attachListeners();
   }
@@ -751,6 +761,20 @@ export class TaskView {
 
   private attachListeners() {
     const state = taskStore.getState();
+
+    const descInput = this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement;
+    const descLimit = this.taskNode?.querySelector("#task-desc-limit");
+    if (descInput) {
+      const updateCharLimit = () => {
+        if (descLimit) {
+          descLimit.textContent = `${descInput.value.length} / 1000`;
+        }
+      };
+      descInput.addEventListener("input", () => {
+        setInputError("task-desc-input", null);
+        updateCharLimit();
+      });
+    }
 
     this.taskNode
       ?.querySelector("#btn-toggle-task-status")

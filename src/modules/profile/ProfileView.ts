@@ -5,6 +5,7 @@ import { ProfileActions } from './ProfileActions';
 import { navigateTo } from '../../router';
 import { showConfirmModal } from '../../utils/confirmModal';
 import { UserProfile } from './profile.types';
+import { setInputError } from '../../utils';
 
 const template = Handlebars.compile(profileTpl);
 
@@ -84,8 +85,20 @@ export class ProfileView {
       }
     };
 
+    const descLimit = document.getElementById('profile-desc-limit');
+    const updateCharLimit = () => {
+      if (descInput && descLimit) {
+        descLimit.textContent = `${descInput.value.length} / 1000`;
+      }
+    };
+    updateCharLimit();
+
     nameInput?.addEventListener('input', checkChanges);
-    descInput?.addEventListener('input', checkChanges);
+    descInput?.addEventListener('input', () => {
+      setInputError('profile-desc', null);
+      updateCharLimit();
+      checkChanges();
+    });
 
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -162,6 +175,12 @@ export class ProfileView {
         modalOverlay.classList.add('hidden');
         modalDelete.classList.add('hidden');
       }
+    }
+
+    if (state.error) {
+      setInputError('profile-desc', state.error);
+    } else {
+      setInputError('profile-desc', null);
     }
   }
 }

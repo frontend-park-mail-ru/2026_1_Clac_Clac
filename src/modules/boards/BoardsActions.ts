@@ -23,7 +23,7 @@ interface TaskRaw {
 const bgUploadErrorMessage = (status: number): string => {
   if (status === 413) return "Изображение слишком большое";
   if (status === 415) return "Неверный формат изображения";
-  return "Неверный формат изображения";
+  return "Не удалось загрузить фоновое изображение";
 };
 
 const handleLogoutAndRedirect = (): void => {
@@ -161,9 +161,23 @@ export const BoardsActions = {
       });
     } catch (err: unknown) {
       const error = err as ApiError;
+      let errorMsg = "Ошибка загрузки досок";
+      if (error.status === 400) {
+        errorMsg = "Некорректный запрос";
+      } else if (error.status === 403) {
+        errorMsg = "Отказано в доступе";
+      } else if (error.status === 404) {
+        errorMsg = "Доска не найдена";
+      } else if (error.status === 409) {
+        errorMsg = "Конфликт данных при загрузке досок";
+      } else if (error.status === 429) {
+        errorMsg = "Слишком много запросов, попробуйте позже";
+      } else if (error.status === 500) {
+        errorMsg = "Ошибка сервера, попробуйте позже";
+      }
       appDispatcher.dispatch({
         type: "FETCH_BOARDS_ERROR",
-        payload: { error: error.message || "Ошибка загрузки досок" },
+        payload: { error: errorMsg },
       });
 
       if (error.status === 401) {

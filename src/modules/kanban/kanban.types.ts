@@ -80,9 +80,12 @@ export const KANBAN_COLORS: Record<string, string> = {
   pink: "#f9a8d4",
 };
 
-export interface ApiError extends Error {
+export interface ApiError {
   status: number;
-  data: { message: string; error: string };
+  data?: {
+    message?: string;
+    error?: string;
+  } | null;
 }
 
 export interface RawUser {

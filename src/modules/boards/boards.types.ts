@@ -45,8 +45,12 @@ export interface CreateBoardResponse {
   };
 }
 
-export interface ApiError extends Error {
+export interface ApiError {
   status: number;
+  data?: {
+    message?: string;
+    error?: string;
+  } | null;
 }
 
 export interface FetchBoardsSuccessPayload {
