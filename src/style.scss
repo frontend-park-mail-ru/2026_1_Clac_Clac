@@ -1602,7 +1602,11 @@ a {
 }
 
 .poll-deck-btn {
-    &:hover:not(:disabled) {
+    &:hover:not(:disabled):not(.poll-deck-btn--active) {
         background-color: rgba(139, 92, 246, 0.15) !important;
+    }
+    
+    &--active:hover:not(:disabled) {
+        background-color: var(--primary-hover, #7c3aed) !important;
     }
 }

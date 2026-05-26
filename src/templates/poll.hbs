@@ -142,7 +142,7 @@
           <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Итоговая оценка:</p>
           <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
             {{#each deck}}
-            <button class="btn poll-deck-btn" 
+            <button class="btn poll-deck-btn {{#if (eq ../finalScore this)}}poll-deck-btn--active{{/if}}" 
               data-points="{{this}}" 
               style="
                 width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
@@ -175,7 +175,7 @@
           <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Ваша оценка:</p>
           <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
             {{#each deck}}
-            <button class="btn poll-deck-btn" 
+            <button class="btn poll-deck-btn {{#if (eq ../selectedVote this)}}poll-deck-btn--active{{/if}}" 
               data-points="{{this}}" 
               style="
                 width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
