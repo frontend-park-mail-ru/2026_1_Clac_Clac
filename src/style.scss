@@ -657,6 +657,27 @@ a {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
+
+        .modal__close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            &:hover {
+                color: white;
+            }
+        }
     }
 
     &__title {
@@ -753,6 +774,11 @@ a {
         align-items: center;
         transition: opacity 0.2s;
 
+        svg {
+            width: 22px;
+            height: 22px;
+        }
+
         &:hover {
             opacity: 0.8;
             color: #ff5c5c;
@@ -764,6 +790,7 @@ a {
         cursor: grab;
         display: flex;
         align-items: center;
+        font-size: 1.5rem;
     }
 
     &__add-btn {
