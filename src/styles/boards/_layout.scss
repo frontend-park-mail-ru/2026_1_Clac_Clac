@@ -56,6 +56,13 @@
         background-color: transparent;
         color: #3e3e42;
       }
+
+      &.sidebar__icon--active {
+        color: var(--primary);
+        &:hover {
+          color: var(--primary);
+        }
+      }
     }
 
     &--logout:hover {
