@@ -24,6 +24,7 @@ export interface Task {
   hasSubtasks?: boolean;
   position: number;
   points?: number;
+  pointsColor?: string;
 }
 
 export interface Section {

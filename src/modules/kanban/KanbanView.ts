@@ -75,13 +75,26 @@ export class KanbanView {
 
     const sectionsWithSelection = state.sections.map((sec) => ({
       ...sec,
-      tasks: sec.tasks.map((task) => ({
-        ...task,
-        hasPoints: task.points !== undefined && task.points !== null,
-        isSelected: state.selectedCards
-          ? state.selectedCards.has(task.id)
-          : false,
-      })),
+      tasks: sec.tasks.map((task) => {
+        let pointsColor = "";
+        if (task.points !== undefined && task.points !== null) {
+          if (task.points <= 8) {
+            pointsColor = "#a78bfa";
+          } else if (task.points <= 13) {
+            pointsColor = "#fb923c";
+          } else {
+            pointsColor = "#ff6b6b";
+          }
+        }
+        return {
+          ...task,
+          hasPoints: task.points !== undefined && task.points !== null,
+          pointsColor,
+          isSelected: state.selectedCards
+            ? state.selectedCards.has(task.id)
+            : false,
+        };
+      }),
     }));
 
     const hasSelectedCards = state.selectedCards && state.selectedCards.size > 0;
