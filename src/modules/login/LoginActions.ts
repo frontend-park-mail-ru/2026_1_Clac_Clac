@@ -70,7 +70,9 @@ export const LoginActions = {
       const e = err as any;
       const httpStatus = e?.status;
       const bodyCode = e?.data?.code;
-      const isCredentialsError = httpStatus === 404 || bodyCode === 404;
+      const isCredentialsError =
+        [400, 401, 403, 404].includes(httpStatus) ||
+        [400, 401, 403, 404].includes(bodyCode);
 
       if (isCredentialsError) {
         appDispatcher.dispatch({
