@@ -3,7 +3,7 @@ import kanbanTpl from "../../templates/kanban.hbs?raw";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
 import { authApi, boardsApi, kanbanApi } from "../../api";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 
 import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
@@ -1379,7 +1379,7 @@ export class KanbanView {
             listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1.5rem; font-size: 0.9rem;">Загрузка участников...</div>`;
           }
           try {
-            myEmail = (currentUser?.email || "").toLowerCase().trim();
+            myEmail = (getCurrentUser()?.email || "").toLowerCase().trim();
 
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;

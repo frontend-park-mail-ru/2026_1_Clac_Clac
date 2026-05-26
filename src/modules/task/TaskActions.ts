@@ -10,7 +10,7 @@ import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
 import { clearKanbanCache } from "../kanban";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -257,7 +257,7 @@ export const TaskActions = {
         throw new Error("Задача не найдена");
       }
 
-      currentUserLink = currentUser?.link || null;
+      currentUserLink = getCurrentUser()?.link || null;
 
       const comments = await fetchAndProcessComments(taskId, usersList);
 

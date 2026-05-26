@@ -37,6 +37,8 @@ initGlobalListeners();
 
 export let currentUser: any = null;
 
+export const getCurrentUser = () => currentUser;
+
 export const setCurrentUser = (val: any) => {
   currentUser = val;
 };

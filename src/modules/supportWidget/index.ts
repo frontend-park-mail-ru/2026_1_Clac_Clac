@@ -3,7 +3,7 @@ import { supportApi } from "../../api";
 import Handlebars from "handlebars";
 import widgetTpl from "../../templates/support_widget.hbs?raw";
 import { Store } from "../../core/Store";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 import { validateEmail } from "../../utils";
 import { Toast } from "../../utils/toast";
 
@@ -96,7 +96,7 @@ document.addEventListener('click', (e) => {
 
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template({ ...store.getState(), user: currentUser });
+    appDiv.innerHTML = template({ ...store.getState(), user: getCurrentUser() });
 
     appDiv.querySelector('#sw-btn-create')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'create' } });

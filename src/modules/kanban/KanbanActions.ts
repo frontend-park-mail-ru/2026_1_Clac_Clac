@@ -3,7 +3,7 @@ import { boardsApi, kanbanApi, pollsApi, API_URL, SectionInfo } from "../../api"
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 import {
   BoardUser,
   Section,
@@ -120,7 +120,7 @@ export const KanbanActions = {
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
 
-      const myEmail = (currentUser?.email || "").toLowerCase().trim();
+      const myEmail = (getCurrentUser()?.email || "").toLowerCase().trim();
 
       const myMember = usersRes.data.members.find(
         (m) => m.email.toLowerCase().trim() === myEmail,
