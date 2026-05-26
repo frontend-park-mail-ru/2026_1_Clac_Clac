@@ -172,6 +172,7 @@ export const KanbanActions = {
                 t.deadline;
               const startVal =
                 t.start ||
+                (t as any).Start ||
                 (t as any).start_date ||
                 (t as any).data_start ||
                 null;

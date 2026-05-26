@@ -883,6 +883,7 @@ export class TaskView {
           deadline: finalDeadline,
           start:
             (state.taskData as any)?.start ||
+            (state.taskData as any)?.Start ||
             (state.taskData as any)?.start_date ||
             (state.taskData as any)?.data_start ||
             null,
