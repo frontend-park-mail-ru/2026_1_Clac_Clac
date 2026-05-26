@@ -102,6 +102,15 @@ export class KanbanPoll {
     }
 
     if (state.lastPollResults) {
+      const results = state.lastPollResults as PollState;
+      const myLink = state.myLink as string;
+      const isVoter = myLink && results.invitees.includes(myLink);
+
+      if (!isVoter) {
+        appDispatcher.dispatch({ type: "KANBAN_POLL_CLEAR" });
+        return;
+      }
+
       this.showSummaryModal(appDiv, state);
       return;
     }
@@ -416,32 +425,12 @@ export class KanbanPoll {
 
     this.destroyOverlay();
 
-    const tasksSummary = results.tasks.map((t) => {
-      const votes = Object.values(t.votes);
-      const avg =
-        votes.length > 0
-          ? parseFloat(
-              (
-                votes.reduce((a, b) => a + b, 0) / votes.length
-              ).toFixed(1),
-            )
-          : 0;
-      return {
-        title: t.title,
-        average: avg,
-        voteCount: votes.length,
-        totalInvitees: results.invitees.length,
-      };
-    });
-
     this.overlay = document.createElement("div");
     this.overlay.id = "poll-overlay-container";
     document.body.appendChild(this.overlay);
 
     this.overlay.innerHTML = template({
       isSummaryModal: true,
-      tasksSummary,
-      totalTasks: tasksSummary.length,
     });
 
     const closeBtn = this.overlay.querySelector("#btn-close-poll-summary");
