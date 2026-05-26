@@ -1,6 +1,7 @@
 import { KanbanActions } from "../KanbanActions";
 import { KanbanState, Section } from "../kanban.types";
 import { Toast } from "../../../utils/toast";
+import { showConfirmModal } from "../../../utils/confirmModal";
 
 export class KanbanColumnManager {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
@@ -189,10 +190,18 @@ export class KanbanColumnManager {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-id")!;
         if (sections[0]?.id === id) return Toast.error("Нельзя удалять бэклог");
-        KanbanActions.deleteSection(boardId, id);
+        const sectionName = btn.getAttribute("data-name") || "";
 
-        document.querySelector("#modal-manage-columns")?.classList.add("hidden");
-        document.querySelector("#modal-overlay")?.classList.add("hidden");
+        showConfirmModal({
+          title: "Удалить колонку",
+          text: `Вы уверены, что хотите удалить колонку "${sectionName}"? Все её задачи будут автоматически перенесены в бэклог.`,
+          confirmLabel: "Удалить",
+          onConfirm: () => {
+            KanbanActions.deleteSection(boardId, id);
+            document.querySelector("#modal-manage-columns")?.classList.add("hidden");
+            document.querySelector("#modal-overlay")?.classList.add("hidden");
+          },
+        });
       });
     });
   }

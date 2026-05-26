@@ -216,6 +216,19 @@ class KanbanStore extends Store {
 
       case "KANBAN_DELETE_SECTION_SUCCESS": {
         const payload = action.payload as { sectionId: string };
+        const deletedSection = this.state.sections.find(
+          (s) => s.id === payload.sectionId,
+        );
+        if (
+          deletedSection &&
+          deletedSection.tasks &&
+          deletedSection.tasks.length > 0
+        ) {
+          const backlog = this.state.sections[0];
+          if (backlog) {
+            backlog.tasks = [...backlog.tasks, ...deletedSection.tasks];
+          }
+        }
         this.state.sections = this.state.sections.filter(
           (s) => s.id !== payload.sectionId,
         );
