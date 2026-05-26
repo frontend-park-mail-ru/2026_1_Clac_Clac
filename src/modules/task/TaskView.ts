@@ -458,7 +458,7 @@ export class TaskView {
       "#task-points-btn",
     ) as HTMLButtonElement;
     if (!btn) return;
-    btn.textContent = pointsVal > 0 ? `${pointsVal} SP` : "Без оценки";
+    btn.textContent = pointsVal > 0 ? String(pointsVal) : "Без оценки";
   }
 
   private buildDatePicker(
@@ -710,7 +710,7 @@ export class TaskView {
     const scroll = document.createElement("div");
     scroll.className = "time-picker__scroll";
 
-    const values = [0, 1, 2, 3, 5, 8, 13, 21];
+    const values = [1, 2, 3, 5, 8, 13, 21];
     const selectedIdx = values.indexOf(currentPoints) !== -1 ? values.indexOf(currentPoints) : 0;
 
     values.forEach((val, idx) => {
@@ -718,7 +718,7 @@ export class TaskView {
       num.className =
         "time-picker__num" +
         (idx === selectedIdx ? " time-picker__num--selected" : "");
-      num.textContent = val === 0 ? "—" : String(val);
+      num.textContent = String(val);
       num.dataset.value = String(val);
       num.addEventListener("click", () => {
         scroll
@@ -994,7 +994,7 @@ export class TaskView {
 
     const commitPointsPicker = (pickerEl: Element, inputEl: HTMLInputElement) => {
       const selected = pickerEl.querySelector(".time-picker__num--selected") as HTMLElement;
-      const val = selected?.dataset.value ?? "0";
+      const val = selected?.dataset.value ?? "1";
       inputEl.value = val;
       this.updatePointsBtn(parseInt(val));
       pickerEl.remove();

@@ -104,9 +104,9 @@
           </svg>
           <span class="task__meta-label">Сложность:</span>
           <button class="task__meta-value-btn" id="task-points-btn" type="button" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
-            {{#if task.points}}{{task.points}} SP{{else}}Без оценки{{/if}}
+            {{#if task.points}}{{task.points}}{{else}}Без оценки{{/if}}
           </button>
-          <input type="hidden" id="task-points-input" value="{{#if task.points}}{{task.points}}{{else}}0{{/if}}">
+          <input type="hidden" id="task-points-input" value="{{#if task.points}}{{task.points}}{{else}}1{{/if}}">
         </div>
         {{/if}}
       </div>
