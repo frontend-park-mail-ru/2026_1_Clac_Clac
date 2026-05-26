@@ -183,6 +183,9 @@ export class TaskView {
       time: (
         this.taskNode?.querySelector("#task-time-input") as HTMLInputElement
       )?.value,
+      points: (
+        this.taskNode?.querySelector("#task-points-input") as HTMLInputElement
+      )?.value,
       subtask: (
         this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement
       )?.value,
@@ -310,10 +313,14 @@ export class TaskView {
       };
     });
 
+    const myRole = kanbanState.myRole || "viewer";
+    const canEditComplexity = myRole === "admin" || myRole === "owner" || myRole === "creator";
+
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
       isViewer: isViewer,
+      canEditComplexity,
       task: {
         title: taskData.title || "Без названия",
         description: taskData.description || "",
@@ -327,6 +334,7 @@ export class TaskView {
         executor_id: this.currentExecuterId,
         subtasks: formattedSubtasks,
         is_done: isDone,
+        points: taskData.points,
       },
       comments: state.comments,
       attachments: formattedAttachments,
@@ -353,6 +361,13 @@ export class TaskView {
         this.taskNode.querySelector("#task-time-input") as HTMLInputElement
       ).value = currentValues.time;
       this.updateTimeBtn(currentValues.time);
+    }
+    if (currentValues.points !== undefined) {
+      const pointsInput = this.taskNode.querySelector("#task-points-input") as HTMLInputElement;
+      if (pointsInput) {
+        pointsInput.value = currentValues.points;
+        this.updatePointsBtn(parseInt(currentValues.points));
+      }
     }
     if (currentValues.subtask !== undefined)
       (
@@ -436,6 +451,14 @@ export class TaskView {
     ) as HTMLButtonElement;
     if (!btn) return;
     btn.textContent = timeVal || "Не задано";
+  }
+
+  private updatePointsBtn(pointsVal: number) {
+    const btn = this.taskNode?.querySelector(
+      "#task-points-btn",
+    ) as HTMLButtonElement;
+    if (!btn) return;
+    btn.textContent = pointsVal > 0 ? `${pointsVal} SP` : "Без оценки";
   }
 
   private buildDatePicker(
@@ -649,6 +672,82 @@ export class TaskView {
     return picker;
   }
 
+  private buildPointsPicker(currentPoints: number): HTMLElement {
+    const picker = document.createElement("div");
+    picker.className = "time-picker";
+    picker.style.minWidth = "120px";
+
+    const updateSelectedByScroll = (scroll: HTMLElement) => {
+      const scrollRect = scroll.getBoundingClientRect();
+      const center = scrollRect.top + scrollRect.height / 2;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+      scroll
+        .querySelectorAll<HTMLElement>(".time-picker__num")
+        .forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const dist = Math.abs(rect.top + rect.height / 2 - center);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = el;
+          }
+        });
+      scroll
+        .querySelectorAll(".time-picker__num")
+        .forEach((el) => el.classList.remove("time-picker__num--selected"));
+      (closest as HTMLElement | null)?.classList.add(
+        "time-picker__num--selected",
+      );
+    };
+
+    const col = document.createElement("div");
+    col.className = "time-picker__col";
+    const labelEl = document.createElement("div");
+    labelEl.className = "time-picker__col-label";
+    labelEl.textContent = "Сложность";
+    col.appendChild(labelEl);
+
+    const scroll = document.createElement("div");
+    scroll.className = "time-picker__scroll";
+
+    const values = [0, 1, 2, 3, 5, 8, 13, 21];
+    const selectedIdx = values.indexOf(currentPoints) !== -1 ? values.indexOf(currentPoints) : 0;
+
+    values.forEach((val, idx) => {
+      const num = document.createElement("div");
+      num.className =
+        "time-picker__num" +
+        (idx === selectedIdx ? " time-picker__num--selected" : "");
+      num.textContent = val === 0 ? "—" : String(val);
+      num.dataset.value = String(val);
+      num.addEventListener("click", () => {
+        scroll
+          .querySelectorAll(".time-picker__num")
+          .forEach((el) => el.classList.remove("time-picker__num--selected"));
+        num.classList.add("time-picker__num--selected");
+        num.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+      scroll.appendChild(num);
+    });
+
+    let scrollTimer: ReturnType<typeof setTimeout>;
+    scroll.addEventListener("scroll", () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 200);
+    });
+
+    col.appendChild(scroll);
+    picker.appendChild(col);
+
+    setTimeout(() => {
+      scroll
+        .querySelector(".time-picker__num--selected")
+        ?.scrollIntoView({ block: "center" });
+    }, 0);
+
+    return picker;
+  }
+
   private attachListeners() {
     const state = taskStore.getState();
 
@@ -755,7 +854,9 @@ export class TaskView {
         };
 
         if (state.taskId) {
-          TaskActions.saveTask(state.taskId, payload);
+          const pointsInput = this.taskNode?.querySelector("#task-points-input") as HTMLInputElement;
+          const points = pointsInput ? parseInt(pointsInput.value || "0") : null;
+          TaskActions.saveTask(state.taskId, payload, points);
         }
       });
 
@@ -878,6 +979,54 @@ export class TaskView {
       };
       const onOutside = () => {
         commitTimePicker(picker, timeInput);
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onKey);
+      };
+      setTimeout(() => {
+        document.addEventListener("click", onOutside);
+        document.addEventListener("keydown", onKey);
+      }, 0);
+    });
+
+    const pointsBtn = this.taskNode?.querySelector(
+      "#task-points-btn",
+    ) as HTMLButtonElement;
+
+    const commitPointsPicker = (pickerEl: Element, inputEl: HTMLInputElement) => {
+      const selected = pickerEl.querySelector(".time-picker__num--selected") as HTMLElement;
+      const val = selected?.dataset.value ?? "0";
+      inputEl.value = val;
+      this.updatePointsBtn(parseInt(val));
+      pickerEl.remove();
+    };
+
+    pointsBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pointsInput = this.taskNode?.querySelector(
+        "#task-points-input",
+      ) as HTMLInputElement;
+      const existing = this.taskNode?.querySelector(".points-picker-container");
+      if (existing) {
+        commitPointsPicker(existing, pointsInput);
+        return;
+      }
+
+      this.taskNode?.querySelectorAll(".time-picker").forEach((p) => p.remove());
+
+      const picker = this.buildPointsPicker(parseInt(pointsInput.value || "0"));
+      picker.classList.add("points-picker-container");
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      pointsBtn.parentElement?.appendChild(picker);
+
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+          commitPointsPicker(picker, pointsInput);
+          document.removeEventListener("keydown", onKey);
+          document.removeEventListener("click", onOutside);
+        }
+      };
+      const onOutside = () => {
+        commitPointsPicker(picker, pointsInput);
         document.removeEventListener("click", onOutside);
         document.removeEventListener("keydown", onKey);
       };

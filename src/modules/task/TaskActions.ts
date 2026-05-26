@@ -274,9 +274,12 @@ export const TaskActions = {
     }
   },
 
-  async saveTask(taskId: string, payload: any) {
+  async saveTask(taskId: string, payload: any, points?: number | null) {
     appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
     try {
+      if (points !== undefined && points !== null) {
+        await kanbanApi.updateTaskPoints(taskId, { points });
+      }
       await kanbanApi.updateTask(taskId, payload);
       appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_SUCCESS });
     } catch (err: any) {

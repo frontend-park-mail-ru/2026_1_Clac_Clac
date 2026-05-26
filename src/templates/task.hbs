@@ -90,6 +90,25 @@
           </button>
           <input type="hidden" id="task-time-input" value="{{task.raw_time}}">
         </div>
+
+        {{#if canEditComplexity}}
+        <div class="task__meta-item relative-wrapper">
+          <svg width="24" height="24" viewBox="0 0 21 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Kettlebell Icon -->
+            <g transform="translate(3, 0)">
+              <path d="M12.25 5.75C13.462 3.70643 14.0701 3.00071 13.58 2.22929C13.4285 1.99066 13.2127 1.77563 12.945 1.59643C11.273 0.467857 3.22676 0.467857 1.55472 1.59643C1.28705 1.77563 1.07129 1.99066 0.919701 2.22929C0.429688 3.00071 1.0397 3.70714 2.24974 5.75" />
+            </g>
+            <g transform="translate(0, 5)">
+              <path d="M10.2506 0.75C8.47375 0.750071 6.73253 1.25959 5.2247 2.2207C3.71686 3.1818 2.50283 4.55597 1.7205 6.18714C0.938163 7.8183 0.618873 9.64109 0.798892 11.4485C0.978911 13.2559 1.65102 14.9754 2.7389 16.4119C3.59398 17.5399 4.3885 17.75 5.76139 17.75H14.7374C16.1115 17.75 16.9072 17.5399 17.7611 16.4119C18.8489 14.9755 19.521 13.2561 19.7011 11.4488C19.8811 9.6415 19.562 7.8188 18.7798 6.18768C17.9976 4.55656 16.7837 3.18238 15.2761 2.22118C13.7684 1.25999 12.0273 0.750298 10.2506 0.75Z" />
+            </g>
+          </svg>
+          <span class="task__meta-label">Сложность:</span>
+          <button class="task__meta-value-btn" id="task-points-btn" type="button" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
+            {{#if task.points}}{{task.points}} SP{{else}}Без оценки{{/if}}
+          </button>
+          <input type="hidden" id="task-points-input" value="{{#if task.points}}{{task.points}}{{else}}0{{/if}}">
+        </div>
+        {{/if}}
       </div>
 
       {{#if isViewer}}

@@ -88,7 +88,7 @@ export class KanbanView {
         }
         return {
           ...task,
-          hasPoints: task.points !== undefined && task.points !== null,
+          hasPoints: task.points !== undefined && task.points !== null && task.points > 0,
           pointsColor,
           isSelected: state.selectedCards
             ? state.selectedCards.has(task.id)
