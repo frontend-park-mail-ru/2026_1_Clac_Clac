@@ -44,12 +44,14 @@ export const setCurrentUser = (val: any) => {
 };
 
 const initApp = async () => {
-  try {
-    const res = await authApi.checkAuth();
-    currentUser = res.data.profile;
-    setIsAuth(true);
-  } catch (err) {
-    setIsAuth(false);
+  if (window.location.pathname !== "/auth/callback") {
+    try {
+      const res = await authApi.checkAuth();
+      currentUser = res.data.profile;
+      setIsAuth(true);
+    } catch (err) {
+      setIsAuth(false);
+    }
   }
 
   handleRoute();
