@@ -3,6 +3,7 @@ import { KanbanState, Section } from "../kanban.types";
 import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { escapeHtml } from "../../../utils";
+import { kanbanStore } from "../KanbanStore";
 
 export class KanbanColumnManager {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
@@ -18,11 +19,15 @@ export class KanbanColumnManager {
       if (manageList) this.renderManageList(state.boardId!, state.sections, manageList);
       modalOverlay?.classList.remove("hidden");
       modalManage?.classList.remove("hidden");
+      kanbanStore.getState().manageColumnsOpen = true;
     }, { signal });
 
-    appDiv.querySelector("#btn-close-manage")?.addEventListener("click", () => {
+    const closeManageColumns = () => {
+      kanbanStore.getState().manageColumnsOpen = false;
       closeModals();
-    });
+    };
+
+    appDiv.querySelector("#btn-close-manage")?.addEventListener("click", closeManageColumns);
   }
 
   private static bindCreation(appDiv: HTMLElement, boardId: string, closeModals: () => void, signal: AbortSignal): void {
@@ -80,13 +85,11 @@ export class KanbanColumnManager {
         max = 100;
       } else if (isNaN(max)) {
         max = 100;
-      } else if (max === 0) {
-        max = 100;
-      } else if (max < 0) {
-        Toast.error("Лимит задач не может быть отрицательным");
+      } else if (max <= 0) {
+        Toast.error("Число задач должно быть больше 0");
         return;
       } else if (max > 200) {
-        Toast.error("Лимит задач не может быть больше 200");
+        Toast.error("Число задач должно быть не больше 200");
         return;
       }
 
@@ -96,7 +99,7 @@ export class KanbanColumnManager {
     }, { signal });
   }
 
-  private static renderManageList(boardId: string, sections: Section[], container: HTMLElement): void {
+  public static renderManageList(boardId: string, sections: Section[], container: HTMLElement): void {
     container.innerHTML = sections.map((s) => `
       <div class="manage-columns__item" data-id="${s.id}" draggable="true">
         <div class="manage-columns__left">

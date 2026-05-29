@@ -325,6 +325,7 @@ export class TaskView {
       board_name: state.boardName,
       isViewer: isViewer,
       canEditComplexity,
+      isSaving: (state as any).isSaving,
       task: {
         title: taskData.title || "Без названия",
         description: taskData.description || "",
@@ -779,15 +780,17 @@ export class TaskView {
 
     this.taskNode
       ?.querySelector("#btn-toggle-task-status")
-      ?.addEventListener("click", () => {
+      ?.addEventListener("click", async () => {
         const state = taskStore.getState();
-        if (state.taskId && state.taskData) {
-          const currentDone =
-            state.taskData.status === true ||
-            state.taskData.done === true ||
-            false;
-          TaskActions.toggleTaskStatus(state.taskId, !currentDone);
-        }
+        if (!state.taskId || !state.taskData) return;
+        if ((state as any).isSaving) return;
+
+        const currentDone =
+          state.taskData.status === true ||
+          state.taskData.done === true ||
+          false;
+
+        TaskActions.toggleTaskStatus(state.taskId, !currentDone);
       });
 
     const fileInput = this.taskNode?.querySelector(

@@ -96,13 +96,11 @@ export class SectionView {
         maxTasks = 100;
       } else if (isNaN(maxTasks)) {
         maxTasks = 100;
-      } else if (maxTasks === 0) {
-        maxTasks = 100;
-      } else if (maxTasks < 0) {
-        Toast.error("Лимит задач не может быть отрицательным");
+      } else if (maxTasks <= 0) {
+        Toast.error("Число задач должно быть больше 0");
         return;
       } else if (maxTasks > 200) {
-        Toast.error("Лимит задач не может быть больше 200");
+        Toast.error("Число задач должно быть не больше 200");
         return;
       }
 

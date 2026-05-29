@@ -13,6 +13,7 @@ export class BoardsView {
   private abortController: AbortController | null = null;
   private currentBoardId: string | null = null;
   private currentBoardName: string | null = null;
+  private currentBoardDescription: string | null = null;
 
   constructor(appDiv: HTMLElement) {
     this.appDiv = appDiv;
@@ -149,6 +150,9 @@ export class BoardsView {
     }, { signal });
 
     const editBoardNameInput = this.appDiv.querySelector<HTMLInputElement>("#edit-board-name");
+    const editBoardDescInput = this.appDiv.querySelector<HTMLTextAreaElement>("#edit-board-desc");
+    const editNameLimit = this.appDiv.querySelector<HTMLElement>("#edit-board-name-limit");
+    const editDescLimit = this.appDiv.querySelector<HTMLElement>("#edit-board-desc-limit");
     const btnConfirmEdit = this.appDiv.querySelector<HTMLButtonElement>("#btn-confirm-edit");
     const editImgInput = this.appDiv.querySelector<HTMLInputElement>("#edit-board-image");
     const editImgName = this.appDiv.querySelector<HTMLElement>("#edit-board-image-name");
@@ -156,9 +160,10 @@ export class BoardsView {
     const checkEditChanges = (): void => {
       if (!btnConfirmEdit) return;
       const nameChanged = editBoardNameInput?.value.trim() !== this.currentBoardName;
+      const descChanged = editBoardDescInput?.value.trim() !== (this.currentBoardDescription || "");
       const imageSelected = !!editImgInput?.files?.length;
       const nameEmpty = !editBoardNameInput?.value.trim();
-      btnConfirmEdit.disabled = nameEmpty || (!nameChanged && !imageSelected);
+      btnConfirmEdit.disabled = nameEmpty || (!nameChanged && !descChanged && !imageSelected);
     };
 
     editImgInput?.addEventListener("change", (e: Event) => {
@@ -177,7 +182,19 @@ export class BoardsView {
       checkEditChanges();
     }, { signal });
 
-    editBoardNameInput?.addEventListener("input", checkEditChanges, { signal });
+    editBoardNameInput?.addEventListener("input", () => {
+      if (editNameLimit) {
+        editNameLimit.textContent = `${editBoardNameInput.value.length} / 128`;
+      }
+      checkEditChanges();
+    }, { signal });
+
+    editBoardDescInput?.addEventListener("input", () => {
+      if (editDescLimit) {
+        editDescLimit.textContent = `${editBoardDescInput.value.length} / 500`;
+      }
+      checkEditChanges();
+    }, { signal });
 
     this.appDiv.querySelectorAll(".board-card__options-btn").forEach((btn) => {
       btn.addEventListener("click", (e: Event) => {
@@ -185,8 +202,16 @@ export class BoardsView {
         const target = e.currentTarget as HTMLElement;
         this.currentBoardId = target.getAttribute("data-id");
         this.currentBoardName = target.getAttribute("data-name");
+        this.currentBoardDescription = target.getAttribute("data-description") || "";
 
-        if (editBoardNameInput) editBoardNameInput.value = this.currentBoardName || "";
+        if (editBoardNameInput) {
+          editBoardNameInput.value = this.currentBoardName || "";
+          if (editNameLimit) editNameLimit.textContent = `${editBoardNameInput.value.length} / 128`;
+        }
+        if (editBoardDescInput) {
+          editBoardDescInput.value = this.currentBoardDescription || "";
+          if (editDescLimit) editDescLimit.textContent = `${editBoardDescInput.value.length} / 500`;
+        }
         if (editImgInput) editImgInput.value = "";
         if (editImgName) editImgName.textContent = "Изображение доски (макс. 10 МБ)";
         if (btnConfirmEdit) btnConfirmEdit.disabled = true;
@@ -202,8 +227,9 @@ export class BoardsView {
 
       btnConfirmEdit.disabled = true;
       const file = editImgInput?.files?.[0];
+      const desc = editBoardDescInput?.value.trim() || "";
 
-      await BoardsActions.updateBoard(this.currentBoardId, name, "Создаём аналог Trello", file);
+      await BoardsActions.updateBoard(this.currentBoardId, name, desc, file);
       closeModals();
     }, { signal });
 

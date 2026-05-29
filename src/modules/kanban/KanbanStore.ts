@@ -26,6 +26,7 @@ class KanbanStore extends Store {
     lastPollResults: null,
     isSelectionMode: false,
     selectedCards: new Set(),
+    manageColumnsOpen: false,
   };
 
   public getState(): KanbanState {

@@ -67,6 +67,7 @@ export interface KanbanState {
   lastPollResults?: PollState | null;
   isSelectionMode?: boolean;
   selectedCards?: Set<string>;
+  manageColumnsOpen?: boolean;
 }
 
 export const KANBAN_COLORS: Record<string, string> = {

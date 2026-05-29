@@ -137,6 +137,15 @@ export class KanbanView {
       tabGantt?.classList.remove("active");
     }
 
+    if (state.manageColumnsOpen) {
+      const modalOverlay = this.appDiv.querySelector<HTMLElement>("#modal-overlay");
+      const modalManage = this.appDiv.querySelector<HTMLElement>("#modal-manage-columns");
+      const manageList = this.appDiv.querySelector<HTMLElement>("#manage-columns-list");
+      if (manageList) KanbanColumnManager.renderManageList(state.boardId!, state.sections, manageList);
+      modalOverlay?.classList.remove("hidden");
+      modalManage?.classList.remove("hidden");
+    }
+
     tabKanban?.addEventListener("click", () => {
       this.currentView = "kanban";
       kanbanWrapper?.classList.remove("hidden");
@@ -1186,6 +1195,7 @@ export class KanbanView {
 
   private attachEventListeners(state: KanbanState, signal: AbortSignal): void {
     const closeModals = (): void => {
+      state.manageColumnsOpen = false;
       this.appDiv
         .querySelectorAll(".modal, .manage-columns")
         .forEach((m) => m.classList.add("hidden"));
@@ -1455,7 +1465,6 @@ export class KanbanView {
                       Toast.success("Роль участника обновлена");
                       m.role = nextRole;
                       renderMembersList(searchInput?.value.trim() || "");
-                      KanbanActions.fetchKanban(state.boardId!, true);
                     } catch (err: any) {
                       const msg =
                         err?.data?.message ||
