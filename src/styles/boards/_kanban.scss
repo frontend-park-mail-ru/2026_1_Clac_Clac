@@ -425,7 +425,9 @@
     font-weight: bold;
     margin-bottom: 1.2rem;
     line-height: 1.4;
-    word-wrap: break-word;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   &__meta {

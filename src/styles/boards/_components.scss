@@ -232,6 +232,15 @@
     &--error {
       border-color: #ff5c5c;
     }
+
+    &--textarea {
+      resize: vertical;
+      min-height: 80px;
+      max-height: 240px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
   }
 
   &__input-error {

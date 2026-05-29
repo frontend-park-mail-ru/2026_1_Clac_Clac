@@ -125,6 +125,32 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         });
       });
 
+      const emailInput = appDiv.querySelector('#sw-email') as HTMLInputElement;
+      const nameInput = appDiv.querySelector('#sw-name') as HTMLInputElement;
+      const descTextarea = appDiv.querySelector('#sw-desc') as HTMLTextAreaElement;
+      const emailLimit = appDiv.querySelector('#sw-email-limit');
+      const nameLimit = appDiv.querySelector('#sw-name-limit');
+      const descLimit = appDiv.querySelector('#sw-desc-limit');
+
+      const updateCounter = (el: HTMLInputElement | HTMLTextAreaElement | null, limitEl: Element | null, max: number) => {
+        if (limitEl && el) {
+          limitEl.textContent = `${el.value.length} / ${max}`;
+        }
+      };
+
+      if (emailInput && emailLimit) {
+        updateCounter(emailInput, emailLimit, 254);
+        emailInput.addEventListener('input', () => updateCounter(emailInput, emailLimit, 254));
+      }
+      if (nameInput && nameLimit) {
+        updateCounter(nameInput, nameLimit, 128);
+        nameInput.addEventListener('input', () => updateCounter(nameInput, nameLimit, 128));
+      }
+      if (descTextarea && descLimit) {
+        updateCounter(descTextarea, descLimit, 500);
+        descTextarea.addEventListener('input', () => updateCounter(descTextarea, descLimit, 500));
+      }
+
       const fileInput = appDiv.querySelector('#sw-attachment') as HTMLInputElement;
       const fileName = appDiv.querySelector('#sw-attachment-name');
       const fileHint = appDiv.querySelector('#sw-attachment-hint');
