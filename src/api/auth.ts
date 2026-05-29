@@ -27,5 +27,5 @@ export const authApi = {
   resetPassword: (data: NewPasswordRequest) =>
     apiClient.post<BaseResponse, NewPasswordRequest>("/reset-password", data),
   vkAuth: (data: VkAuthRequest) =>
-    apiClient.post<ApiResponse<VkAuthResponse>, VkAuthRequest>("/auth/vk", data),
+    apiClient.post<ApiResponse<VkAuthResponse>, VkAuthRequest>("/oauth/vk", data),
 };
