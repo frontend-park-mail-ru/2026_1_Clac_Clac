@@ -52,19 +52,6 @@ const initApp = async () => {
     setIsAuth(false);
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const vkCode = urlParams.get("code");
-  if (vkCode) {
-    if (vkCode === "200") {
-      setIsAuth(true);
-      try {
-        const res = await authApi.checkAuth();
-        currentUser = res.data.profile;
-      } catch {}
-    }
-    window.history.replaceState({}, "", "/boards");
-  }
-
   handleRoute();
 };
 

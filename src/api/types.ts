@@ -253,6 +253,25 @@ export interface UpdateCommentRequest {
   text: string;
 }
 
+export interface VkAuthRequest {
+  code: string;
+  code_verifier: string;
+  state: string;
+  device_id?: string;
+}
+
+export interface VkAuthUser {
+  id: string;
+  email: string;
+  first_name: string;
+  avatar: string;
+}
+
+export interface VkAuthResponse {
+  success: boolean;
+  user: VkAuthUser;
+}
+
 export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;

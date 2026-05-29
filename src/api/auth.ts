@@ -9,6 +9,8 @@ import {
   RecoveryCodeRequest,
   NewPasswordRequest,
   MeResponse,
+  VkAuthRequest,
+  VkAuthResponse,
 } from "./types";
 
 export const authApi = {
@@ -24,6 +26,6 @@ export const authApi = {
     apiClient.post<BaseResponse, RecoveryCodeRequest>("/check-code", data),
   resetPassword: (data: NewPasswordRequest) =>
     apiClient.post<BaseResponse, NewPasswordRequest>("/reset-password", data),
-  vkLogin: (code: string) =>
-    apiClient.get<void>(`/oauth/vk?code=${encodeURIComponent(code)}`),
+  vkAuth: (data: VkAuthRequest) =>
+    apiClient.post<ApiResponse<VkAuthResponse>, VkAuthRequest>("/auth/vk", data),
 };

@@ -1,6 +1,5 @@
 import Handlebars from "handlebars";
 import loginTpl from "../../templates/login.hbs?raw";
-import config from "../../config";
 import { setGlobalError, validateEmail, setInputError, } from "../../utils";
 import { FormValidator, ValidationSchema } from "../../utils/validator";
 import { navigateTo } from "../../router";
@@ -26,9 +25,7 @@ export class LoginView {
   }
 
   public mount(): void {
-    this.appDiv.innerHTML = template({
-      vkAuthUrl: config.vkAuthUrl,
-    });
+    this.appDiv.innerHTML = template({});
 
     this.submitBtn = this.appDiv.querySelector<HTMLButtonElement>("#login-submit");
     this.emailInput = this.appDiv.querySelector<HTMLInputElement>("#email");
@@ -36,6 +33,11 @@ export class LoginView {
 
     this.initValidation();
     this.attachEventListeners();
+
+    const vkBtn = this.appDiv.querySelector<HTMLButtonElement>("#vk-login-btn");
+    vkBtn?.addEventListener("click", () => {
+      LoginActions.loginWithVK();
+    });
   }
 
   public updateUI(state: LoginState): void {
