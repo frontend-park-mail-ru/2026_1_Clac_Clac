@@ -183,7 +183,7 @@
       color: white;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1100px) {
       display: flex;
     }
   }
@@ -642,7 +642,7 @@
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1100px) {
     &__panel {
       width: 100% !important;
       max-width: 100% !important;
