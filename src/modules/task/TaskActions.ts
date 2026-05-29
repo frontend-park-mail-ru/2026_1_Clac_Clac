@@ -282,6 +282,12 @@ export const TaskActions = {
       }
       await kanbanApi.updateTask(taskId, payload);
       appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_SUCCESS });
+      if (payload.description !== undefined) {
+        appDispatcher.dispatch({
+          type: "KANBAN_UPDATE_TASK_DESCRIPTION",
+          payload: { taskId, description: payload.description || "" },
+        });
+      }
     } catch (err: any) {
       console.error("Save task error", err);
       let errorMsg = "Ошибка при сохранении";
@@ -311,11 +317,15 @@ export const TaskActions = {
       await kanbanApi.deleteTask(taskId);
       appDispatcher.dispatch({ type: TaskActionTypes.DELETE_TASK_SUCCESS });
     } catch (err: any) {
-      console.error("Delete task error", err);
-      appDispatcher.dispatch({
-        type: TaskActionTypes.DELETE_TASK_ERROR,
-        payload: { error: "Ошибка при удалении" },
-      });
+      if (err?.status === 404) {
+        appDispatcher.dispatch({ type: TaskActionTypes.DELETE_TASK_SUCCESS });
+      } else {
+        console.error("Delete task error", err);
+        appDispatcher.dispatch({
+          type: TaskActionTypes.DELETE_TASK_ERROR,
+          payload: { error: "Ошибка при удалении" },
+        });
+      }
     }
   },
 

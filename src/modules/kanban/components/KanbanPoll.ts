@@ -211,7 +211,8 @@ export class KanbanPoll {
         closeAll();
         await KanbanActions.fetchPoll(state.boardId!);
       } catch (e: any) {
-        Toast.error(e.data?.message || "Ошибка при создании голосования");
+        const msg = e.data?.message || e.data?.error || "";
+        Toast.error(msg === "Permission denied" ? "Доступ запрещён" : (msg || "Ошибка при создании голосования"));
         confirmBtn.disabled = false;
         confirmBtn.textContent = "Начать";
       }

@@ -44,6 +44,8 @@ export class TaskView {
   private currentExecuterId: string = "";
   private isFirstRender: boolean = true;
   private scrollToNewComment: boolean = false;
+  private isViewer: boolean = false;
+  private canEditComplexity: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -154,8 +156,14 @@ export class TaskView {
 
     if (!taskData) return;
 
-    const kanbanState = kanbanStore.getState();
-    const isViewer = kanbanState.myRole === "viewer";
+    if (this.isFirstRender) {
+      const kanbanState = kanbanStore.getState();
+      this.isViewer = kanbanState.myRole === "viewer";
+      const myRole = kanbanState.myRole || "viewer";
+      this.canEditComplexity = myRole === "admin" || myRole === "owner" || myRole === "creator";
+    }
+
+    const isViewer = this.isViewer;
 
     const isDone = taskData.status === true || taskData.done === true || false;
 
@@ -317,14 +325,11 @@ export class TaskView {
       };
     });
 
-    const myRole = kanbanState.myRole || "viewer";
-    const canEditComplexity = myRole === "admin" || myRole === "owner" || myRole === "creator";
-
     this.taskNode.innerHTML = template({
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
       isViewer: isViewer,
-      canEditComplexity,
+      canEditComplexity: this.canEditComplexity,
       isSaving: (state as any).isSaving,
       task: {
         title: taskData.title || "Без названия",
@@ -1405,6 +1410,10 @@ export class TaskView {
           const textarea = document.createElement("textarea");
           textarea.className = "task__comment-edit-input";
           textarea.value = originalText;
+          textarea.maxLength = 2000;
+
+          const origHeight = commentTextEl.offsetHeight;
+          textarea.style.height = `${Math.max(origHeight, 40)}px`;
 
           const actionsDiv = document.createElement("div");
           actionsDiv.className = "task__comment-edit-actions";

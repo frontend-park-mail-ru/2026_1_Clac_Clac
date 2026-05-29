@@ -278,6 +278,18 @@ class KanbanStore extends Store {
         break;
       }
 
+      case "KANBAN_UPDATE_TASK_DESCRIPTION": {
+        const { taskId, description } = action.payload as { taskId: string; description: string };
+        for (const section of this.state.sections) {
+          const task = section.tasks.find((t) => t.id === taskId);
+          if (task) {
+            task.description = description;
+            break;
+          }
+        }
+        break;
+      }
+
       case "KANBAN_SSE_EVENT": {
         const { type, payload } = action.payload as {
           type: string;

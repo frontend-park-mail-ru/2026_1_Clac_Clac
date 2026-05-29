@@ -100,8 +100,14 @@ export const SectionActions = {
       clearKanbanCache();
       this.setDeleteModalOpen(false);
       navigateTo(`/board?id=${state.boardId}`);
-    } catch (err) {
-      Toast.error("Ошибка при удалении");
+    } catch (err: any) {
+      if (err?.status === 404) {
+        clearKanbanCache();
+        this.setDeleteModalOpen(false);
+        navigateTo(`/board?id=${state.boardId}`);
+      } else {
+        Toast.error("Ошибка при удалении");
+      }
     }
   }
 };

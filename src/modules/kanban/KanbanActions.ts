@@ -348,8 +348,15 @@ export const KanbanActions = {
         type: "KANBAN_DELETE_SECTION_SUCCESS",
         payload: { sectionId },
       });
-    } catch {
-      Toast.error("Ошибка при удалении колонки");
+    } catch (e: any) {
+      if (e?.status === 404) {
+        appDispatcher.dispatch({
+          type: "KANBAN_DELETE_SECTION_SUCCESS",
+          payload: { sectionId },
+        });
+      } else {
+        Toast.error("Ошибка при удалении колонки");
+      }
     }
   },
 
@@ -396,6 +403,7 @@ export const KanbanActions = {
       const newTask: Task = {
         id: taskResponse.card_link,
         title: title,
+        description: "",
         executor: executorName,
         executor_id: executerId || null,
         due_date: null,
@@ -430,8 +438,15 @@ export const KanbanActions = {
         type: "KANBAN_DELETE_TASK_SUCCESS",
         payload: { taskId },
       });
-    } catch {
-      Toast.error("Ошибка при удалении");
+    } catch (e: any) {
+      if (e?.status === 404) {
+        appDispatcher.dispatch({
+          type: "KANBAN_DELETE_TASK_SUCCESS",
+          payload: { taskId },
+        });
+      } else {
+        Toast.error("Ошибка при удалении");
+      }
     }
   },
 
