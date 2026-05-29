@@ -51,6 +51,7 @@ export interface PollState {
 export interface PollTask {
   cardLink: string;
   title: string;
+  description?: string;
   votes: Record<string, number>;
 }
 

@@ -294,6 +294,8 @@ export interface UpdateCardPointsRequest {
 
 export interface PollTaskData {
   card_link: string;
+  title?: string;
+  description?: string;
 }
 
 export interface GetPollResponse {

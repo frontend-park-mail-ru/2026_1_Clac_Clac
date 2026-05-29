@@ -88,7 +88,8 @@ class KanbanStore extends Store {
   private buildPollState(data: GetPollResponse, existing?: PollState | null): PollState {
     const tasks: PollTask[] = data.tasks.map((t, idx) => ({
       cardLink: t.card_link,
-      title: this.resolveCardTitle(t.card_link),
+      title: t.title || this.resolveCardTitle(t.card_link),
+      description: t.description || undefined,
       votes: existing?.tasks?.[idx]?.votes ?? {},
     }));
 
