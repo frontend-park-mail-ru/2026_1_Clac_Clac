@@ -54,6 +54,12 @@ const initApp = async () => {
     }
   }
 
+  if (document.readyState === "loading") {
+    await new Promise<void>((resolve) => {
+      document.addEventListener("DOMContentLoaded", () => resolve());
+    });
+  }
+
   handleRoute();
 };
 
