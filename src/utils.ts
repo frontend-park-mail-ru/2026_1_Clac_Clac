@@ -2,6 +2,15 @@ import { supportApi } from './api';
 import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
 import { navigateTo } from './router';
 
+export const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+};
+
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
  *

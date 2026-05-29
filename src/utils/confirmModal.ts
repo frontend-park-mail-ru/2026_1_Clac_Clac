@@ -1,3 +1,5 @@
+import { escapeHtml } from "../utils";
+
 export function showConfirmModal(options: {
   title: string;
   text: string;
@@ -13,16 +15,21 @@ export function showConfirmModal(options: {
   overlay.innerHTML = `
     <div class="modal" style="display:block">
       <div class="modal__header">
-        <h2 class="modal__title">${options.title}</h2>
+        <h2 class="modal__title"></h2>
         <button class="modal__close-btn" id="confirm-modal-close">×</button>
       </div>
-      <p class="modal__text">${options.text}</p>
+      <p class="modal__text"></p>
       <div class="modal__actions">
-        <button class="btn btn--danger" id="confirm-modal-ok">${options.confirmLabel}</button>
+        <button class="btn btn--danger" id="confirm-modal-ok">${escapeHtml(options.confirmLabel)}</button>
         <button class="btn btn--cancel" id="confirm-modal-cancel">Отменить</button>
       </div>
     </div>
   `;
+
+  const titleEl = overlay.querySelector<HTMLElement>(".modal__title");
+  const textEl = overlay.querySelector<HTMLElement>(".modal__text");
+  if (titleEl) titleEl.textContent = options.title;
+  if (textEl) textEl.textContent = options.text;
 
   document.body.appendChild(overlay);
 

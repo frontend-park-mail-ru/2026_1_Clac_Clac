@@ -7,7 +7,7 @@ import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { clearKanbanCache } from "../../modules/kanban";
 import { showConfirmModal } from "../../utils/confirmModal";
-import { setInputError } from "../../utils";
+import { setInputError, escapeHtml } from "../../utils";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -17,8 +17,8 @@ const openLightbox = (url: string, name: string) => {
   overlay.innerHTML = `
     <div class="lightbox-container">
       <button class="lightbox-close">&times;</button>
-      <img src="${url}" alt="${name}" class="lightbox-img">
-      <div class="lightbox-caption">${name}</div>
+      <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="lightbox-img">
+      <div class="lightbox-caption">${escapeHtml(name)}</div>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -1151,16 +1151,16 @@ export class TaskView {
             const item = document.createElement("div");
             item.className = "assignee__dropdown-item";
             item.innerHTML = `
-            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+            ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
             <div class="assignee__info">
-              <span class="assignee__name">${user.name}</span>
-              <span class="assignee__email">${user.email}</span>
+              <span class="assignee__name">${escapeHtml(user.name)}</span>
+              <span class="assignee__email">${escapeHtml(user.email)}</span>
             </div>
           `;
             item.addEventListener("click", () => {
               execBtn.innerHTML = `
-              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
-              ${user.name}
+              ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
+              ${escapeHtml(user.name)}
             `;
               this.currentExecuterId = user.id;
               dropdown.remove();

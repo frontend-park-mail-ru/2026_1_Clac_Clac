@@ -82,6 +82,10 @@ export class SectionView {
   private attachListeners() {
     if (!this.overlayContainer) return;
 
+    this.overlayContainer.querySelector<HTMLInputElement>("#section-max-tasks-input")?.addEventListener("input", function () {
+      this.value = this.value.replace(/\D/g, "");
+    });
+
     this.overlayContainer.querySelector("#btn-save-section")?.addEventListener("click", () => {
       const name = (this.overlayContainer?.querySelector("#section-name-input") as HTMLInputElement).value.trim();
       const maxVal = (this.overlayContainer?.querySelector("#section-max-tasks-input") as HTMLInputElement).value.trim();

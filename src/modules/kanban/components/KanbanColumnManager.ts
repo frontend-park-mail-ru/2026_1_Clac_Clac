@@ -2,6 +2,7 @@ import { KanbanActions } from "../KanbanActions";
 import { KanbanState, Section } from "../kanban.types";
 import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
+import { escapeHtml } from "../../../utils";
 
 export class KanbanColumnManager {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
@@ -62,8 +63,12 @@ export class KanbanColumnManager {
         appDiv.querySelectorAll(".create-column-form__color-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         selectedColor = btn.getAttribute("data-color") || "white";
-      }, { signal });
+          }, { signal });
     });
+
+    inputMax?.addEventListener("input", () => {
+      inputMax.value = inputMax.value.replace(/\D/g, "");
+    }, { signal });
 
     btnCreate?.addEventListener("click", () => {
       const name = inputName?.value.trim();
@@ -96,10 +101,10 @@ export class KanbanColumnManager {
       <div class="manage-columns__item" data-id="${s.id}" draggable="true">
         <div class="manage-columns__left">
           <div class="manage-columns__dot bg-${s.color}"></div>
-          <input type="text" class="manage-columns__name" value="${s.section_name}" data-id="${s.id}" placeholder="Имя колонки">
+          <input type="text" class="manage-columns__name" value="${escapeHtml(s.section_name)}" data-id="${s.id}" placeholder="Имя колонки">
         </div>
         <div class="manage-columns__actions">
-          <button class="icon-btn manage-columns__delete" data-id="${s.id}" data-name="${s.section_name}">
+          <button class="icon-btn manage-columns__delete" data-id="${s.id}" data-name="${escapeHtml(s.section_name)}">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
           <div class="manage-columns__color-trigger bg-${s.color}" data-id="${s.id}"></div>

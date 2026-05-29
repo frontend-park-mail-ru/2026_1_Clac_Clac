@@ -99,6 +99,7 @@
   &__textarea {
     resize: vertical;
     min-height: 100px;
+    max-height: 280px;
     background: #252527;
     border-color: #333;
   }

@@ -1126,11 +1126,32 @@ a {
     color: #ccc;
     width: 100%;
     min-height: 180px;
+    max-height: 400px;
     padding: 1.5rem;
     font-size: 1rem;
     line-height: 1.6;
     resize: vertical;
     outline: none;
+
+    &:focus {
+        border-color: #8b5cf6;
+    }
+}
+
+.task__comment-edit-input {
+    background: #2a2a2c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #ccc;
+    width: 100%;
+    min-height: 40px;
+    max-height: 200px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
 
     &:focus {
         border-color: #8b5cf6;
@@ -1363,6 +1384,7 @@ a {
         textarea {
             resize: vertical;
             min-height: 100px;
+            max-height: 280px;
         }
     }
 
@@ -1517,6 +1539,9 @@ a {
             border-radius: 8px;
             max-width: 85%;
             font-size: 0.95rem;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.5;
         }
 
         .msg-user {
