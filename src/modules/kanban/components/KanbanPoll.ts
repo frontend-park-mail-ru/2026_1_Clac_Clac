@@ -6,6 +6,7 @@ import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
 import { KanbanActions } from "../KanbanActions";
+import { kanbanStore } from "../KanbanStore";
 import { getCurrentUser } from "../../../main";
 
 const template = Handlebars.compile(pollTpl);
@@ -239,8 +240,9 @@ export class KanbanPoll {
 
     const cardLink = currentTask.cardLink;
     const cardTitle = currentTask.title || "Без названия";
+    const liveState = kanbanStore.getState();
     let cardDescription = "";
-    for (const section of state.sections) {
+    for (const section of liveState.sections) {
       const task = (section.tasks as any[]).find((t: any) => t.id === cardLink);
       if (task?.description) {
         cardDescription = task.description;
