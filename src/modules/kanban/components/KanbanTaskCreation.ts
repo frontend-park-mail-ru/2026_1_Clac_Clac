@@ -2,6 +2,7 @@ import { KanbanActions } from "../KanbanActions";
 import { KanbanState } from "../kanban.types";
 import { kanbanStore } from "../KanbanStore";
 import { KanbanContextMenus } from "./KanbanContextMenus";
+import { escapeHtml } from "../../../utils";
 
 export class KanbanTaskCreation {
   public static bind(appDiv: HTMLElement, state: KanbanState, closeModals: () => void, signal: AbortSignal): void {
@@ -24,6 +25,8 @@ export class KanbanTaskCreation {
       btnConfirmCreateTask.disabled = disabled;
     };
 
+    const titleLimit = appDiv.querySelector<HTMLElement>("#new-task-title-limit");
+
     const openCreateModal = (sectionId?: string) => {
       if (state.sections.length === 0) return;
       activeSectionId = sectionId ?? state.sections[0].id;
@@ -32,14 +35,18 @@ export class KanbanTaskCreation {
       modalCreateTask?.classList.remove("hidden");
       if (taskTitleInput) {
         taskTitleInput.value = "";
-        taskTitleInput.focus();
+        setTimeout(() => taskTitleInput.focus(), 100);
       }
       if (modalAssigneeBtn) modalAssigneeBtn.textContent = "Выбрать...";
       selectedAssigneeId = undefined!;
+      if (titleLimit) titleLimit.textContent = "0 / 128";
       setConfirmDisabled(true);
     };
 
     taskTitleInput?.addEventListener("input", () => {
+      if (titleLimit) {
+        titleLimit.textContent = `${taskTitleInput.value.length} / 128`;
+      }
       setConfirmDisabled(!taskTitleInput.value.trim());
     }, { signal });
 
@@ -88,18 +95,18 @@ export class KanbanTaskCreation {
             item.className = "assignee__dropdown-item";
             if (user.id === selectedAssigneeId) item.classList.add("assignee__dropdown-item--selected");
             item.innerHTML = `
-              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+              ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
               <div class="assignee__info">
-                <span class="assignee__name">${user.name}</span>
-                <span class="assignee__email">${user.email}</span>
+                <span class="assignee__name">${escapeHtml(user.name)}</span>
+                <span class="assignee__email">${escapeHtml(user.email)}</span>
               </div>
             `;
             item.addEventListener("click", () => {
               selectedAssigneeId = user.id;
               if (modalAssigneeBtn) {
                 modalAssigneeBtn.innerHTML = `
-                  ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
-                  ${user.name}
+                  ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
+                  ${escapeHtml(user.name)}
                 `;
               }
               dropdown.remove();
@@ -139,7 +146,7 @@ export class KanbanTaskCreation {
           return;
         }
 
-        parent.innerHTML = `<div class="kanban__add-card-form"><textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="50" autofocus></textarea></div>`;
+        parent.innerHTML = `<div class="kanban__add-card-form"><textarea class="kanban__add-card-input" id="inline-new-task-${sectionId}" placeholder="Введите имя карточки..." maxlength="128" autofocus></textarea></div>`;
         const input = document.getElementById(`inline-new-task-${sectionId}`) as HTMLTextAreaElement;
         input.focus();
 

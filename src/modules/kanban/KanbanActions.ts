@@ -1,9 +1,9 @@
 import { appDispatcher } from "../../core/Dispatcher";
-import { boardsApi, kanbanApi, pollsApi, profileApi, API_URL, SectionInfo } from "../../api";
+import { boardsApi, kanbanApi, pollsApi, API_URL, SectionInfo } from "../../api";
 import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { kanbanStore } from "./KanbanStore";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 import {
   BoardUser,
   Section,
@@ -14,7 +14,6 @@ import {
 
 export const profileCache = new Map<string, BoardUser>();
 
-let cachedMyEmail: string | null = null;
 let boardEventSource: EventSource | null = null;
 let currentBoardId: string | null = null;
 
@@ -121,17 +120,7 @@ export const KanbanActions = {
 
       const usersRes = await boardsApi.getBoardUsers(boardId);
 
-      let myEmail =
-        cachedMyEmail || (currentUser?.email || "").toLowerCase().trim();
-      if (!myEmail) {
-        try {
-          const profileRes = await profileApi.getProfile();
-          myEmail = (profileRes.data.email || "").toLowerCase().trim();
-          cachedMyEmail = myEmail;
-        } catch (err) {
-          console.error("Failed to load profile for role check", err);
-        }
-      }
+      const myEmail = (getCurrentUser()?.email || "").toLowerCase().trim();
 
       const myMember = usersRes.data.members.find(
         (m) => m.email.toLowerCase().trim() === myEmail,
@@ -177,7 +166,16 @@ export const KanbanActions = {
             .map((t) => {
               const exId = t.executor_link;
               const exUser = users.find((u) => u.id === exId);
-              const dl = t.deadline;
+              const dl =
+                (t as any).dead_line ||
+                (t as any).data_dead_line ||
+                t.deadline;
+              const startVal =
+                t.start ||
+                (t as any).Start ||
+                (t as any).start_date ||
+                (t as any).data_start ||
+                null;
 
               const isDone = t.status === true || false;
 
@@ -264,7 +262,7 @@ export const KanbanActions = {
                 hasSubtasks,
                 position: t.position,
                 is_done: isDone,
-                start: t.start || null,
+                start: startVal,
                 deadline: dl || null,
                 points: t.points,
               };
@@ -350,8 +348,15 @@ export const KanbanActions = {
         type: "KANBAN_DELETE_SECTION_SUCCESS",
         payload: { sectionId },
       });
-    } catch {
-      Toast.error("Ошибка при удалении колонки");
+    } catch (e: any) {
+      if (e?.status === 404) {
+        appDispatcher.dispatch({
+          type: "KANBAN_DELETE_SECTION_SUCCESS",
+          payload: { sectionId },
+        });
+      } else {
+        Toast.error("Ошибка при удалении колонки");
+      }
     }
   },
 
@@ -398,6 +403,7 @@ export const KanbanActions = {
       const newTask: Task = {
         id: taskResponse.card_link,
         title: title,
+        description: "",
         executor: executorName,
         executor_id: executerId || null,
         due_date: null,
@@ -432,8 +438,15 @@ export const KanbanActions = {
         type: "KANBAN_DELETE_TASK_SUCCESS",
         payload: { taskId },
       });
-    } catch {
-      Toast.error("Ошибка при удалении");
+    } catch (e: any) {
+      if (e?.status === 404) {
+        appDispatcher.dispatch({
+          type: "KANBAN_DELETE_TASK_SUCCESS",
+          payload: { taskId },
+        });
+      } else {
+        Toast.error("Ошибка при удалении");
+      }
     }
   },
 

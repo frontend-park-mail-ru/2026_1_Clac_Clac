@@ -1,6 +1,5 @@
 import Handlebars from "handlebars";
 import loginTpl from "../../templates/login.hbs?raw";
-import config from "../../config";
 import { setGlobalError, validateEmail, setInputError, } from "../../utils";
 import { FormValidator, ValidationSchema } from "../../utils/validator";
 import { navigateTo } from "../../router";
@@ -26,9 +25,7 @@ export class LoginView {
   }
 
   public mount(): void {
-    this.appDiv.innerHTML = template({
-      vkAuthUrl: config.vkAuthUrl,
-    });
+    this.appDiv.innerHTML = template({});
 
     this.submitBtn = this.appDiv.querySelector<HTMLButtonElement>("#login-submit");
     this.emailInput = this.appDiv.querySelector<HTMLInputElement>("#email");
@@ -36,6 +33,11 @@ export class LoginView {
 
     this.initValidation();
     this.attachEventListeners();
+
+    const vkBtn = this.appDiv.querySelector<HTMLButtonElement>("#vk-login-btn");
+    vkBtn?.addEventListener("click", () => {
+      LoginActions.loginWithVK();
+    });
   }
 
   public updateUI(state: LoginState): void {
@@ -60,11 +62,11 @@ export class LoginView {
   private initValidation(): void {
     const loginSchema: ValidationSchema = {
       email: [
-        { required: true, message: "Введите адрес электронной почты" },
+        { required: true, message: "Введите email, например, name@domain.com" },
         {
           customValidator: (value: string) =>
-            validateEmail(value) ? null : "Неверный формат email",
-          message: "Неверный формат email",
+            validateEmail(value) ? null : "Неверный email, например, name@domain.com",
+          message: "Неверный email, например, name@domain.com",
         },
       ],
       password: [{ required: true, message: "Введите пароль" }],

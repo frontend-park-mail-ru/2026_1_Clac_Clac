@@ -7,6 +7,7 @@ import { navigateTo } from "../../router";
 import { Toast } from "../../utils/toast";
 import { clearKanbanCache } from "../../modules/kanban";
 import { showConfirmModal } from "../../utils/confirmModal";
+import { setInputError, escapeHtml } from "../../utils";
 
 const template = Handlebars.compile(taskTpl);
 
@@ -16,8 +17,8 @@ const openLightbox = (url: string, name: string) => {
   overlay.innerHTML = `
     <div class="lightbox-container">
       <button class="lightbox-close">&times;</button>
-      <img src="${url}" alt="${name}" class="lightbox-img">
-      <div class="lightbox-caption">${name}</div>
+      <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="lightbox-img">
+      <div class="lightbox-caption">${escapeHtml(name)}</div>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -43,6 +44,8 @@ export class TaskView {
   private currentExecuterId: string = "";
   private isFirstRender: boolean = true;
   private scrollToNewComment: boolean = false;
+  private isViewer: boolean = false;
+  private canEditComplexity: boolean = false;
 
   private onStoreChangeBound = this.onStoreChange.bind(this);
   private onStoreSuccessBound = this.onStoreSuccess.bind(this);
@@ -133,6 +136,9 @@ export class TaskView {
   private onStoreError() {
     const state = taskStore.getState();
     Toast.error(state.error || "Произошла ошибка");
+    if (state.error) {
+      setInputError("task-desc-input", state.error);
+    }
 
     const btnSave = this.taskNode?.querySelector(
       "#btn-save-task",
@@ -150,8 +156,14 @@ export class TaskView {
 
     if (!taskData) return;
 
-    const kanbanState = kanbanStore.getState();
-    const isViewer = kanbanState.myRole === "viewer";
+    if (this.isFirstRender) {
+      const kanbanState = kanbanStore.getState();
+      this.isViewer = kanbanState.myRole === "viewer";
+      const myRole = kanbanState.myRole || "viewer";
+      this.canEditComplexity = myRole === "admin" || myRole === "owner" || myRole === "creator";
+    }
+
+    const isViewer = this.isViewer;
 
     const isDone = taskData.status === true || taskData.done === true || false;
 
@@ -182,6 +194,9 @@ export class TaskView {
       )?.value,
       time: (
         this.taskNode?.querySelector("#task-time-input") as HTMLInputElement
+      )?.value,
+      points: (
+        this.taskNode?.querySelector("#task-points-input") as HTMLInputElement
       )?.value,
       subtask: (
         this.taskNode?.querySelector("#new-subtask-input") as HTMLInputElement
@@ -314,6 +329,8 @@ export class TaskView {
       noAnimation: !this.isFirstRender,
       board_name: state.boardName,
       isViewer: isViewer,
+      canEditComplexity: this.canEditComplexity,
+      isSaving: (state as any).isSaving,
       task: {
         title: taskData.title || "Без названия",
         description: taskData.description || "",
@@ -327,6 +344,7 @@ export class TaskView {
         executor_id: this.currentExecuterId,
         subtasks: formattedSubtasks,
         is_done: isDone,
+        points: taskData.points,
       },
       comments: state.comments,
       attachments: formattedAttachments,
@@ -353,6 +371,13 @@ export class TaskView {
         this.taskNode.querySelector("#task-time-input") as HTMLInputElement
       ).value = currentValues.time;
       this.updateTimeBtn(currentValues.time);
+    }
+    if (currentValues.points !== undefined) {
+      const pointsInput = this.taskNode.querySelector("#task-points-input") as HTMLInputElement;
+      if (pointsInput) {
+        pointsInput.value = currentValues.points;
+        this.updatePointsBtn(parseInt(currentValues.points));
+      }
     }
     if (currentValues.subtask !== undefined)
       (
@@ -398,6 +423,12 @@ export class TaskView {
       if (el) el.value = val;
     });
 
+    const descInput = this.taskNode.querySelector("#task-desc-input") as HTMLTextAreaElement;
+    const descLimit = this.taskNode.querySelector("#task-desc-limit");
+    if (descInput && descLimit) {
+      descLimit.textContent = `${descInput.value.length} / 1000`;
+    }
+
     this.attachListeners();
   }
 
@@ -436,6 +467,14 @@ export class TaskView {
     ) as HTMLButtonElement;
     if (!btn) return;
     btn.textContent = timeVal || "Не задано";
+  }
+
+  private updatePointsBtn(pointsVal: number) {
+    const btn = this.taskNode?.querySelector(
+      "#task-points-btn",
+    ) as HTMLButtonElement;
+    if (!btn) return;
+    btn.textContent = pointsVal > 0 ? String(pointsVal) : "Без оценки";
   }
 
   private buildDatePicker(
@@ -649,20 +688,114 @@ export class TaskView {
     return picker;
   }
 
+  private buildPointsPicker(currentPoints: number): HTMLElement {
+    const picker = document.createElement("div");
+    picker.className = "time-picker";
+    picker.style.minWidth = "120px";
+
+    const updateSelectedByScroll = (scroll: HTMLElement) => {
+      const scrollRect = scroll.getBoundingClientRect();
+      const center = scrollRect.top + scrollRect.height / 2;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+      scroll
+        .querySelectorAll<HTMLElement>(".time-picker__num")
+        .forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const dist = Math.abs(rect.top + rect.height / 2 - center);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = el;
+          }
+        });
+      scroll
+        .querySelectorAll(".time-picker__num")
+        .forEach((el) => el.classList.remove("time-picker__num--selected"));
+      (closest as HTMLElement | null)?.classList.add(
+        "time-picker__num--selected",
+      );
+    };
+
+    const col = document.createElement("div");
+    col.className = "time-picker__col";
+    const labelEl = document.createElement("div");
+    labelEl.className = "time-picker__col-label";
+    labelEl.textContent = "Сложность";
+    col.appendChild(labelEl);
+
+    const scroll = document.createElement("div");
+    scroll.className = "time-picker__scroll";
+
+    const values = [0, 1, 2, 3, 5, 8, 13, 21];
+    const normalizedPoints = currentPoints || 0;
+    const selectedIdx = values.indexOf(normalizedPoints) !== -1 ? values.indexOf(normalizedPoints) : 0;
+
+    values.forEach((val, idx) => {
+      const num = document.createElement("div");
+      num.className =
+        "time-picker__num" +
+        (idx === selectedIdx ? " time-picker__num--selected" : "");
+      num.textContent = val === 0 ? "–" : String(val);
+      num.dataset.value = String(val);
+      num.addEventListener("click", () => {
+        scroll
+          .querySelectorAll(".time-picker__num")
+          .forEach((el) => el.classList.remove("time-picker__num--selected"));
+        num.classList.add("time-picker__num--selected");
+        num.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+      scroll.appendChild(num);
+    });
+
+    let scrollTimer: ReturnType<typeof setTimeout>;
+    scroll.addEventListener("scroll", () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => updateSelectedByScroll(scroll), 200);
+    });
+
+    col.appendChild(scroll);
+    picker.appendChild(col);
+
+    setTimeout(() => {
+      scroll
+        .querySelector(".time-picker__num--selected")
+        ?.scrollIntoView({ block: "center" });
+    }, 0);
+
+    return picker;
+  }
+
   private attachListeners() {
     const state = taskStore.getState();
 
+    const descInput = this.taskNode?.querySelector("#task-desc-input") as HTMLTextAreaElement;
+    const descLimit = this.taskNode?.querySelector("#task-desc-limit");
+    if (descInput) {
+      const updateCharLimit = () => {
+        if (descLimit) {
+          descLimit.textContent = `${descInput.value.length} / 500`;
+        }
+      };
+      descInput.addEventListener("input", () => {
+        setInputError("task-desc-input", null);
+        updateCharLimit();
+      });
+      updateCharLimit();
+    }
+
     this.taskNode
       ?.querySelector("#btn-toggle-task-status")
-      ?.addEventListener("click", () => {
+      ?.addEventListener("click", async () => {
         const state = taskStore.getState();
-        if (state.taskId && state.taskData) {
-          const currentDone =
-            state.taskData.status === true ||
-            state.taskData.done === true ||
-            false;
-          TaskActions.toggleTaskStatus(state.taskId, !currentDone);
-        }
+        if (!state.taskId || !state.taskData) return;
+        if ((state as any).isSaving) return;
+
+        const currentDone =
+          state.taskData.status === true ||
+          state.taskData.done === true ||
+          false;
+
+        TaskActions.toggleTaskStatus(state.taskId, !currentDone);
       });
 
     const fileInput = this.taskNode?.querySelector(
@@ -672,6 +805,11 @@ export class TaskView {
       fileInput.addEventListener("change", async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            Toast.error("Размер файла не должен превышать 10 МБ");
+            fileInput.value = "";
+            return;
+          }
           const state = taskStore.getState();
           if (state.attachments.length >= 5) {
             Toast.error("Максимум 5 файлов на задачу");
@@ -751,11 +889,19 @@ export class TaskView {
           description: description,
           executor_link: this.currentExecuterId || null,
           deadline: finalDeadline,
+          start:
+            (state.taskData as any)?.start ||
+            (state.taskData as any)?.Start ||
+            (state.taskData as any)?.start_date ||
+            (state.taskData as any)?.data_start ||
+            null,
           max_tasks: state.taskData?.max_tasks || 100,
         };
 
         if (state.taskId) {
-          TaskActions.saveTask(state.taskId, payload);
+          const pointsInput = this.taskNode?.querySelector("#task-points-input") as HTMLInputElement;
+          const points = pointsInput ? parseInt(pointsInput.value || "0") : null;
+          TaskActions.saveTask(state.taskId, payload, points);
         }
       });
 
@@ -887,6 +1033,54 @@ export class TaskView {
       }, 0);
     });
 
+    const pointsBtn = this.taskNode?.querySelector(
+      "#task-points-btn",
+    ) as HTMLButtonElement;
+
+    const commitPointsPicker = (pickerEl: Element, inputEl: HTMLInputElement) => {
+      const selected = pickerEl.querySelector(".time-picker__num--selected") as HTMLElement;
+      const val = selected?.dataset.value ?? "0";
+      inputEl.value = val;
+      this.updatePointsBtn(parseInt(val));
+      pickerEl.remove();
+    };
+
+    pointsBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pointsInput = this.taskNode?.querySelector(
+        "#task-points-input",
+      ) as HTMLInputElement;
+      const existing = this.taskNode?.querySelector(".points-picker-container");
+      if (existing) {
+        commitPointsPicker(existing, pointsInput);
+        return;
+      }
+
+      this.taskNode?.querySelectorAll(".time-picker").forEach((p) => p.remove());
+
+      const picker = this.buildPointsPicker(parseInt(pointsInput.value || "0"));
+      picker.classList.add("points-picker-container");
+      picker.addEventListener("click", (ev) => ev.stopPropagation());
+      pointsBtn.parentElement?.appendChild(picker);
+
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+          commitPointsPicker(picker, pointsInput);
+          document.removeEventListener("keydown", onKey);
+          document.removeEventListener("click", onOutside);
+        }
+      };
+      const onOutside = () => {
+        commitPointsPicker(picker, pointsInput);
+        document.removeEventListener("click", onOutside);
+        document.removeEventListener("keydown", onKey);
+      };
+      setTimeout(() => {
+        document.addEventListener("click", onOutside);
+        document.addEventListener("keydown", onKey);
+      }, 0);
+    });
+
     const saveBtn = this.taskNode?.querySelector(
       "#btn-save-task",
     ) as HTMLButtonElement;
@@ -894,8 +1088,12 @@ export class TaskView {
       "#task-title-input",
     ) as HTMLInputElement;
     if (saveBtn && titleInput) {
+      titleInput.maxLength = 128;
       saveBtn.disabled = !titleInput.value.trim();
       titleInput.addEventListener("input", () => {
+        if (titleInput.value.length > 128) {
+          titleInput.value = titleInput.value.slice(0, 128);
+        }
         saveBtn.disabled = !titleInput.value.trim();
       });
     }
@@ -961,16 +1159,16 @@ export class TaskView {
             const item = document.createElement("div");
             item.className = "assignee__dropdown-item";
             item.innerHTML = `
-            ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${user.name.charAt(0).toUpperCase()}</div>`}
+            ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar assignee__avatar--img">` : `<div class="assignee__avatar">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
             <div class="assignee__info">
-              <span class="assignee__name">${user.name}</span>
-              <span class="assignee__email">${user.email}</span>
+              <span class="assignee__name">${escapeHtml(user.name)}</span>
+              <span class="assignee__email">${escapeHtml(user.email)}</span>
             </div>
           `;
             item.addEventListener("click", () => {
               execBtn.innerHTML = `
-              ${user.avatarUrl ? `<img src="${user.avatarUrl}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${user.name.charAt(0).toUpperCase()}</div>`}
-              ${user.name}
+              ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" class="assignee__avatar-small">` : `<div class="assignee__avatar-fallback-small">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>`}
+              ${escapeHtml(user.name)}
             `;
               this.currentExecuterId = user.id;
               dropdown.remove();
@@ -1051,11 +1249,23 @@ export class TaskView {
       ".task__comment-send-btn",
     ) as HTMLButtonElement;
 
+    const commentLimit = this.taskNode?.querySelector("#task-comment-limit");
+    if (commentInput) {
+      const updateCommentLimit = () => {
+        if (commentLimit) {
+          commentLimit.textContent = `${commentInput.value.length} / 2000`;
+        }
+      };
+      commentInput.addEventListener("input", updateCommentLimit);
+      updateCommentLimit();
+    }
+
     const submitComment = () => {
       const text = commentInput?.value.trim();
       if (text && state.taskId) {
         this.scrollToNewComment = true;
         commentInput.value = "";
+        if (commentLimit) commentLimit.textContent = "0 / 2000";
         TaskActions.addComment(state.taskId, text);
       }
     };
@@ -1200,6 +1410,10 @@ export class TaskView {
           const textarea = document.createElement("textarea");
           textarea.className = "task__comment-edit-input";
           textarea.value = originalText;
+          textarea.maxLength = 2000;
+
+          const origHeight = commentTextEl.offsetHeight;
+          textarea.style.height = `${Math.max(origHeight, 40)}px`;
 
           const actionsDiv = document.createElement("div");
           actionsDiv.className = "task__comment-edit-actions";

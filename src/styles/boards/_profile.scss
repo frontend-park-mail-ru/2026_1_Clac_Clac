@@ -40,6 +40,11 @@
     gap: 0.6rem;
   }
 
+  &__avatar-hint {
+    font-size: 0.75rem;
+    color: #88888b;
+  }
+
   &__action-link {
     color: #8b5cf6;
     font-size: 0.9rem;
@@ -80,6 +85,12 @@
     font-size: 0.85rem;
   }
 
+  &__char-limit {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: normal;
+  }
+
   &__input-field {
     background: #252527;
     border-color: #333;
@@ -88,6 +99,7 @@
   &__textarea {
     resize: vertical;
     min-height: 100px;
+    max-height: 280px;
     background: #252527;
     border-color: #333;
   }
@@ -237,7 +249,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .profile {
     &__container {
       padding: 1rem;

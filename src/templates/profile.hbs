@@ -1,5 +1,5 @@
 <div class="boards__layout">
-  {{> sidebar activeProfile=true}}
+  {{> sidebar activeProfile=true activeBoards=true}}
 
   <div class="main-content profile__container">
     <h1 class="boards__title profile__title">Профиль</h1>
@@ -27,6 +27,7 @@
         <span id="btn-delete-avatar"
           class="profile__action-delete{{#unless user.avatar_url}} profile__action-delete--disabled{{/unless}} cursor-pointer">Удалить
           фото</span>
+        <span class="profile__avatar-hint">Макс. 10 МБ</span>
       </div>
     </div>
 
@@ -37,9 +38,13 @@
           value="{{user.display_name}}" maxlength="128">
       </div>
       <div class="input-group">
-        <label class="profile__input-label">О себе</label>
-        <textarea id="profile-desc" class="input-group__field profile__textarea" maxlength="1000"
+        <div class="input-group__header">
+          <label class="profile__input-label">О себе</label>
+          <span class="profile__char-limit" id="profile-desc-limit">0 / 500</span>
+        </div>
+        <textarea id="profile-desc" class="input-group__field profile__textarea" maxlength="500"
           placeholder="Расскажите о себе">{{user.description_user}}</textarea>
+        <span class="input-group__error-msg" id="profile-desc-error"></span>
       </div>
       <div class="input-group">
         <div class="input-group__header">

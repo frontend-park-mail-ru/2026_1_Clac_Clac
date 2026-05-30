@@ -6,6 +6,7 @@ import { Toast } from "../../../utils/toast";
 import { showConfirmModal } from "../../../utils/confirmModal";
 import { PollState } from "../kanban.types";
 import { KanbanActions } from "../KanbanActions";
+import { getCurrentUser } from "../../../main";
 
 const template = Handlebars.compile(pollTpl);
 
@@ -42,7 +43,10 @@ export class KanbanPoll {
             ? Array.from(state.selectedCards as Set<string>)
             : [];
           if (selectedCards.length === 0) {
-            Toast.error("Выберите хотя бы одну задачу для оценки");
+            appDispatcher.dispatch({
+              type: "KANBAN_SET_SELECTION_MODE",
+              payload: false,
+            });
             return;
           }
           this.openStartModal(appDiv, state);
@@ -98,6 +102,15 @@ export class KanbanPoll {
     }
 
     if (state.lastPollResults) {
+      const results = state.lastPollResults as PollState;
+      const myLink = state.myLink as string;
+      const isVoter = myLink && results.invitees.includes(myLink);
+
+      if (!isVoter) {
+        appDispatcher.dispatch({ type: "KANBAN_POLL_CLEAR" });
+        return;
+      }
+
       this.showSummaryModal(appDiv, state);
       return;
     }
@@ -131,7 +144,11 @@ export class KanbanPoll {
     document.body.appendChild(this.overlay);
 
     const inviteesSet = new Set<string>();
-    const members = state.users;
+    const members = state.users.filter(
+      (m: any) =>
+        m.id !== getCurrentUser()?.link &&
+        m.email.toLowerCase().trim() !== getCurrentUser()?.email?.toLowerCase().trim(),
+    );
 
     this.overlay.innerHTML = template({
       isStartModal: true,
@@ -194,7 +211,8 @@ export class KanbanPoll {
         closeAll();
         await KanbanActions.fetchPoll(state.boardId!);
       } catch (e: any) {
-        Toast.error(e.data?.message || "Ошибка при создании голосования");
+        const msg = e.data?.message || e.data?.error || "";
+        Toast.error(msg === "Permission denied" ? "Доступ запрещён" : (msg || "Ошибка при создании голосования"));
         confirmBtn.disabled = false;
         confirmBtn.textContent = "Начать";
       }
@@ -221,14 +239,7 @@ export class KanbanPoll {
 
     const cardLink = currentTask.cardLink;
     const cardTitle = currentTask.title || "Без названия";
-    let cardDescription = "";
-    for (const section of state.sections) {
-      const task = (section.tasks as any[]).find((t: any) => t.id === cardLink);
-      if (task?.description) {
-        cardDescription = task.description;
-        break;
-      }
-    }
+    const cardDescription = currentTask.description || "";
     const totalCards = poll.tasks.length;
     const currentCardIndex = poll.currentIdx + 1;
     const totalInvitees = poll.invitees.length;
@@ -365,16 +376,10 @@ export class KanbanPoll {
         // Final score deck
         const deckBtns = this.overlay.querySelectorAll(".poll-deck-btn");
         deckBtns.forEach((btn) => {
-          btn.addEventListener("click", async () => {
+          btn.addEventListener("click", () => {
             const points = parseInt(btn.getAttribute("data-points")!);
             this.finalScore = points;
             this.renderActivePoll(_appDiv, state);
-
-            try {
-              await kanbanApi.updateTaskPoints(cardLink, { points });
-            } catch {
-              Toast.error("Не удалось отправить итоговую оценку");
-            }
           });
         });
 
@@ -384,6 +389,10 @@ export class KanbanPoll {
         nextBtn?.addEventListener("click", async () => {
           nextBtn.disabled = true;
           try {
+            if (this.finalScore !== null) {
+              await kanbanApi.updateTaskPoints(cardLink, { points: this.finalScore });
+            }
+
             if (isLastCard) {
               await pollsApi.closePoll(state.boardId!);
               this.destroyOverlay();
@@ -394,7 +403,7 @@ export class KanbanPoll {
             }
             this.finalScore = null;
           } catch {
-            Toast.error("Ошибка переключения на следующую задачу");
+            Toast.error("Ошибка при сохранении оценки или переходе");
             nextBtn.disabled = false;
           }
         });
@@ -410,32 +419,12 @@ export class KanbanPoll {
 
     this.destroyOverlay();
 
-    const tasksSummary = results.tasks.map((t) => {
-      const votes = Object.values(t.votes);
-      const avg =
-        votes.length > 0
-          ? parseFloat(
-              (
-                votes.reduce((a, b) => a + b, 0) / votes.length
-              ).toFixed(1),
-            )
-          : 0;
-      return {
-        title: t.title,
-        average: avg,
-        voteCount: votes.length,
-        totalInvitees: results.invitees.length,
-      };
-    });
-
     this.overlay = document.createElement("div");
     this.overlay.id = "poll-overlay-container";
     document.body.appendChild(this.overlay);
 
     this.overlay.innerHTML = template({
       isSummaryModal: true,
-      tasksSummary,
-      totalTasks: tasksSummary.length,
     });
 
     const closeBtn = this.overlay.querySelector("#btn-close-poll-summary");

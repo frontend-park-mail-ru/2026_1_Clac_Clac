@@ -70,10 +70,10 @@ export class RegisterView {
         { required: true, message: 'Введите имя' }
       ],
       email: [
-        { required: true, message: 'Введите адрес электронной почты' },
+        { required: true, message: 'Введите email, например, name@domain.com' },
         {
-          customValidator: (value: string) => validateEmail(value) ? null : 'Неверный формат email',
-          message: 'Неверный формат email'
+          customValidator: (value: string) => validateEmail(value) ? null : 'Неверный email, например, name@domain.com',
+          message: 'Неверный email, например, name@domain.com'
         }
       ],
       password: [

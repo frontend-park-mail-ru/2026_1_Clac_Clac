@@ -41,6 +41,10 @@ input[type="number"] {
     -webkit-tap-highlight-color: transparent;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}
+
 html,
 body {
     height: 100%;
@@ -653,6 +657,27 @@ a {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
+
+        .modal__close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            &:hover {
+                color: white;
+            }
+        }
     }
 
     &__title {
@@ -692,6 +717,7 @@ a {
         padding: 0.75rem 1.25rem;
         border-radius: 12px;
         gap: 1rem;
+        min-width: 0;
     }
 
     &__left {
@@ -699,6 +725,7 @@ a {
         align-items: center;
         gap: 0.75rem;
         flex: 1;
+        min-width: 0;
     }
 
     &__dot {
@@ -729,6 +756,7 @@ a {
         font-weight: 500;
         outline: none;
         width: 100%;
+        min-width: 0;
 
         &::placeholder {
             color: #666;
@@ -749,6 +777,11 @@ a {
         align-items: center;
         transition: opacity 0.2s;
 
+        svg {
+            width: 22px;
+            height: 22px;
+        }
+
         &:hover {
             opacity: 0.8;
             color: #ff5c5c;
@@ -760,6 +793,7 @@ a {
         cursor: grab;
         display: flex;
         align-items: center;
+        font-size: 1.5rem;
     }
 
     &__add-btn {
@@ -945,7 +979,7 @@ a {
 }
 
 .task__content {
-    padding: 0 2rem;
+    padding: 0 2rem 1rem 2rem;
     flex: 1;
     overflow-y: auto;
 }
@@ -1092,6 +1126,7 @@ a {
     color: #ccc;
     width: 100%;
     min-height: 180px;
+    max-height: 400px;
     padding: 1.5rem;
     font-size: 1rem;
     line-height: 1.6;
@@ -1100,6 +1135,38 @@ a {
 
     &:focus {
         border-color: #8b5cf6;
+    }
+}
+
+.task__comment-edit-input {
+    background: #2a2a2c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #ccc;
+    width: 100%;
+    min-height: 40px;
+    max-height: 300px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+
+    &:focus {
+        border-color: #8b5cf6;
+    }
+}
+
+.task__comment-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    .btn {
+        width: auto;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -1329,6 +1396,7 @@ a {
         textarea {
             resize: vertical;
             min-height: 100px;
+            max-height: 280px;
         }
     }
 
@@ -1483,6 +1551,9 @@ a {
             border-radius: 8px;
             max-width: 85%;
             font-size: 0.95rem;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.5;
         }
 
         .msg-user {
@@ -1599,4 +1670,14 @@ a {
     justify-content: center;
     align-items: center;
     margin-top: 20px;
+}
+
+.poll-deck-btn {
+    &:hover:not(:disabled):not(.poll-deck-btn--active) {
+        background-color: rgba(139, 92, 246, 0.15) !important;
+    }
+    
+    &--active:hover:not(:disabled) {
+        background-color: var(--primary-hover, #7c3aed) !important;
+    }
 }

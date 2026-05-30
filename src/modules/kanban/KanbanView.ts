@@ -2,8 +2,8 @@ import Handlebars from "handlebars";
 import kanbanTpl from "../../templates/kanban.hbs?raw";
 import { KanbanState } from "./kanban.types";
 import { navigateTo } from "../../router";
-import { authApi, boardsApi, kanbanApi, profileApi } from "../../api";
-import { currentUser } from "../../main";
+import { authApi, boardsApi, kanbanApi } from "../../api";
+import { getCurrentUser } from "../../main";
 
 import { KanbanDragAndDrop } from "./components/KanbanDragAndDrop";
 import { KanbanContextMenus } from "./components/KanbanContextMenus";
@@ -13,6 +13,7 @@ import { KanbanPoll } from "./components/KanbanPoll";
 import { showConfirmModal } from "../../utils/confirmModal";
 import { Toast } from "../../utils/toast";
 import { KanbanActions } from "./KanbanActions";
+import { escapeHtml } from "../../utils";
 
 const template = Handlebars.compile(kanbanTpl);
 
@@ -75,14 +76,30 @@ export class KanbanView {
 
     const sectionsWithSelection = state.sections.map((sec) => ({
       ...sec,
-      tasks: sec.tasks.map((task) => ({
-        ...task,
-        hasPoints: task.points !== undefined && task.points !== null,
-        isSelected: state.selectedCards
-          ? state.selectedCards.has(task.id)
-          : false,
-      })),
+      tasks: sec.tasks.map((task) => {
+        let pointsColor = "";
+        const pointsSet = task.points !== undefined && task.points !== null && task.points !== 0;
+        if (pointsSet) {
+          if (task.points! <= 8) {
+            pointsColor = "#a78bfa";
+          } else if (task.points! <= 13) {
+            pointsColor = "#fb923c";
+          } else {
+            pointsColor = "#ff6b6b";
+          }
+        }
+        return {
+          ...task,
+          hasPoints: pointsSet,
+          pointsColor,
+          isSelected: state.selectedCards
+            ? state.selectedCards.has(task.id)
+            : false,
+        };
+      }),
     }));
+
+    const hasSelectedCards = state.selectedCards && state.selectedCards.size > 0;
 
     this.appDiv.innerHTML = template({
       board_name: state.boardName,
@@ -90,6 +107,7 @@ export class KanbanView {
       isViewer: isViewer,
       pollActive: isPollActive,
       isSelectionMode: state.isSelectionMode,
+      hasSelectedCards: hasSelectedCards,
     });
 
     const tabKanban = this.appDiv.querySelector("#tab-view-kanban");
@@ -117,6 +135,15 @@ export class KanbanView {
       filterContainer?.classList.add("hidden");
       tabKanban?.classList.add("active");
       tabGantt?.classList.remove("active");
+    }
+
+    if (state.manageColumnsOpen) {
+      const modalOverlay = this.appDiv.querySelector<HTMLElement>("#modal-overlay");
+      const modalManage = this.appDiv.querySelector<HTMLElement>("#modal-manage-columns");
+      const manageList = this.appDiv.querySelector<HTMLElement>("#manage-columns-list");
+      if (manageList) KanbanColumnManager.renderManageList(state.boardId!, state.sections, manageList);
+      modalOverlay?.classList.remove("hidden");
+      modalManage?.classList.remove("hidden");
     }
 
     tabKanban?.addEventListener("click", () => {
@@ -337,20 +364,20 @@ export class KanbanView {
         row.innerHTML = `
           <div class="gantt-filter-input-group">
             <span>с</span>
-            <input type="text" id="gantt-val-date-from" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterStartDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterStartDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-from" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterStartDate)}" placeholder="ДД.ММ.ГГГГ">
+            ${this.ganttFilterWithTime ? `<input type="text" id="gantt-val-time-from" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterStartDate)}" placeholder="ЧЧ:ММ">` : ""}
           </div>
           <div class="gantt-filter-input-group">
             <span>до</span>
-            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" placeholder="ДД.ММ.ГГГГ">
+            ${this.ganttFilterWithTime ? `<input type="text" id="gantt-val-time-to" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" placeholder="ЧЧ:ММ">` : ""}
           </div>
         `;
       } else {
         row.innerHTML = `
           <div class="gantt-filter-input-group">
-            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" readonly>
-            ${this.ganttFilterWithTime ? `<input type="text" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" readonly>` : ""}
+            <input type="text" id="gantt-val-date-to" class="gantt-filter-field" value="${formatDateToInput(this.tempGanttFilterEndDate)}" placeholder="ДД.ММ.ГГГГ">
+            ${this.ganttFilterWithTime ? `<input type="text" id="gantt-val-time-to" class="gantt-filter-field gantt-filter-field--time" value="${formatTimeToInput(this.tempGanttFilterEndDate)}" placeholder="ЧЧ:ММ">` : ""}
           </div>
         `;
       }
@@ -476,6 +503,120 @@ export class KanbanView {
     const refreshPopover = () => {
       this.renderGanttFilterPopover(state);
     };
+
+    const parseDateInput = (val: string): Date | null => {
+      const trimmed = val.trim();
+      if (!trimmed) return null;
+      if (!/^\d{2}\.\d{2}\.\d{4}$/.test(trimmed)) return null;
+      const parts = trimmed.split(".");
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
+      if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+      const d = new Date(year, month - 1, day);
+      if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+      return d;
+    };
+
+    const parseTimeInput = (val: string): { hours: number; minutes: number } | null => {
+      const trimmed = val.trim();
+      if (!trimmed) return null;
+      if (!/^\d{2}:\d{2}$/.test(trimmed)) return null;
+      const parts = trimmed.split(":");
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      if (hours > 23 || minutes > 59) return null;
+      return { hours, minutes };
+    };
+
+    const bindDateInput = (id: string, target: "start" | "end") => {
+      const input = popover.querySelector<HTMLInputElement>(`#${id}`);
+      input?.addEventListener("input", () => {
+        const val = input.value;
+        if (val.length < 10) return;
+        const parsed = parseDateInput(val);
+        if (!parsed) {
+          if (val.length >= 10) Toast.error("Введена некорректная дата");
+          return;
+        }
+        if (target === "start") {
+          this.tempGanttFilterStartDate = new Date(
+            parsed.getFullYear(),
+            parsed.getMonth(),
+            parsed.getDate(),
+            this.tempGanttFilterStartDate?.getHours() ?? 0,
+            this.tempGanttFilterStartDate?.getMinutes() ?? 0,
+          );
+          if (this.tempGanttFilterEndDate && parsed > this.tempGanttFilterEndDate) {
+            this.tempGanttFilterEndDate = new Date(parsed);
+          }
+        } else {
+          this.tempGanttFilterEndDate = new Date(
+            parsed.getFullYear(),
+            parsed.getMonth(),
+            parsed.getDate(),
+            this.tempGanttFilterEndDate?.getHours() ?? 0,
+            this.tempGanttFilterEndDate?.getMinutes() ?? 0,
+          );
+          if (this.tempGanttFilterStartDate && parsed < this.tempGanttFilterStartDate) {
+            this.tempGanttFilterStartDate = new Date(parsed);
+          }
+        }
+        refreshPopover();
+      });
+      input?.addEventListener("blur", () => {
+        const val = input.value;
+        if (val.length > 0 && val.length < 10) {
+          Toast.error("Введена некорректная дата");
+        }
+      });
+    };
+
+    const bindTimeInput = (id: string, target: "start" | "end") => {
+      const input = popover.querySelector<HTMLInputElement>(`#${id}`);
+      input?.addEventListener("input", () => {
+        const val = input.value;
+        if (val.length < 5) return;
+        const parsed = parseTimeInput(val);
+        if (!parsed) {
+          if (val.length >= 5) Toast.error("Введено некорректное время");
+          return;
+        }
+        const date = target === "start" ? this.tempGanttFilterStartDate : this.tempGanttFilterEndDate;
+        if (date) {
+          date.setHours(parsed.hours, parsed.minutes, 0, 0);
+          if (target === "start") {
+            this.tempGanttFilterStartDate = date;
+            if (this.tempGanttFilterEndDate && date > this.tempGanttFilterEndDate) {
+              this.tempGanttFilterEndDate = new Date(date);
+            }
+          } else {
+            this.tempGanttFilterEndDate = date;
+            if (this.tempGanttFilterStartDate && date < this.tempGanttFilterStartDate) {
+              this.tempGanttFilterStartDate = new Date(date);
+            }
+          }
+          refreshPopover();
+        }
+      });
+      input?.addEventListener("blur", () => {
+        const val = input.value;
+        if (val.length > 0 && val.length < 5) {
+          Toast.error("Введено некорректное время");
+        }
+      });
+    };
+
+    bindDateInput("gantt-val-date-to", "end");
+    if (this.ganttFilterWithStart) {
+      bindDateInput("gantt-val-date-from", "start");
+    }
+    if (this.ganttFilterWithTime) {
+      bindTimeInput("gantt-val-time-to", "end");
+      if (this.ganttFilterWithStart) {
+        bindTimeInput("gantt-val-time-from", "start");
+      }
+    }
   }
 
   private renderGanttChart(state: KanbanState) {
@@ -522,7 +663,10 @@ export class KanbanView {
         const rawStart = parseDate((task as any).start);
         const rawEnd = parseDate((task as any).deadline);
 
-        const end = rawEnd || rawStart || new Date();
+        const end =
+          rawEnd ||
+          (rawStart ? new Date(rawStart.getTime() + 4 * 86400000) : null) ||
+          new Date();
         const start = rawStart || new Date(end.getTime() - 4 * 86400000);
 
         const taskOverlaps =
@@ -769,7 +913,7 @@ export class KanbanView {
         leftRow.innerHTML = `
             <div class="gantt-chart__item-title">
               ${iconHtml}
-              <span class="${isTaskDone ? "kanban-card__title--done" : ""}">${item.name}</span>
+              <span class="${isTaskDone ? "kanban-card__title--done" : ""}">${escapeHtml(item.name)}</span>
             </div>
             <button class="gantt-chart__open-details-btn" title="Открыть карточку">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -799,7 +943,7 @@ export class KanbanView {
         leftRow.innerHTML = `
             <div class="gantt-chart__item-title">
               ${iconHtml}
-              <span>${item.name}</span>
+              <span>${escapeHtml(item.name)}</span>
             </div>
             ${dateRangeHtml}
           `;
@@ -1051,6 +1195,7 @@ export class KanbanView {
 
   private attachEventListeners(state: KanbanState, signal: AbortSignal): void {
     const closeModals = (): void => {
+      state.manageColumnsOpen = false;
       this.appDiv
         .querySelectorAll(".modal, .manage-columns")
         .forEach((m) => m.classList.add("hidden"));
@@ -1228,8 +1373,8 @@ export class KanbanView {
             item.className = "invite-modal__member-item";
 
             const avatarHtml = m.avatar_url
-              ? `<img src="${m.avatar_url}" class="invite-modal__member-avatar" alt="Avatar">`
-              : `<div class="invite-modal__member-avatar-fallback">${(m.display_name || "U").charAt(0).toUpperCase()}</div>`;
+              ? `<img src="${escapeHtml(m.avatar_url)}" class="invite-modal__member-avatar" alt="Avatar">`
+              : `<div class="invite-modal__member-avatar-fallback">${escapeHtml((m.display_name || "U").charAt(0).toUpperCase())}</div>`;
 
             const isSelf = m.email.toLowerCase().trim() === myEmail;
             const isOwner = m.role === "owner" || m.role === "creator";
@@ -1237,7 +1382,7 @@ export class KanbanView {
             const canDeleteThisMember = canManage && !isSelf && !isOwner;
             const canEditThisMemberRole = canManage && !isSelf && !isOwner;
 
-            const roleLabel = roleLabels[m.role] || m.role || "Участник";
+            const roleLabel = escapeHtml(roleLabels[m.role] || m.role || "Участник");
 
             const roleSelectorHtml = canEditThisMemberRole
               ? `
@@ -1265,8 +1410,8 @@ export class KanbanView {
               <div class="invite-modal__member-left">
                 ${avatarHtml}
                 <div class="invite-modal__member-info">
-                  <span class="invite-modal__member-name" title="${m.display_name || "Без имени"}">${m.display_name || "Без имени"}</span>
-                  <span class="invite-modal__member-email" title="${m.email}">${m.email}</span>
+                  <span class="invite-modal__member-name" title="${escapeHtml(m.display_name || "Без имени")}">${escapeHtml(m.display_name || "Без имени")}</span>
+                  <span class="invite-modal__member-email" title="${escapeHtml(m.email)}">${escapeHtml(m.email)}</span>
                 </div>
               </div>
               <div class="invite-modal__member-right">
@@ -1320,7 +1465,6 @@ export class KanbanView {
                       Toast.success("Роль участника обновлена");
                       m.role = nextRole;
                       renderMembersList(searchInput?.value.trim() || "");
-                      KanbanActions.fetchKanban(state.boardId!, true);
                     } catch (err: any) {
                       const msg =
                         err?.data?.message ||
@@ -1376,13 +1520,7 @@ export class KanbanView {
             listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 1.5rem; font-size: 0.9rem;">Загрузка участников...</div>`;
           }
           try {
-            myEmail = (currentUser?.email || "").toLowerCase().trim();
-            if (!myEmail) {
-              try {
-                const profileRes = await profileApi.getProfile();
-                myEmail = (profileRes.data.email || "").toLowerCase().trim();
-              } catch {}
-            }
+            myEmail = (getCurrentUser()?.email || "").toLowerCase().trim();
 
             const res = await boardsApi.getBoardUsers(state.boardId!);
             cachedMembers = res.data.members;

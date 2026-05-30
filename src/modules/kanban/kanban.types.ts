@@ -24,6 +24,7 @@ export interface Task {
   hasSubtasks?: boolean;
   position: number;
   points?: number;
+  pointsColor?: string;
 }
 
 export interface Section {
@@ -50,6 +51,7 @@ export interface PollState {
 export interface PollTask {
   cardLink: string;
   title: string;
+  description?: string;
   votes: Record<string, number>;
 }
 
@@ -66,6 +68,7 @@ export interface KanbanState {
   lastPollResults?: PollState | null;
   isSelectionMode?: boolean;
   selectedCards?: Set<string>;
+  manageColumnsOpen?: boolean;
 }
 
 export const KANBAN_COLORS: Record<string, string> = {
@@ -79,9 +82,12 @@ export const KANBAN_COLORS: Record<string, string> = {
   pink: "#f9a8d4",
 };
 
-export interface ApiError extends Error {
+export interface ApiError {
   status: number;
-  data: { message: string; error: string };
+  data?: {
+    message?: string;
+    error?: string;
+  } | null;
 }
 
 export interface RawUser {

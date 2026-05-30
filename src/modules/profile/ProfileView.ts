@@ -5,6 +5,8 @@ import { ProfileActions } from './ProfileActions';
 import { navigateTo } from '../../router';
 import { showConfirmModal } from '../../utils/confirmModal';
 import { UserProfile } from './profile.types';
+import { setInputError } from '../../utils';
+import { Toast } from '../../utils/toast';
 
 const template = Handlebars.compile(profileTpl);
 
@@ -84,8 +86,20 @@ export class ProfileView {
       }
     };
 
+    const descLimit = document.getElementById('profile-desc-limit');
+    const updateCharLimit = () => {
+      if (descInput && descLimit) {
+        descLimit.textContent = `${descInput.value.length} / 500`;
+      }
+    };
+    updateCharLimit();
+
     nameInput?.addEventListener('input', checkChanges);
-    descInput?.addEventListener('input', checkChanges);
+    descInput?.addEventListener('input', () => {
+      setInputError('profile-desc', null);
+      updateCharLimit();
+      checkChanges();
+    });
 
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -94,8 +108,14 @@ export class ProfileView {
 
     const avatarUpload = document.getElementById('avatar-upload') as HTMLInputElement;
     avatarUpload?.addEventListener('change', (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
       if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          Toast.error("Размер файла не должен превышать 10 МБ");
+          input.value = "";
+          return;
+        }
         ProfileActions.updateAvatar(file);
       }
     });
@@ -162,6 +182,12 @@ export class ProfileView {
         modalOverlay.classList.add('hidden');
         modalDelete.classList.add('hidden');
       }
+    }
+
+    if (state.error) {
+      setInputError('profile-desc', state.error);
+    } else {
+      setInputError('profile-desc', null);
     }
   }
 }

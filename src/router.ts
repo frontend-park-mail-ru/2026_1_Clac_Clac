@@ -44,6 +44,10 @@ export const routes: Record<string, (appDiv: HTMLElement) => Promise<void>> = {
     const { renderSupportAdminModule } = await import("./modules/supportAdmin");
     renderSupportAdminModule(appDiv);
   },
+  "/auth/callback": async (_appDiv) => {
+    const { LoginActions } = await import("./modules/login/LoginActions");
+    await LoginActions.handleVkCallback();
+  },
 };
 
 let isAuthenticated = false;
@@ -68,7 +72,7 @@ export const handleRoute = async (): Promise<void> => {
   const path = window.location.pathname;
   const isAuth = getIsAuth();
 
-  const publicRoutes = ["/login", "/register", "/forgot-password"];
+  const publicRoutes = ["/login", "/register", "/forgot-password", "/auth/callback"];
 
   if (path.startsWith("/invite/")) {
     const inviteLink = path.replace("/invite/", "").trim();

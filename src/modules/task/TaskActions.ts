@@ -3,7 +3,6 @@ import {
   boardsApi,
   CommentResponse,
   kanbanApi,
-  profileApi,
   API_URL,
 } from "../../api";
 import { TaskActionTypes, User } from "./task.types";
@@ -11,6 +10,7 @@ import { taskStore } from "./TaskStore";
 import { Toast } from "../../utils/toast";
 import { profileCache } from "../kanban/KanbanActions";
 import { clearKanbanCache } from "../kanban";
+import { getCurrentUser } from "../../main";
 
 interface ExtendedCommentResponse extends CommentResponse {
   author_name?: string;
@@ -250,19 +250,14 @@ export const TaskActions = {
         return user;
       });
 
-      const [taskRes, meRes] = await Promise.all([
-        kanbanApi.getTask(taskId),
-        profileApi.getProfile().catch(() => null),
-      ]);
+      const taskRes = await kanbanApi.getTask(taskId);
       const taskData = taskRes.data;
 
       if (!taskData) {
         throw new Error("Задача не найдена");
       }
 
-      if (meRes?.data?.link) {
-        currentUserLink = meRes.data.link;
-      }
+      currentUserLink = getCurrentUser()?.link || null;
 
       const comments = await fetchAndProcessComments(taskId, usersList);
 
@@ -279,16 +274,39 @@ export const TaskActions = {
     }
   },
 
-  async saveTask(taskId: string, payload: any) {
+  async saveTask(taskId: string, payload: any, points?: number | null) {
     appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_START });
     try {
+      if (points !== undefined && points !== null) {
+        await kanbanApi.updateTaskPoints(taskId, { points });
+      }
       await kanbanApi.updateTask(taskId, payload);
       appDispatcher.dispatch({ type: TaskActionTypes.SAVE_TASK_SUCCESS });
+      if (payload.description !== undefined) {
+        appDispatcher.dispatch({
+          type: "KANBAN_UPDATE_TASK_DESCRIPTION",
+          payload: { taskId, description: payload.description || "" },
+        });
+      }
     } catch (err: any) {
       console.error("Save task error", err);
+      let errorMsg = "Ошибка при сохранении";
+      if (err?.status === 400) {
+        errorMsg = "Превышен лимит символов или неверный формат";
+      } else if (err?.status === 403) {
+        errorMsg = "Отказано в доступе";
+      } else if (err?.status === 404) {
+        errorMsg = "Задача не найдена";
+      } else if (err?.status === 409) {
+        errorMsg = "Конфликт при сохранении задачи";
+      } else if (err?.status === 429) {
+        errorMsg = "Слишком много запросов, попробуйте позже";
+      } else if (err?.status === 500) {
+        errorMsg = "Ошибка сервера, попробуйте позже";
+      }
       appDispatcher.dispatch({
         type: TaskActionTypes.SAVE_TASK_ERROR,
-        payload: { error: "Ошибка при сохранении" },
+        payload: { error: errorMsg },
       });
     }
   },
@@ -299,11 +317,15 @@ export const TaskActions = {
       await kanbanApi.deleteTask(taskId);
       appDispatcher.dispatch({ type: TaskActionTypes.DELETE_TASK_SUCCESS });
     } catch (err: any) {
-      console.error("Delete task error", err);
-      appDispatcher.dispatch({
-        type: TaskActionTypes.DELETE_TASK_ERROR,
-        payload: { error: "Ошибка при удалении" },
-      });
+      if (err?.status === 404) {
+        appDispatcher.dispatch({ type: TaskActionTypes.DELETE_TASK_SUCCESS });
+      } else {
+        console.error("Delete task error", err);
+        appDispatcher.dispatch({
+          type: TaskActionTypes.DELETE_TASK_ERROR,
+          payload: { error: "Ошибка при удалении" },
+        });
+      }
     }
   },
 

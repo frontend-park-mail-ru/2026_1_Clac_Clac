@@ -8,10 +8,13 @@ import {
   PasswordRecoveryRequest,
   RecoveryCodeRequest,
   NewPasswordRequest,
+  MeResponse,
+  VkAuthRequest,
+  VkAuthResponse,
 } from "./types";
 
 export const authApi = {
-  checkAuth: () => apiClient.get<BaseResponse>("/me"),
+  checkAuth: () => apiClient.get<ApiResponse<MeResponse>>("/me"),
   login: (data: LogInRequest) =>
     apiClient.post<ApiResponse<UserInfoResponse>, LogInRequest>("/login", data),
   register: (data: RegisterRequest) =>
@@ -23,6 +26,6 @@ export const authApi = {
     apiClient.post<BaseResponse, RecoveryCodeRequest>("/check-code", data),
   resetPassword: (data: NewPasswordRequest) =>
     apiClient.post<BaseResponse, NewPasswordRequest>("/reset-password", data),
-  vkLogin: (code: string) =>
-    apiClient.get<void>(`/oauth/vk?code=${encodeURIComponent(code)}`),
+  vkAuth: (data: VkAuthRequest) =>
+    apiClient.post<ApiResponse<VkAuthResponse>, VkAuthRequest>("/oauth/vk", data),
 };

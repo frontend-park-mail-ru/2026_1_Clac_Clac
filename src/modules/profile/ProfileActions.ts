@@ -3,6 +3,7 @@ import { ActionTypes } from './profile.types';
 import { authApi, profileApi } from '../../api';
 import { navigateTo, setIsAuth } from '../../router';
 import { Toast } from '../../utils/toast';
+import { setCurrentUser } from '../../main';
 
 export const ProfileActions = {
   resetState() {
@@ -14,6 +15,7 @@ export const ProfileActions = {
     try {
       const res = await profileApi.getProfile();
       const user = res.data;
+      setCurrentUser(user);
       appDispatcher.dispatch({ type: ActionTypes.SET_USER, payload: user });
     } catch (err: any) {
       console.error('Profile fetch error', err);
@@ -30,15 +32,32 @@ export const ProfileActions = {
 
   async updateProfile(displayName: string, descriptionUser: string) {
     appDispatcher.dispatch({ type: ActionTypes.SET_IS_SAVING, payload: true });
+    appDispatcher.dispatch({ type: ActionTypes.SET_ERROR, payload: null });
     try {
       await profileApi.updateProfile({
         display_name: displayName,
         description_user: descriptionUser,
       });
       await ProfileActions.fetchProfile();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Save profile failed', e);
-      appDispatcher.dispatch({ type: ActionTypes.SET_ERROR, payload: 'Не удалось сохранить профиль' });
+      let errorMsg = 'Не удалось сохранить профиль';
+      if (e?.status === 400) {
+        errorMsg = 'Превышен лимит символов или неверный формат';
+      } else if (e?.status === 403) {
+        errorMsg = 'Отказано в доступе';
+      } else if (e?.status === 404) {
+        errorMsg = 'Профиль не найден';
+      } else if (e?.status === 409) {
+        errorMsg = 'Конфликт при обновлении данных';
+      } else if (e?.status === 413) {
+        errorMsg = 'Изображение слишком большое';
+      } else if (e?.status === 429) {
+        errorMsg = 'Слишком много запросов, попробуйте позже';
+      } else if (e?.status === 500) {
+        errorMsg = 'Ошибка сервера, попробуйте позже';
+      }
+      appDispatcher.dispatch({ type: ActionTypes.SET_ERROR, payload: errorMsg });
     } finally {
       appDispatcher.dispatch({ type: ActionTypes.SET_IS_SAVING, payload: false });
     }

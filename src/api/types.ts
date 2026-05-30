@@ -49,6 +49,10 @@ export interface ProfileResponse {
   email: string;
   link: string;
 }
+export interface MeResponse {
+  user_link: string;
+  profile: ProfileResponse;
+}
 export interface UpdateProfileRequest {
   description_user: string;
   display_name: string;
@@ -249,6 +253,19 @@ export interface UpdateCommentRequest {
   text: string;
 }
 
+export interface VkAuthRequest {
+  code: string;
+  code_verifier: string;
+  state: string;
+  device_id?: string;
+}
+
+export interface VkAuthResponse {
+  link: string;
+  display_name: string;
+  email: string;
+}
+
 export interface AppealInfo {
   appeal_id: number;
   appeal_link: string;
@@ -290,6 +307,8 @@ export interface UpdateCardPointsRequest {
 
 export interface PollTaskData {
   card_link: string;
+  title?: string;
+  description?: string;
 }
 
 export interface GetPollResponse {

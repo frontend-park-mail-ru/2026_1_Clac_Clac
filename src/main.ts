@@ -37,22 +37,27 @@ initGlobalListeners();
 
 export let currentUser: any = null;
 
+export const getCurrentUser = () => currentUser;
+
+export const setCurrentUser = (val: any) => {
+  currentUser = val;
+};
+
 const initApp = async () => {
-  try {
-    const res = await authApi.checkAuth();
-    currentUser = res;
-    setIsAuth(true);
-  } catch (err) {
-    setIsAuth(false);
+  if (window.location.pathname !== "/auth/callback") {
+    try {
+      const res = await authApi.checkAuth();
+      currentUser = res.data.profile;
+      setIsAuth(true);
+    } catch (err) {
+      setIsAuth(false);
+    }
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const vkCode = urlParams.get("code");
-  if (vkCode) {
-    if (vkCode === "200") {
-      setIsAuth(true);
-    }
-    window.history.replaceState({}, "", "/boards");
+  if (document.readyState === "loading") {
+    await new Promise<void>((resolve) => {
+      document.addEventListener("DOMContentLoaded", () => resolve());
+    });
   }
 
   handleRoute();

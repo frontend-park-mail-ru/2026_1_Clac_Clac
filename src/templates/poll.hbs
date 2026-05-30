@@ -142,11 +142,16 @@
           <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Итоговая оценка:</p>
           <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
             {{#each deck}}
-            <button class="btn btn--secondary poll-deck-btn" 
+            <button class="btn poll-deck-btn {{#if (eq ../finalScore this)}}poll-deck-btn--active{{/if}}" 
               data-points="{{this}}" 
               style="
                 width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
-                {{#if (eq ../finalScore this)}}background: #8b5cf6; color: white; border-color: #8b5cf6;{{/if}}
+                transition: all 0.2s;
+                {{#if (eq ../finalScore this)}}
+                  background: #8b5cf6; color: white; border: 1.5px solid #8b5cf6;
+                {{else}}
+                  background: transparent; color: white; border: 1px solid #8b5cf6;
+                {{/if}}
               ">{{this}}</button>
             {{/each}}
           </div>
@@ -170,11 +175,16 @@
           <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.75rem; text-align: left;">Ваша оценка:</p>
           <div class="color-picker-list" style="justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
             {{#each deck}}
-            <button class="btn btn--secondary poll-deck-btn" 
+            <button class="btn poll-deck-btn {{#if (eq ../selectedVote this)}}poll-deck-btn--active{{/if}}" 
               data-points="{{this}}" 
               style="
                 width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;
-                {{#if (eq ../selectedVote this)}}background: #8b5cf6; color: white; border-color: #8b5cf6;{{/if}}
+                transition: all 0.2s;
+                {{#if (eq ../selectedVote this)}}
+                  background: #8b5cf6; color: white; border: 1.5px solid #8b5cf6;
+                {{else}}
+                  background: transparent; color: white; border: 1px solid #8b5cf6;
+                {{/if}}
               ">{{this}}</button>
             {{/each}}
           </div>
@@ -189,10 +199,10 @@
             {{#if isLastCard}}Завершить голосование{{else}}Далее{{/if}}
           </button>
           {{#unless finalScore}}<p style="color: #888; font-size: 0.8rem; margin-top: 0.25rem;">Выберите итоговую оценку выше</p>{{/unless}}
-          {{#unless isLastCard}}<button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>{{/unless}}
+          <button class="btn btn--cancel" id="btn-poll-terminate">Завершить голосование досрочно</button>
         {{else}}
-          <button class="btn btn--danger-outline" id="btn-poll-reveal">Показать оценки</button>
-          <button class="btn btn--danger-outline" id="btn-poll-terminate">Завершить голосование</button>
+          <button class="btn btn--primary" id="btn-poll-reveal">Показать оценки</button>
+          <button class="btn btn--cancel" id="btn-poll-terminate">Завершить голосование досрочно</button>
         {{/if}}
       {{/if}}
 
@@ -206,55 +216,18 @@
   {{/if}}
 
   {{#if isSummaryModal}}
-  <div id="modal-poll-summary" class="modal" style="display: block; width: 480px;">
+  <div id="modal-poll-summary" class="modal" style="display: block; width: 400px; text-align: center;">
     <div class="modal__header">
       <h2 class="modal__title">Голосование завершено</h2>
       <button class="modal__close-btn" id="btn-close-poll-summary">×</button>
     </div>
-    <div class="modal__body" style="text-align: center;">
-      <p style="color: #888; font-size: 0.9rem; margin-bottom: 1.5rem;">
-        Итоги по всем задачам ({{totalTasks}})
+    <div class="modal__body" style="padding: 1.5rem 1rem;">
+      <p style="color: #ccc; font-size: 1rem; line-height: 1.5;">
+        Голосование успешно завершено администратором. Все выставленные оценки сохранены на карточках.
       </p>
-      
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 300px; overflow-y: auto; padding-right: 4px;">
-        {{#each tasksSummary}}
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #18181a;
-          padding: 0.75rem 1rem;
-          border-radius: 10px;
-          border: 1px solid #2a2a2d;
-        ">
-          <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.25rem;
-            max-width: 300px;
-          ">
-            <span style="color: white; font-size: 0.95rem; font-weight: 500; text-align: left; word-break: break-word;">{{title}}</span>
-            <span style="color: #666; font-size: 0.8rem;">
-              {{voteCount}} из {{totalInvitees}} голосов
-            </span>
-          </div>
-          <div style="
-            background: rgba(139, 92, 246, 0.15);
-            color: #a5b4fc;
-            padding: 0.4rem 0.75rem;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1rem;
-          ">
-            {{average}}
-          </div>
-        </div>
-        {{/each}}
-      </div>
     </div>
-    <div class="modal__actions">
-      <button class="btn btn--primary" id="btn-ok-poll-summary">Понятно</button>
+    <div class="modal__actions" style="margin-top: 1rem;">
+      <button class="btn btn--primary" id="btn-ok-poll-summary" style="width: 100%;">Понятно</button>
     </div>
   </div>
   {{/if}}

@@ -183,7 +183,7 @@
       color: white;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1100px) {
       display: flex;
     }
   }
@@ -621,7 +621,7 @@
   }
 
   &__content {
-    padding: 0 2rem;
+    padding: 0 2rem 3rem 2rem;
     flex: 1;
     overflow-y: auto;
   }
@@ -642,7 +642,7 @@
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1100px) {
     &__panel {
       width: 100% !important;
       max-width: 100% !important;
@@ -651,7 +651,7 @@
       padding: 1rem 1.25rem;
     }
     &__content {
-      padding: 0 1.25rem;
+      padding: 0 1.25rem 3rem 1.25rem;
     }
     &__title-input {
       font-size: 1.6rem;

@@ -12,7 +12,10 @@
       <div class="task__header-right">
         <button
           class="btn task__status-btn {{#if task.is_done}}task__status-btn--done{{else}}task__status-btn--pending{{/if}}"
-          id="btn-toggle-task-status" type="button" {{#if isViewer}}disabled style="cursor: default; opacity: 0.75;"{{/if}}>
+          id="btn-toggle-task-status" type="button" {{#if isViewer}}disabled style="cursor: default; opacity: 0.75;"{{else}}{{#if isSaving}}disabled style="cursor: wait; opacity: 0.6;"{{/if}}{{/if}}>
+          {{#if isSaving}}
+          Сохранение...
+          {{else}}
           {{#if task.is_done}}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="20 6 9 17 4 12"></polyline>
@@ -20,6 +23,7 @@
           Выполнена
           {{else}}
           Выполнить
+          {{/if}}
           {{/if}}
         </button>
         {{#unless isViewer}}
@@ -40,7 +44,7 @@
 
       <div class="task__title-container">
         <input type="text" class="task__title-input {{#if task.is_done}}task__title-input--done{{/if}}" id="task-title-input" value="{{task.title}}"
-          placeholder="Заголовок задачи" maxlength="100" {{#if isViewer}}disabled{{/if}}>
+          placeholder="Название задачи" maxlength="128" {{#if isViewer}}disabled{{/if}}>
       </div>
 
       <div class="task__meta-list">
@@ -90,22 +94,46 @@
           </button>
           <input type="hidden" id="task-time-input" value="{{task.raw_time}}">
         </div>
+
+        {{#if canEditComplexity}}
+        <div class="task__meta-item relative-wrapper">
+          <svg width="24" height="24" viewBox="0 0 21 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Kettlebell Icon -->
+            <g transform="translate(3, 0)">
+              <path d="M12.25 5.75C13.462 3.70643 14.0701 3.00071 13.58 2.22929C13.4285 1.99066 13.2127 1.77563 12.945 1.59643C11.273 0.467857 3.22676 0.467857 1.55472 1.59643C1.28705 1.77563 1.07129 1.99066 0.919701 2.22929C0.429688 3.00071 1.0397 3.70714 2.24974 5.75" />
+            </g>
+            <g transform="translate(0, 5)">
+              <path d="M10.2506 0.75C8.47375 0.750071 6.73253 1.25959 5.2247 2.2207C3.71686 3.1818 2.50283 4.55597 1.7205 6.18714C0.938163 7.8183 0.618873 9.64109 0.798892 11.4485C0.978911 13.2559 1.65102 14.9754 2.7389 16.4119C3.59398 17.5399 4.3885 17.75 5.76139 17.75H14.7374C16.1115 17.75 16.9072 17.5399 17.7611 16.4119C18.8489 14.9755 19.521 13.2561 19.7011 11.4488C19.8811 9.6415 19.562 7.8188 18.7798 6.18768C17.9976 4.55656 16.7837 3.18238 15.2761 2.22118C13.7684 1.25999 12.0273 0.750298 10.2506 0.75Z" />
+            </g>
+          </svg>
+          <span class="task__meta-label">Сложность:</span>
+          <button class="task__meta-value-btn" id="task-points-btn" type="button" {{#if isViewer}}disabled style="border-bottom: none; cursor: default;"{{/if}}>
+            {{#if task.points}}{{task.points}}{{else}}Без оценки{{/if}}
+          </button>
+          <input type="hidden" id="task-points-input" value="{{#if task.points}}{{task.points}}{{else}}0{{/if}}">
+        </div>
+        {{/if}}
       </div>
 
       {{#if isViewer}}
         {{#if task.description}}
         <div class="task__description-section">
           <div class="task__description-box">
-            <textarea class="task__description-textarea" id="task-desc-input"
+            <textarea class="task__description-textarea" id="task-desc-input" maxlength="500"
               disabled style="background: transparent; border-color: transparent; padding: 0; resize: none; cursor: default; color: #ccc;">{{task.description}}</textarea>
           </div>
         </div>
         {{/if}}
       {{else}}
         <div class="task__description-section">
-          <div class="task__description-box">
-            <textarea class="task__description-textarea" id="task-desc-input"
+          <div class="task__description-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span class="task__description-label" style="color: #ccc; font-size: 0.85rem;">Описание</span>
+            <span class="task__char-limit" id="task-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 500</span>
+          </div>
+          <div class="task__description-box" style="margin-top: 0; position: relative;">
+            <textarea class="task__description-textarea" id="task-desc-input" maxlength="500"
               placeholder="Добавить описание...">{{task.description}}</textarea>
+            <span class="input-group__error-msg" id="task-desc-input-error"></span>
           </div>
         </div>
       {{/if}}
@@ -120,7 +148,7 @@
                 is_done}}checked{{/if}} {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
               <span class="checkmark"></span>
               <input type="text" class="task__subtask-text-input {{#if is_done}}task__subtask-text-input--done{{/if}}"
-                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}" {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
+                value="{{description}}" data-id="{{id}}" data-done="{{is_done}}" maxlength="500" {{#if ../../isViewer}}disabled style="cursor: default;"{{/if}}>
             </label>
             {{#unless ../../isViewer}}
             <button class="icon-btn task__subtask-delete-btn task__subtask-delete-btn-styled" data-id="{{id}}">
@@ -142,7 +170,7 @@
 
         {{#unless isViewer}}
         <div class="task__subtask-add mt-05">
-          <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу...">
+          <input type="text" class="task__subtask-input" id="new-subtask-input" placeholder="Добавить подзадачу..." maxlength="500">
           <button class="icon-btn task__subtask-add-btn" id="subtask-add-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -207,9 +235,9 @@
               Лимит файлов (100/100)
               {{else}}
               {{#if (eq attachmentsCount 0)}}
-              Загрузить файл
+              Загрузить файл (макс. 10 МБ)
               {{else}}
-              Загрузить файл
+              Загрузить файл (макс. 10 МБ)
               {{/if}}
               {{/if}}
             </span>
@@ -292,15 +320,21 @@
         </div>
       </div>
 
-      <div class="task__comment-input-area">
-        <input type="text" class="task__comment-input" placeholder="Комментарий...">
-        <button class="icon-btn task__comment-send-btn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
+      <div class="task__comment-input-area" style="position: relative; flex-direction: column; align-items: stretch; gap: 0.5rem; border: none; padding: 0; margin-bottom: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span style="font-size: 0.85rem; color: #ccc;">Комментарии</span>
+          <span class="task__char-limit" id="task-comment-limit" style="font-size: 0.75rem; color: #666;">0 / 2000</span>
+        </div>
+        <div style="display: flex; align-items: center; width: 100%; border: 1px solid #2a2a2c; border-radius: 8px; padding: 0.5rem 0.75rem; background-color: #1e1e20;">
+          <input type="text" class="task__comment-input" placeholder="Комментарий..." maxlength="2000" style="flex: 1; border: none; background: transparent; color: white; outline: none; margin-right: 0.5rem;">
+          <button class="icon-btn task__comment-send-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
 
     </div>

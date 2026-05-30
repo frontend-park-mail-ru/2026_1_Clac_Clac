@@ -45,9 +45,20 @@ export class KanbanContextMenus {
             menu
               .querySelector("#ctx-delete-list")
               ?.addEventListener("click", () => {
+                this.closeMenu();
                 if (state.sections[0]?.id === sectionId)
                   return Toast.error("Нельзя удалять бэклог");
-                KanbanActions.deleteSection(state.boardId!, sectionId);
+
+                const section = state.sections.find((s) => s.id === sectionId);
+                const sectionName = section ? section.section_name : "";
+
+                showConfirmModal({
+                  title: "Удалить колонку",
+                  text: `Вы уверены, что хотите удалить колонку "${sectionName}"? Все её задачи будут автоматически перенесены в бэклог.`,
+                  confirmLabel: "Удалить",
+                  onConfirm: () =>
+                    KanbanActions.deleteSection(state.boardId!, sectionId),
+                });
               });
           },
           { signal },

@@ -2,6 +2,15 @@ import { supportApi } from './api';
 import { SupportIframeManager } from './modules/supportWidget/SupportIframeManager';
 import { navigateTo } from './router';
 
+export const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+};
+
 /**
  * Устанавливает или снимает состояние ошибки для конкретного поля ввода.
  *
@@ -97,7 +106,7 @@ export const validatePassword = (password: string): string | null => {
   }
   for (let i = 0; i < password.length; i++) {
     if (password.charCodeAt(i) > 127) {
-      return 'Разрешены только латинские буквы, цифры и спецсимволы';
+      return 'Только латиница, цифры и знаки (!, @, #)';
     }
   }
   return null;

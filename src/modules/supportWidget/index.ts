@@ -3,7 +3,7 @@ import { supportApi } from "../../api";
 import Handlebars from "handlebars";
 import widgetTpl from "../../templates/support_widget.hbs?raw";
 import { Store } from "../../core/Store";
-import { currentUser } from "../../main";
+import { getCurrentUser } from "../../main";
 import { validateEmail } from "../../utils";
 import { Toast } from "../../utils/toast";
 
@@ -69,7 +69,12 @@ export const SupportWidgetActions = {
       Toast.success("Обращение отправлено");
     } catch (e: any) {
       console.error("Ошибка при создании тикета:", e);
-      const msg = e.data?.message || e.data?.error || "Ошибка при отправке";
+      let msg: string;
+      if (e?.status === 415) {
+        msg = "Неподдерживаемый формат изображения. Допустимые форматы: JPEG, PNG, GIF, WebP, BMP";
+      } else {
+        msg = e.data?.message || e.data?.error || "Ошибка при отправке";
+      }
       Toast.error(msg);
       throw e;
     }
@@ -96,7 +101,7 @@ document.addEventListener('click', (e) => {
 
 export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
   const render = () => {
-    appDiv.innerHTML = template({ ...store.getState(), user: currentUser });
+    appDiv.innerHTML = template({ ...store.getState(), user: getCurrentUser() });
 
     appDiv.querySelector('#sw-btn-create')?.addEventListener('click', () => {
       appDispatcher.dispatch({ type: 'SW_SET_STATE', payload: { view: 'create' } });
@@ -125,6 +130,32 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
         });
       });
 
+      const emailInput = appDiv.querySelector('#sw-email') as HTMLInputElement;
+      const nameInput = appDiv.querySelector('#sw-name') as HTMLInputElement;
+      const descTextarea = appDiv.querySelector('#sw-desc') as HTMLTextAreaElement;
+      const emailLimit = appDiv.querySelector('#sw-email-limit');
+      const nameLimit = appDiv.querySelector('#sw-name-limit');
+      const descLimit = appDiv.querySelector('#sw-desc-limit');
+
+      const updateCounter = (el: HTMLInputElement | HTMLTextAreaElement | null, limitEl: Element | null, max: number) => {
+        if (limitEl && el) {
+          limitEl.textContent = `${el.value.length} / ${max}`;
+        }
+      };
+
+      if (emailInput && emailLimit) {
+        updateCounter(emailInput, emailLimit, 254);
+        emailInput.addEventListener('input', () => updateCounter(emailInput, emailLimit, 254));
+      }
+      if (nameInput && nameLimit) {
+        updateCounter(nameInput, nameLimit, 128);
+        nameInput.addEventListener('input', () => updateCounter(nameInput, nameLimit, 128));
+      }
+      if (descTextarea && descLimit) {
+        updateCounter(descTextarea, descLimit, 500);
+        descTextarea.addEventListener('input', () => updateCounter(descTextarea, descLimit, 500));
+      }
+
       const fileInput = appDiv.querySelector('#sw-attachment') as HTMLInputElement;
       const fileName = appDiv.querySelector('#sw-attachment-name');
       const fileHint = appDiv.querySelector('#sw-attachment-hint');
@@ -134,9 +165,24 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       const removeBtn = appDiv.querySelector('#sw-attachment-remove');
       let selectedFile: File | null = null;
 
+      const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+
       fileInput?.addEventListener('change', (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
         if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            Toast.error("Размер файла не должен превышать 10 МБ");
+            input.value = '';
+            selectedFile = null;
+            return;
+          }
+          if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            Toast.error("Неподдерживаемый формат изображения. Допустимые форматы: JPEG, PNG, GIF, WebP, BMP");
+            input.value = '';
+            selectedFile = null;
+            return;
+          }
           selectedFile = file;
 
           if (fileName) fileName.textContent = file.name;

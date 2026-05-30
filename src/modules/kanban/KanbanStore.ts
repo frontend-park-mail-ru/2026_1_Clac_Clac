@@ -26,6 +26,7 @@ class KanbanStore extends Store {
     lastPollResults: null,
     isSelectionMode: false,
     selectedCards: new Set(),
+    manageColumnsOpen: false,
   };
 
   public getState(): KanbanState {
@@ -87,7 +88,8 @@ class KanbanStore extends Store {
   private buildPollState(data: GetPollResponse, existing?: PollState | null): PollState {
     const tasks: PollTask[] = data.tasks.map((t, idx) => ({
       cardLink: t.card_link,
-      title: this.resolveCardTitle(t.card_link),
+      title: t.title || this.resolveCardTitle(t.card_link),
+      description: t.description || undefined,
       votes: existing?.tasks?.[idx]?.votes ?? {},
     }));
 
@@ -216,6 +218,19 @@ class KanbanStore extends Store {
 
       case "KANBAN_DELETE_SECTION_SUCCESS": {
         const payload = action.payload as { sectionId: string };
+        const deletedSection = this.state.sections.find(
+          (s) => s.id === payload.sectionId,
+        );
+        if (
+          deletedSection &&
+          deletedSection.tasks &&
+          deletedSection.tasks.length > 0
+        ) {
+          const backlog = this.state.sections[0];
+          if (backlog) {
+            backlog.tasks = [...backlog.tasks, ...deletedSection.tasks];
+          }
+        }
         this.state.sections = this.state.sections.filter(
           (s) => s.id !== payload.sectionId,
         );
@@ -260,6 +275,18 @@ class KanbanStore extends Store {
           if (data.max_tasks) section.max_tasks = data.max_tasks;
           if (data.is_mandatory) section.is_mandatory = data.is_mandatory;
           this.emit("change");
+        }
+        break;
+      }
+
+      case "KANBAN_UPDATE_TASK_DESCRIPTION": {
+        const { taskId, description } = action.payload as { taskId: string; description: string };
+        for (const section of this.state.sections) {
+          const task = section.tasks.find((t) => t.id === taskId);
+          if (task) {
+            task.description = description;
+            break;
+          }
         }
         break;
       }

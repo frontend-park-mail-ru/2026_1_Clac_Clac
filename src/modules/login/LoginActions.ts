@@ -2,45 +2,11 @@ import { appDispatcher } from "../../core/Dispatcher";
 import { authApi } from "../../api";
 import { navigateTo, setIsAuth } from "../../router";
 import { Toast } from "../../utils/toast";
+import { setCurrentUser } from "../../main";
+import config from "../../config";
+import { generateRandomString, generateCodeChallenge } from "../../utils/pkce";
 
 export const LoginActions = {
-
-  checkVkAuthErrors(): void {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    const message = urlParams.get("message");
-
-    if (code === "502" && message?.includes("oauth_no_email")) {
-      Toast.error("Для входа через VK необходимо привязать Email к вашему аккаунту.");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    const vkError = localStorage.getItem("vkError");
-    if (vkError) {
-      let errorMsg = `Ошибка авторизации: ${vkError}`;
-
-      switch (vkError) {
-        case "vk_oauth_error":
-          errorMsg = "Ошибка авторизации через VK";
-          break;
-        case "no_valid_email":
-          errorMsg = "К вашему VK не привязан Email";
-          break;
-        case "cannot_request_data":
-          errorMsg = "Не удалось получить данные из VK";
-          break;
-        case "something_went_wrong":
-          errorMsg = "Что-то пошло не так. Попробуйте снова";
-          break;
-      }
-
-      appDispatcher.dispatch({
-        type: "SET_GLOBAL_ERROR",
-        payload: { error: errorMsg },
-      });
-      localStorage.removeItem("vkError");
-    }
-  },
 
   clearError(): void {
     appDispatcher.dispatch({
@@ -56,13 +22,22 @@ export const LoginActions = {
       await authApi.login({ email, password });
 
       setIsAuth(true);
+      try {
+        const meRes = await authApi.checkAuth();
+        setCurrentUser(meRes.data.profile);
+      } catch (err) {
+        console.error("Failed to load user profile on login", err);
+      }
+
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
     } catch (err: unknown) {
       const e = err as any;
       const httpStatus = e?.status;
       const bodyCode = e?.data?.code;
-      const isCredentialsError = httpStatus === 404 || bodyCode === 404;
+      const isCredentialsError =
+        [400, 401, 403, 404].includes(httpStatus) ||
+        [400, 401, 403, 404].includes(bodyCode);
 
       if (isCredentialsError) {
         appDispatcher.dispatch({
@@ -78,6 +53,112 @@ export const LoginActions = {
           payload: { globalError: "Проверьте подключение и попробуйте снова" },
         });
       }
+    }
+  },
+
+  async loginWithVK(): Promise<void> {
+    if ((LoginActions as any)._vkRedirecting) {
+      return;
+    }
+    (LoginActions as any)._vkRedirecting = true;
+
+    const codeVerifier = generateRandomString(64);
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const state = generateRandomString(32);
+
+    sessionStorage.setItem("vk_code_verifier", codeVerifier);
+    sessionStorage.setItem("vk_state", state);
+
+    const authUrl = new URL(config.vkAuthorizeUrl);
+    authUrl.searchParams.set("client_id", config.vkClientId);
+    authUrl.searchParams.set("redirect_uri", config.vkRedirectUri);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", config.vkScope);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", state);
+
+    window.location.href = authUrl.toString();
+  },
+
+  async handleVkCallback(): Promise<void> {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const state = urlParams.get("state");
+    const deviceId = urlParams.get("device_id");
+
+    console.log("[VK OAuth] Callback params:", { code: code ? "present" : "missing", state: state ? "present" : "missing", deviceId });
+
+    const savedState = sessionStorage.getItem("vk_state");
+    console.log("[VK OAuth] Saved state:", savedState ? "present" : "missing", "| Match:", state === savedState);
+
+    if (!savedState || state !== savedState) {
+      Toast.error("Ошибка авторизации. Попробуйте снова.");
+      sessionStorage.removeItem("vk_state");
+      sessionStorage.removeItem("vk_code_verifier");
+      navigateTo("/login");
+      return;
+    }
+
+    if (!code) {
+      Toast.error("Ошибка авторизации. Попробуйте снова.");
+      sessionStorage.removeItem("vk_state");
+      sessionStorage.removeItem("vk_code_verifier");
+      navigateTo("/login");
+      return;
+    }
+
+    const codeVerifier = sessionStorage.getItem("vk_code_verifier");
+    if (!codeVerifier) {
+      Toast.error("Сессия истекла. Попробуйте снова.");
+      sessionStorage.removeItem("vk_state");
+      sessionStorage.removeItem("vk_code_verifier");
+      navigateTo("/login");
+      return;
+    }
+
+    try {
+      const res = await authApi.vkAuth({
+        code,
+        code_verifier: codeVerifier,
+        state,
+        device_id: deviceId || undefined,
+      });
+
+      console.log("[VK OAuth] Backend response:", JSON.stringify(res, null, 2));
+
+      // Backend returns { status: "ok", data: { link, display_name, email } } on success.
+      // Check for the actual user link field rather than a non-existent "success" field.
+      if (res.data && res.data.link) {
+        sessionStorage.removeItem("vk_code_verifier");
+        sessionStorage.removeItem("vk_state");
+
+        setIsAuth(true);
+        try {
+          const meRes = await authApi.checkAuth();
+          setCurrentUser(meRes.data.profile);
+        } catch (err) {
+          console.error("[VK OAuth] Failed to load user profile after VK auth", err);
+        }
+
+        navigateTo("/boards");
+      } else {
+        console.error("[VK OAuth] Missing user data in response. res.data:", res.data);
+        Toast.error("Ошибка авторизации через VK.");
+        sessionStorage.removeItem("vk_state");
+        sessionStorage.removeItem("vk_code_verifier");
+        navigateTo("/login");
+      }
+    } catch (err: any) {
+      console.error("[VK OAuth] Request failed:", err?.status, err?.data);
+      const msg =
+        err?.data?.message ||
+        err?.data?.error ||
+        "Ошибка авторизации через VK";
+      Toast.error(msg);
+      sessionStorage.removeItem("vk_state");
+      sessionStorage.removeItem("vk_code_verifier");
+      navigateTo("/login");
     }
   },
 };

@@ -21,9 +21,12 @@ export class Toast {
     toast.className = `toast toast--${type}`;
 
     toast.innerHTML = `
-      <span class="toast__msg">${message}</span>
+      <span class="toast__msg"></span>
       <button class="toast__close">&times;</button>
     `;
+
+    const msgEl = toast.querySelector<HTMLElement>(".toast__msg");
+    if (msgEl) msgEl.textContent = message;
 
     this.container!.appendChild(toast);
 

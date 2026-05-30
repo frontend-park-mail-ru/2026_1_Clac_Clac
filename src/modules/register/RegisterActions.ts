@@ -36,7 +36,7 @@ export const RegisterActions = {
 
       if (errMsg) {
         if (errMsg.includes('exists')) {
-          this.setFieldError('email', 'Этот адрес уже зарегистрирован');
+          this.setFieldError('email', 'Невозможно создать аккаунт, попробуйте другой email');
         } else {
           this.setGlobalError(errMsg);
         }

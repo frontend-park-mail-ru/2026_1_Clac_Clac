@@ -35,14 +35,20 @@
 
   <div class="support-widget__create">
     <div class="input-group sw-mb-08">
-      <label class="input-group__label">Email</label>
-      <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <label class="input-group__label" style="margin-bottom: 0;">Email</label>
+        <span class="support-widget__char-limit" id="sw-email-limit" style="font-size: 0.75rem; color: #666;">0 / 254</span>
+      </div>
+      <input type="email" id="sw-email" class="input-group__field" placeholder="Ваш email" value="{{user.email}}" maxlength="254">
     </div>
 
     <div class="input-group sw-mb-08">
-      <label class="input-group__label">Имя</label>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <label class="input-group__label" style="margin-bottom: 0;">Имя</label>
+        <span class="support-widget__char-limit" id="sw-name-limit" style="font-size: 0.75rem; color: #666;">0 / 128</span>
+      </div>
       <input type="text" id="sw-name" class="input-group__field" placeholder="Как к вам обращаться?"
-        value="{{user.display_name}}">
+        value="{{user.display_name}}" maxlength="128">
     </div>
 
     <div class="input-group relative-wrapper sw-mb-08">
@@ -62,9 +68,12 @@
     </div>
 
     <div class="input-group sw-mb-08">
-      <label class="input-group__label">Описание</label>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <label class="input-group__label" style="margin-bottom: 0;">Описание</label>
+        <span class="support-widget__char-limit" id="sw-desc-limit" style="font-size: 0.75rem; color: #666;">0 / 500</span>
+      </div>
       <textarea id="sw-desc" class="input-group__field"
-        placeholder="Опишите проблему максимально подробно..."></textarea>
+        placeholder="Опишите проблему максимально подробно..." maxlength="500"></textarea>
     </div>
 
     <div class="sw-flex-gap-05 sw-mb-15">
@@ -79,7 +88,7 @@
           </path>
         </svg>
         <span id="sw-attachment-name" class="support-widget__attachment-text">Прикрепить фото</span>
-        <span id="sw-attachment-hint" class="support-widget__attachment-hint">(необязательно)</span>
+        <span id="sw-attachment-hint" class="support-widget__attachment-hint">(необязательно, макс. 10 МБ)</span>
         <input type="file" id="sw-attachment" class="hidden" accept="image/*">
       </label>
 
@@ -117,9 +126,9 @@
   <div class="support-widget__messages" id="sw-messages">
     <div class="msg msg-user"><strong>Описание:</strong><br>{{currentTicket.description}}</div>
 
-    {{#if currentTicket.attachment_key}}
+    {{#if currentTicket.attachment_url}}
     <div class="msg msg-user sw-msg-img-wrap">
-      <img src="{{currentTicket.attachment_key}}" class="sw-msg-img" alt="Вложение">
+      <img src="{{currentTicket.attachment_url}}" class="sw-msg-img" alt="Вложение">
     </div>
     {{/if}}
   </div>

@@ -4,6 +4,7 @@ import { sectionStore } from "./SectionStore";
 import { SectionActions } from "./SectionActions";
 import { navigateTo } from "../../router";
 import { renderKanbanModule } from "../../modules/kanban";
+import { Toast } from "../../utils/toast";
 
 const template = Handlebars.compile(sectionTpl);
 
@@ -81,10 +82,27 @@ export class SectionView {
   private attachListeners() {
     if (!this.overlayContainer) return;
 
+    this.overlayContainer.querySelector<HTMLInputElement>("#section-max-tasks-input")?.addEventListener("input", function () {
+      this.value = this.value.replace(/\D/g, "");
+    });
+
     this.overlayContainer.querySelector("#btn-save-section")?.addEventListener("click", () => {
       const name = (this.overlayContainer?.querySelector("#section-name-input") as HTMLInputElement).value.trim();
-      const maxTasks = parseInt((this.overlayContainer?.querySelector("#section-max-tasks-input") as HTMLInputElement).value);
+      const maxVal = (this.overlayContainer?.querySelector("#section-max-tasks-input") as HTMLInputElement).value.trim();
+      let maxTasks = parseInt(maxVal, 10);
       const isMandatory = (this.overlayContainer?.querySelector("#section-mandatory-input") as HTMLInputElement).checked;
+
+      if (maxVal === "") {
+        maxTasks = 100;
+      } else if (isNaN(maxTasks)) {
+        maxTasks = 100;
+      } else if (maxTasks <= 0) {
+        Toast.error("Число задач должно быть больше 0");
+        return;
+      } else if (maxTasks > 200) {
+        Toast.error("Число задач должно быть не больше 200");
+        return;
+      }
 
       SectionActions.updateSection(name, maxTasks, isMandatory);
     });
