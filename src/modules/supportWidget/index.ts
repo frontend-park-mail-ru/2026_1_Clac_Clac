@@ -69,7 +69,12 @@ export const SupportWidgetActions = {
       Toast.success("Обращение отправлено");
     } catch (e: any) {
       console.error("Ошибка при создании тикета:", e);
-      const msg = e.data?.message || e.data?.error || "Ошибка при отправке";
+      let msg: string;
+      if (e?.status === 415) {
+        msg = "Неподдерживаемый формат изображения. Допустимые форматы: JPEG, PNG, GIF, WebP, BMP";
+      } else {
+        msg = e.data?.message || e.data?.error || "Ошибка при отправке";
+      }
       Toast.error(msg);
       throw e;
     }
@@ -160,12 +165,20 @@ export const renderSupportWidgetModule = (appDiv: HTMLElement): void => {
       const removeBtn = appDiv.querySelector('#sw-attachment-remove');
       let selectedFile: File | null = null;
 
+      const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+
       fileInput?.addEventListener('change', (e) => {
         const input = e.target as HTMLInputElement;
         const file = input.files?.[0];
         if (file) {
           if (file.size > 10 * 1024 * 1024) {
             Toast.error("Размер файла не должен превышать 10 МБ");
+            input.value = '';
+            selectedFile = null;
+            return;
+          }
+          if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            Toast.error("Неподдерживаемый формат изображения. Допустимые форматы: JPEG, PNG, GIF, WebP, BMP");
             input.value = '';
             selectedFile = null;
             return;
