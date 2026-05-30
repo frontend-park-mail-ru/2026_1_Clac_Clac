@@ -2,6 +2,7 @@ import { appDispatcher } from '../../core/Dispatcher';
 import { ActionTypes } from './register.types';
 import { authApi } from '../../api';
 import { navigateTo, setIsAuth } from '../../router';
+import { setCurrentUser } from '../../main';
 
 export const RegisterActions = {
   resetState() {
@@ -30,6 +31,14 @@ export const RegisterActions = {
 
       localStorage.setItem('isAuth', 'true');
       setIsAuth(true);
+
+      try {
+        const meRes = await authApi.checkAuth();
+        setCurrentUser(meRes.data.profile);
+      } catch (err) {
+        console.error("Не удалось загрузить данные пользователя после регистрации", err);
+      }
+
       navigateTo('/boards');
     } catch (err: any) {
       const errMsg = err.data?.message || err.data?.error;
