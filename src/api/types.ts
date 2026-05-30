@@ -260,16 +260,10 @@ export interface VkAuthRequest {
   device_id?: string;
 }
 
-export interface VkAuthUser {
-  id: string;
-  email: string;
-  first_name: string;
-  avatar: string;
-}
-
 export interface VkAuthResponse {
-  success: boolean;
-  user: VkAuthUser;
+  link: string;
+  display_name: string;
+  email: string;
 }
 
 export interface AppealInfo {

@@ -57,6 +57,11 @@ export const LoginActions = {
   },
 
   async loginWithVK(): Promise<void> {
+    if ((LoginActions as any)._vkRedirecting) {
+      return;
+    }
+    (LoginActions as any)._vkRedirecting = true;
+
     const codeVerifier = generateRandomString(64);
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     const state = generateRandomString(32);
@@ -82,12 +87,15 @@ export const LoginActions = {
     const state = urlParams.get("state");
     const deviceId = urlParams.get("device_id");
 
+    console.log("[VK OAuth] Callback params:", { code: code ? "present" : "missing", state: state ? "present" : "missing", deviceId });
+
     const savedState = sessionStorage.getItem("vk_state");
+    console.log("[VK OAuth] Saved state:", savedState ? "present" : "missing", "| Match:", state === savedState);
+
     if (!savedState || state !== savedState) {
       Toast.error("Ошибка авторизации. Попробуйте снова.");
       sessionStorage.removeItem("vk_state");
       sessionStorage.removeItem("vk_code_verifier");
-      window.history.replaceState({}, "", "/login");
       navigateTo("/login");
       return;
     }
@@ -96,7 +104,6 @@ export const LoginActions = {
       Toast.error("Ошибка авторизации. Попробуйте снова.");
       sessionStorage.removeItem("vk_state");
       sessionStorage.removeItem("vk_code_verifier");
-      window.history.replaceState({}, "", "/login");
       navigateTo("/login");
       return;
     }
@@ -104,7 +111,8 @@ export const LoginActions = {
     const codeVerifier = sessionStorage.getItem("vk_code_verifier");
     if (!codeVerifier) {
       Toast.error("Сессия истекла. Попробуйте снова.");
-      window.history.replaceState({}, "", "/login");
+      sessionStorage.removeItem("vk_state");
+      sessionStorage.removeItem("vk_code_verifier");
       navigateTo("/login");
       return;
     }
@@ -117,7 +125,11 @@ export const LoginActions = {
         device_id: deviceId || undefined,
       });
 
-      if (res.data.success) {
+      console.log("[VK OAuth] Backend response:", JSON.stringify(res, null, 2));
+
+      // Backend returns { status: "ok", data: { link, display_name, email } } on success.
+      // Check for the actual user link field rather than a non-existent "success" field.
+      if (res.data && res.data.link) {
         sessionStorage.removeItem("vk_code_verifier");
         sessionStorage.removeItem("vk_state");
 
@@ -126,19 +138,19 @@ export const LoginActions = {
           const meRes = await authApi.checkAuth();
           setCurrentUser(meRes.data.profile);
         } catch (err) {
-          console.error("Failed to load user profile after VK auth", err);
+          console.error("[VK OAuth] Failed to load user profile after VK auth", err);
         }
 
-        window.history.replaceState({}, "", "/boards");
         navigateTo("/boards");
       } else {
+        console.error("[VK OAuth] Missing user data in response. res.data:", res.data);
         Toast.error("Ошибка авторизации через VK.");
         sessionStorage.removeItem("vk_state");
         sessionStorage.removeItem("vk_code_verifier");
-        window.history.replaceState({}, "", "/login");
         navigateTo("/login");
       }
     } catch (err: any) {
+      console.error("[VK OAuth] Request failed:", err?.status, err?.data);
       const msg =
         err?.data?.message ||
         err?.data?.error ||
@@ -146,7 +158,6 @@ export const LoginActions = {
       Toast.error(msg);
       sessionStorage.removeItem("vk_state");
       sessionStorage.removeItem("vk_code_verifier");
-      window.history.replaceState({}, "", "/login");
       navigateTo("/login");
     }
   },
