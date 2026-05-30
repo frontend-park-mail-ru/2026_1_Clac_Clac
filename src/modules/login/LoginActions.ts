@@ -24,9 +24,7 @@ export const LoginActions = {
       try {
         const meRes = await authApi.checkAuth();
         setCurrentUser(meRes.data.profile);
-      } catch (err) {
-        console.error("Failed to load user profile on login", err);
-      }
+      } catch (err) {}
 
       appDispatcher.dispatch({ type: "LOGIN_SUCCESS" });
       navigateTo("/boards");
@@ -86,21 +84,7 @@ export const LoginActions = {
     const state = urlParams.get("state");
     const deviceId = urlParams.get("device_id");
 
-    console.log("[VK OAuth] Callback params:", {
-      code: code ? "present" : "missing",
-      state: state ? "present" : "missing",
-      deviceId,
-    });
-
     const savedState = sessionStorage.getItem("vk_state");
-    console.log(
-      "[VK OAuth] Saved state:",
-      savedState ? "present" : "missing",
-      "| Match:",
-      state === savedState,
-    );
-
-    console.log(savedState, state);
 
     if (!savedState || state !== savedState) {
       Toast.error("Ошибка авторизации. Попробуйте снова.");
@@ -135,12 +119,6 @@ export const LoginActions = {
         device_id: deviceId || undefined,
       });
 
-      console.log();
-
-      console.log("[VK OAuth] Backend response:", JSON.stringify(res, null, 2));
-
-      // Backend returns { status: "ok", data: { link, display_name, email } } on success.
-      // Check for the actual user link field rather than a non-existent "success" field.
       if (res.data && res.data.link) {
         sessionStorage.removeItem("vk_code_verifier");
         sessionStorage.removeItem("vk_state");
@@ -149,26 +127,16 @@ export const LoginActions = {
         try {
           const meRes = await authApi.checkAuth();
           setCurrentUser(meRes.data.profile);
-        } catch (err) {
-          console.error(
-            "[VK OAuth] Failed to load user profile after VK auth",
-            err,
-          );
-        }
+        } catch (err) {}
 
         navigateTo("/boards");
       } else {
-        console.error(
-          "[VK OAuth] Missing user data in response. res.data:",
-          res.data,
-        );
         Toast.error("Ошибка авторизации через VK.");
         sessionStorage.removeItem("vk_state");
         sessionStorage.removeItem("vk_code_verifier");
         navigateTo("/login");
       }
     } catch (err: any) {
-      console.error("[VK OAuth] Request failed:", err?.status, err?.data);
       const msg =
         err?.data?.message || err?.data?.error || "Ошибка авторизации через VK";
       Toast.error(msg);
