@@ -1,5 +1,4 @@
 import { loginStore } from "./LoginStore";
-import { LoginActions } from "./LoginActions";
 import { LoginView } from "./LoginView";
 
 let view: LoginView | null = null;
@@ -19,8 +18,6 @@ export const renderLoginModule = (appDiv: HTMLElement): void => {
 
   loginStore.off("change", handleStoreChange);
   loginStore.on("change", handleStoreChange);
-
-  LoginActions.checkVkAuthErrors();
 
   view.updateUI(loginStore.getState());
 };

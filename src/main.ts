@@ -44,25 +44,20 @@ export const setCurrentUser = (val: any) => {
 };
 
 const initApp = async () => {
-  try {
-    const res = await authApi.checkAuth();
-    currentUser = res.data.profile;
-    setIsAuth(true);
-  } catch (err) {
-    setIsAuth(false);
+  if (window.location.pathname !== "/auth/callback") {
+    try {
+      const res = await authApi.checkAuth();
+      currentUser = res.data.profile;
+      setIsAuth(true);
+    } catch (err) {
+      setIsAuth(false);
+    }
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const vkCode = urlParams.get("code");
-  if (vkCode) {
-    if (vkCode === "200") {
-      setIsAuth(true);
-      try {
-        const res = await authApi.checkAuth();
-        currentUser = res.data.profile;
-      } catch {}
-    }
-    window.history.replaceState({}, "", "/boards");
+  if (document.readyState === "loading") {
+    await new Promise<void>((resolve) => {
+      document.addEventListener("DOMContentLoaded", () => resolve());
+    });
   }
 
   handleRoute();
